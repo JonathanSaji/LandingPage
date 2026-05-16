@@ -7,8 +7,8 @@ export const products = [
   {
     id: "travel-sync",
     name: "TravelSync",
-    accent: "#2EE8D4",
-    accentRgb: "46 232 212",
+    accent: "#FFD60A",
+    accentRgb: "255 214 10",
     tagline: "Every journey, perfectly in rhythm.",
     personality: "The wanderer — confident, worldly, always three steps ahead.",
     connection:
@@ -17,8 +17,8 @@ export const products = [
   {
     id: "photo-sync",
     name: "PhotoSync",
-    accent: "#FF4D8D",
-    accentRgb: "255 77 141",
+    accent: "#FFE566",
+    accentRgb: "255 229 102",
     tagline: "Memories that move with you.",
     personality: "The curator — nostalgic yet futuristic, obsessed with beautiful recall.",
     connection:
@@ -27,8 +27,8 @@ export const products = [
   {
     id: "brain-sync",
     name: "BrainSync",
-    accent: "#9B7BFF",
-    accentRgb: "155 123 255",
+    accent: "#FFEB3B",
+    accentRgb: "255 235 59",
     tagline: "Think faster. Remember everything.",
     personality: "The oracle — calm, brilliant, quietly omniscient.",
     connection:
@@ -37,8 +37,8 @@ export const products = [
   {
     id: "fluency-sync",
     name: "FluencySync",
-    accent: "#FFB84A",
-    accentRgb: "255 184 74",
+    accent: "#FFC400",
+    accentRgb: "255 196 0",
     tagline: "Fluency without friction.",
     personality: "The polyglot — playful, encouraging, never patronizing.",
     connection:
@@ -47,8 +47,8 @@ export const products = [
   {
     id: "steady-sync",
     name: "SteadySync",
-    accent: "#3DDB8C",
-    accentRgb: "61 219 140",
+    accent: "#F5A623",
+    accentRgb: "245 166 35",
     tagline: "Balance that actually sticks.",
     personality: "The anchor — warm, grounded, scientifically gentle.",
     connection:
@@ -57,8 +57,8 @@ export const products = [
   {
     id: "subtracker",
     name: "Subtracker",
-    accent: "#FF6B4A",
-    accentRgb: "255 107 74",
+    accent: "#E6B800",
+    accentRgb: "230 184 0",
     tagline: "Subscriptions, finally under control.",
     personality: "The guardian — sharp, protective, delightfully ruthless with waste.",
     connection:
@@ -67,8 +67,8 @@ export const products = [
   {
     id: "seat-sync",
     name: "SeatSync",
-    accent: "#4DA3FF",
-    accentRgb: "77 163 255",
+    accent: "#FFF176",
+    accentRgb: "255 241 118",
     tagline: "Live moments, locked in.",
     personality: "The maestro — electric, social, always front-row.",
     connection:
@@ -79,17 +79,20 @@ export const products = [
 export type Product = (typeof products)[number];
 
 export const colors = {
-  void: "#030308",
-  voidElevated: "#0A0A12",
-  voidSurface: "#12121C",
-  pearl: "#F4F2FF",
-  pearlMuted: "#A8A4C4",
-  pearlDim: "#6B6788",
-  syncCore: "#E8E4FF",
-  iris: "#7B5CFF",
-  irisGlow: "#9B7BFF",
-  border: "rgba(244, 242, 255, 0.08)",
-  borderStrong: "rgba(244, 242, 255, 0.16)",
+  void: "#000000",
+  voidElevated: "#0A0A0A",
+  voidSurface: "#111111",
+  pearl: "#F5F5F7",
+  pearlMuted: "#A1A1A6",
+  pearlDim: "#6E6E73",
+  syncCore: "#FFF9E6",
+  honey: "#FFD60A",
+  honeyGlow: "#FFE566",
+  honeyDeep: "#E6B800",
+  iris: "#FFD60A",
+  irisGlow: "#FFE566",
+  border: "rgba(255, 255, 255, 0.12)",
+  borderStrong: "rgba(255, 214, 10, 0.35)",
 } as const;
 
 export const typography = {

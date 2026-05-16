@@ -46,7 +46,7 @@ export function SyncCoreVisual() {
   return (
     <motion.div
       ref={containerRef}
-      className="relative mx-auto aspect-square w-full max-w-[min(92vw,520px)]"
+      className="relative mx-auto aspect-square w-full max-w-[min(92vw,480px)]"
       style={{
         y: reduceMotion ? 0 : visualY,
         scale: reduceMotion ? 1 : visualScale,
@@ -61,8 +61,8 @@ export function SyncCoreVisual() {
       >
         <defs>
           <radialGradient id="core-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgb(232 228 255)" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="rgb(123 92 255)" stopOpacity="0" />
+            <stop offset="0%" stopColor="rgb(255 235 150)" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="rgb(255 214 10)" stopOpacity="0" />
           </radialGradient>
         </defs>
 
@@ -73,7 +73,7 @@ export function SyncCoreVisual() {
             y1={0}
             x2={x}
             y2={y}
-            stroke={`rgb(${product.accentRgb} / 0.25)`}
+            stroke={`rgb(${product.accentRgb} / 0.35)`}
             strokeWidth="1"
             strokeDasharray="4 6"
             initial={{ opacity: 0 }}
@@ -90,7 +90,7 @@ export function SyncCoreVisual() {
           cx={0}
           cy={0}
           r={ORBIT_RADIUS}
-          stroke="rgba(244, 242, 255, 0.06)"
+          stroke="rgba(255, 214, 10, 0.12)"
           strokeWidth="1"
           fill="none"
           animate={reduceMotion ? undefined : { rotate: 360 }}
@@ -101,7 +101,7 @@ export function SyncCoreVisual() {
           cx={0}
           cy={0}
           r={ORBIT_RADIUS * 0.65}
-          stroke="rgba(123, 92, 255, 0.15)"
+          stroke="rgba(255, 229, 102, 0.2)"
           strokeWidth="1"
           strokeDasharray="2 8"
           fill="none"
@@ -119,20 +119,26 @@ export function SyncCoreVisual() {
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         >
           <motion.div
-            className="absolute inset-0 rounded-full bg-iris/30 blur-2xl"
+            className="absolute inset-0 rounded-full bg-honey/35 blur-2xl"
             animate={
               reduceMotion
                 ? undefined
-                : { scale: [1, 1.15, 1], opacity: [0.4, 0.7, 0.4] }
+                : { scale: [1, 1.15, 1], opacity: [0.4, 0.75, 0.4] }
             }
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute inset-2 rounded-full border border-white/20 bg-gradient-to-br from-white/15 to-white/[0.02] backdrop-blur-md"
+            className="absolute inset-2 rounded-full glass-card"
             animate={
               reduceMotion
                 ? undefined
-                : { boxShadow: ["0 0 40px rgb(123 92 255 / 0.3)", "0 0 80px rgb(155 123 255 / 0.5)", "0 0 40px rgb(123 92 255 / 0.3)"] }
+                : {
+                    boxShadow: [
+                      "0 0 40px rgb(255 214 10 / 0.35)",
+                      "0 0 80px rgb(255 229 102 / 0.55)",
+                      "0 0 40px rgb(255 214 10 / 0.35)",
+                    ],
+                  }
             }
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
@@ -140,7 +146,7 @@ export function SyncCoreVisual() {
             <span className="font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-[0.25em] text-pearl-dim">
               Sync
             </span>
-            <span className="font-[family-name:var(--font-syne)] text-xl font-bold text-sync-core md:text-2xl">
+            <span className="text-xl font-bold text-honey md:text-2xl">
               Core
             </span>
           </div>
@@ -168,7 +174,7 @@ export function SyncCoreVisual() {
           >
             <motion.button
               type="button"
-              className="group relative flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/60"
+              className="group relative flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-honey/50"
               style={{
                 width: NODE_SIZE * 2,
                 height: NODE_SIZE * 2,
@@ -181,15 +187,15 @@ export function SyncCoreVisual() {
                 style={{ backgroundColor: product.accent }}
               />
               <span
-                className="relative block rounded-full border border-white/30"
+                className="relative block rounded-full border border-honey/40"
                 style={{
                   width: NODE_SIZE,
                   height: NODE_SIZE,
                   backgroundColor: product.accent,
-                  boxShadow: `0 0 20px rgb(${product.accentRgb} / 0.6)`,
+                  boxShadow: `0 0 20px rgb(${product.accentRgb} / 0.7)`,
                 }}
               />
-              <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full border border-white/10 bg-void-elevated/90 px-2.5 py-1 text-[10px] font-medium text-pearl opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+              <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-full glass-pill px-2.5 py-1 text-[10px] font-medium text-pearl opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                 {product.name}
               </span>
             </motion.button>
@@ -197,7 +203,7 @@ export function SyncCoreVisual() {
         ))}
       </motion.div>
 
-      <div className="pointer-events-none absolute inset-0 mask-fade-radial bg-gradient-to-b from-transparent via-iris/5 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 mask-fade-radial bg-gradient-to-b from-transparent via-honey/5 to-transparent" />
     </motion.div>
   );
 }

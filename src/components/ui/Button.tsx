@@ -13,10 +13,9 @@ interface ButtonProps extends HTMLMotionProps<"button"> {
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-iris text-pearl glow-iris border border-white/10 hover:border-white/20",
-  secondary:
-    "glass-panel text-pearl hover:bg-white/[0.06] border-white/10",
-  ghost: "text-pearl-muted hover:text-pearl hover:bg-white/[0.04]",
+    "bg-honey text-void font-semibold glow-honey border border-honey-glow/40 hover:bg-honey-glow",
+  secondary: "glass-card text-pearl hover:border-honey/30",
+  ghost: "text-pearl-muted hover:text-pearl hover:bg-white/[0.06]",
 };
 
 export function Button({
@@ -31,8 +30,8 @@ export function Button({
       whileTap={{ scale: 0.98 }}
       transition={motionTokens.springSnappy}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium tracking-wide transition-colors",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/60 focus-visible:ring-offset-2 focus-visible:ring-offset-void",
+        "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium tracking-tight transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-honey/50 focus-visible:ring-offset-2 focus-visible:ring-offset-void",
         variants[variant],
         className,
       )}

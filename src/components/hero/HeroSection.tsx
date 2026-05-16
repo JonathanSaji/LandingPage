@@ -64,11 +64,11 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 backdrop-blur-sm"
+              className="mb-6 inline-flex items-center gap-2 rounded-full glass-pill px-4 py-1.5"
             >
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-iris opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-iris-glow" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-honey opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-honey-glow" />
               </span>
               <span className="font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.2em] text-pearl-muted">
                 Ecosystem launch · 7 products live
@@ -77,7 +77,7 @@ export function HeroSection() {
 
             <motion.h1
               id="hero-heading"
-              className="text-hero-display font-[family-name:var(--font-syne)] font-bold text-pearl"
+              className="text-hero-display font-[family-name:var(--font-display)] font-bold text-pearl"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -89,7 +89,7 @@ export function HeroSection() {
                     variants={wordVariants}
                     className={
                       i === 2 || i === 3
-                        ? "bg-gradient-to-r from-sync-core via-iris-glow to-iris bg-clip-text text-transparent"
+                        ? "text-gradient-honey"
                         : undefined
                     }
                   >
@@ -109,7 +109,7 @@ export function HeroSection() {
               SubSync isn&apos;t another app — it&apos;s a connected universe where
               travel, memory, mind, language, wellness, money, and live experiences
               pulse through one intelligent{" "}
-              <span className="text-sync-core">Sync Core</span>.
+              <span className="font-medium text-honey">Sync Core</span>.
             </motion.p>
 
             <motion.div
@@ -143,7 +143,7 @@ export function HeroSection() {
               {products.map((product) => (
                 <li key={product.id}>
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.02] px-3 py-1 text-xs text-pearl-dim transition-colors hover:border-white/12 hover:text-pearl-muted"
+                    className="inline-flex items-center gap-1.5 rounded-full glass-pill px-3 py-1 text-xs text-pearl-dim transition-colors hover:border-honey/25 hover:text-pearl-muted"
                   >
                     <span
                       className="h-1.5 w-1.5 rounded-full"
@@ -162,8 +162,10 @@ export function HeroSection() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-iris/10 via-transparent to-transparent blur-3xl" />
+            <motion.div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-honey/15 via-transparent to-transparent blur-3xl" />
+            <motion.div className="relative rounded-[2rem] glass-panel p-4 specular-top md:p-6">
             <SyncCoreVisual />
+            </motion.div>
             <motion.p
               className="mt-6 text-center font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.22em] text-pearl-dim"
               initial={{ opacity: 0 }}
@@ -185,11 +187,11 @@ export function HeroSection() {
           Scroll to explore
         </span>
         <motion.div
-          className="flex h-10 w-6 items-start justify-center rounded-full border border-white/15 p-1.5"
+          className="flex h-10 w-6 items-start justify-center rounded-full glass-pill p-1.5"
           animate={reduceMotion ? undefined : { y: [0, 6, 0] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
         >
-          <motion.span className="h-2 w-1 rounded-full bg-iris-glow" />
+          <motion.span className="h-2 w-1 rounded-full bg-honey" />
         </motion.div>
       </motion.div>
 

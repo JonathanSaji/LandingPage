@@ -15,18 +15,8 @@ const navLinks = [
 export function SiteNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { scrollY } = useScroll();
-  const navBg = useTransform(scrollY, [0, 80], [0, 1]);
-  const backgroundColor = useTransform(
-    navBg,
-    (v) => `rgba(10, 10, 18, ${v * 0.85})`,
-  );
-  const borderColor = useTransform(
-    navBg,
-    (v) => `rgba(244, 242, 255, ${v * 0.08})`,
-  );
-  const backdropFilter = useTransform(navBg, (v) =>
-    v > 0.1 ? "blur(20px)" : "blur(0px)",
-  );
+  const scrolled = useTransform(scrollY, [0, 60], [0, 1]);
+  const navOpacity = useTransform(scrolled, [0, 1], [0.92, 1]);
 
   return (
     <motion.header
@@ -36,22 +26,21 @@ export function SiteNav() {
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
     >
       <motion.div
-        className="mx-auto mt-4 flex max-w-[1400px] items-center justify-between rounded-2xl border px-5 py-3"
-        style={{
-          backgroundColor,
-          borderColor,
-          backdropFilter,
-        }}
+        className={cn(
+          "relative mx-auto mt-4 flex max-w-[1400px] items-center justify-between overflow-hidden rounded-2xl px-5 py-3 specular-top",
+          "glass-nav",
+        )}
+        style={{ opacity: navOpacity }}
       >
         <a
           href="#"
-          className="group flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-iris/60 focus-visible:ring-offset-2 focus-visible:ring-offset-void rounded-lg"
+          className="group flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-honey/50 focus-visible:ring-offset-2 focus-visible:ring-offset-void"
         >
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
-            <span className="absolute inset-0 rounded-xl bg-iris/20 blur-md opacity-0 transition-opacity group-hover:opacity-100" />
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-xl glass-pill">
+            <span className="absolute inset-0 rounded-xl bg-honey/25 blur-md opacity-0 transition-opacity group-hover:opacity-100" />
             <svg
               viewBox="0 0 24 24"
-              className="relative h-4 w-4 text-sync-core"
+              className="relative h-4 w-4 text-honey"
               fill="none"
               stroke="currentColor"
               strokeWidth="1.5"
@@ -61,8 +50,8 @@ export function SiteNav() {
               <path d="M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
             </svg>
           </span>
-          <span className="font-[family-name:var(--font-syne)] text-lg font-bold tracking-tight text-pearl">
-            Sub<span className="text-iris-glow">Sync</span>
+          <span className="text-lg font-semibold tracking-tight text-pearl">
+            Sub<span className="text-honey">Sync</span>
           </span>
         </a>
 
@@ -92,13 +81,13 @@ export function SiteNav() {
 
         <button
           type="button"
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-xl glass-pill md:hidden"
           aria-expanded={mobileOpen}
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           onClick={() => setMobileOpen((o) => !o)}
         >
           <span className="sr-only">Menu</span>
-          <motion.div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
             <span
               className={cn(
                 "h-0.5 w-5 bg-pearl transition-transform",
@@ -117,7 +106,7 @@ export function SiteNav() {
                 mobileOpen && "-translate-y-2 -rotate-45",
               )}
             />
-          </motion.div>
+          </div>
         </button>
       </motion.div>
 
@@ -127,7 +116,7 @@ export function SiteNav() {
             initial={{ opacity: 0, y: -8, height: 0 }}
             animate={{ opacity: 1, y: 0, height: "auto" }}
             exit={{ opacity: 0, y: -8, height: 0 }}
-            className="mx-auto mt-2 max-w-[1400px] overflow-hidden rounded-2xl glass-panel md:hidden"
+            className="relative mx-auto mt-2 max-w-[1400px] overflow-hidden rounded-2xl glass-panel specular-top md:hidden"
             aria-label="Mobile"
           >
             <ul className="flex flex-col gap-1 p-4">
@@ -135,14 +124,14 @@ export function SiteNav() {
                 <li key={link.href}>
                   <a
                     href={link.href}
-                    className="block rounded-xl px-4 py-3 text-pearl-muted hover:bg-white/[0.04] hover:text-pearl"
+                    className="block rounded-xl px-4 py-3 text-pearl-muted transition-colors hover:bg-white/[0.06] hover:text-pearl"
                     onClick={() => setMobileOpen(false)}
                   >
                     {link.label}
                   </a>
                 </li>
               ))}
-              <li className="mt-2 flex flex-col gap-2 border-t border-white/[0.06] pt-4">
+              <li className="mt-2 flex flex-col gap-2 border-t border-white/[0.08] pt-4">
                 <Button variant="secondary" className="w-full">
                   Sign in
                 </Button>
