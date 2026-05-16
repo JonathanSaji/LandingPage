@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { AppLogo } from "@/components/brand/AppLogo";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Reveal } from "@/components/ui/Reveal";
 import { products } from "@/lib/design-system";
@@ -97,9 +98,7 @@ export function EcosystemSection() {
               }
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             >
-              <span className="text-2xl font-bold text-honey md:text-3xl">
-                Core
-              </span>
+              <AppLogo size="md" glow animate />
             </motion.div>
 
             <div className="relative mx-auto grid w-full max-w-4xl grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-7 md:gap-4">

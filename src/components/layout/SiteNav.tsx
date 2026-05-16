@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { useState } from "react";
+import { AppLogoLockup } from "@/components/brand/AppLogo";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -34,25 +35,9 @@ export function SiteNav() {
       >
         <a
           href="#"
-          className="group flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-honey/50 focus-visible:ring-offset-2 focus-visible:ring-offset-void"
+          className="group rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-honey/50 focus-visible:ring-offset-2 focus-visible:ring-offset-void"
         >
-          <span className="relative flex h-9 w-9 items-center justify-center rounded-xl glass-pill">
-            <span className="absolute inset-0 rounded-xl bg-honey/25 blur-md opacity-0 transition-opacity group-hover:opacity-100" />
-            <svg
-              viewBox="0 0 24 24"
-              className="relative h-4 w-4 text-honey"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-              <path d="M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-            </svg>
-          </span>
-          <span className="text-lg font-semibold tracking-tight text-pearl">
-            Sub<span className="text-honey">Sync</span>
-          </span>
+          <AppLogoLockup logoSize="sm" className="transition-opacity group-hover:opacity-90" />
         </a>
 
         <nav className="hidden items-center gap-8 md:flex" aria-label="Main">

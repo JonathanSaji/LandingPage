@@ -7,6 +7,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useRef } from "react";
+import { AppLogo } from "@/components/brand/AppLogo";
 import { Button } from "@/components/ui/Button";
 import { SyncCoreVisual } from "@/components/hero/SyncCoreVisual";
 import { products } from "@/lib/design-system";
@@ -64,12 +65,9 @@ export function HeroSection() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full glass-pill px-4 py-1.5"
+              className="mb-6 inline-flex items-center gap-3 rounded-full glass-pill py-1.5 pl-1.5 pr-4"
             >
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-honey opacity-60" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-honey-glow" />
-              </span>
+              <AppLogo size="sm" glow />
               <span className="font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.2em] text-pearl-muted">
                 Ecosystem launch · 7 products live
               </span>
@@ -162,10 +160,13 @@ export function HeroSection() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
           >
-            <motion.div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-honey/15 via-transparent to-transparent blur-3xl" />
-            <motion.div className="relative rounded-[2rem] glass-panel p-4 specular-top md:p-6">
-            <SyncCoreVisual />
-            </motion.div>
+            <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-honey/15 via-transparent to-transparent blur-3xl" />
+            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.07]">
+              <AppLogo size="hero" />
+            </div>
+            <div className="relative rounded-[2rem] glass-panel p-4 specular-top md:p-6">
+              <SyncCoreVisual />
+            </div>
             <motion.p
               className="mt-6 text-center font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.22em] text-pearl-dim"
               initial={{ opacity: 0 }}

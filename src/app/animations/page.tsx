@@ -20,6 +20,7 @@ import {
   TextScramble,
   TiltCard,
 } from "@/components/animations";
+import { AppLogoLockup } from "@/components/brand/AppLogo";
 import { Button } from "@/components/ui/Button";
 import { AmbientBackground } from "@/components/layout/AmbientBackground";
 
@@ -71,7 +72,8 @@ export default function AnimationsPage() {
               >
                 ← Back to landing
               </Link>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight text-pearl md:text-4xl">
+              <AppLogoLockup logoSize="md" className="mt-3" />
+              <h1 className="mt-3 text-3xl font-bold tracking-tight text-pearl md:text-4xl">
                 Animation <span className="text-gradient-honey">Playground</span>
               </h1>
               <p className="mt-2 max-w-xl text-pearl-muted">

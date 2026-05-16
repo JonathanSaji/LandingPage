@@ -1,9 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { AppLogo } from "@/components/brand/AppLogo";
 import { Button } from "@/components/ui/Button";
-import { products } from "@/lib/design-system";
-
 export function CTASection() {
   const reduceMotion = useReducedMotion();
 
@@ -45,23 +44,13 @@ export function CTASection() {
 
           <div className="relative px-8 py-16 text-center md:px-16 md:py-24">
             <motion.div
-              className="mx-auto mb-8 flex flex-wrap justify-center gap-2"
-              initial={reduceMotion ? false : { opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              className="mx-auto mb-8 flex justify-center"
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             >
-              {products.map((product) => (
-                <span
-                  key={product.id}
-                  className="h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor: product.accent,
-                    boxShadow: `0 0 8px rgb(${product.accentRgb} / 0.7)`,
-                  }}
-                  aria-hidden
-                />
-              ))}
+              <AppLogo size="xl" glow animate />
             </motion.div>
 
             <h2

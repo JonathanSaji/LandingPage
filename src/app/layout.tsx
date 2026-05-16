@@ -19,10 +19,15 @@ export const metadata: Metadata = {
   title: "SubSync — Seven apps. One living ecosystem.",
   description:
     "SubSync connects TravelSync, PhotoSync, BrainSync, and four more intelligent platforms into one seamless productivity universe.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
   openGraph: {
     title: "SubSync",
     description: "Seven apps. One sync. Infinite possibility.",
     type: "website",
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "SubSync" }],
   },
 };
 

@@ -1,3 +1,4 @@
+import { AppLogoLockup } from "@/components/brand/AppLogo";
 import { products } from "@/lib/design-system";
 
 const footerLinks = {
@@ -30,23 +31,8 @@ export function SiteFooter() {
         <div className="mx-auto max-w-[1400px] px-[var(--spacing-container)] py-16 md:py-20">
           <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
             <div className="lg:col-span-2">
-              <a
-                href="#"
-                className="inline-flex items-center gap-2.5 text-xl font-semibold tracking-tight text-pearl"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl glass-pill">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 text-honey"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                  >
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-                  </svg>
-                </span>
-                Sub<span className="text-honey">Sync</span>
+              <a href="#" className="inline-flex transition-opacity hover:opacity-90">
+                <AppLogoLockup logoSize="sm" />
               </a>
               <p className="mt-4 max-w-sm text-sm leading-relaxed text-pearl-muted">
                 Seven specialized apps orbiting one intelligent core. Travel,

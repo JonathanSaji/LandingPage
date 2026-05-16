@@ -7,6 +7,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useMemo, useRef } from "react";
+import { AppLogo } from "@/components/brand/AppLogo";
 import { products } from "@/lib/design-system";
 
 const ORBIT_RADIUS = 148;
@@ -128,7 +129,7 @@ export function SyncCoreVisual() {
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute inset-2 rounded-full glass-card"
+            className="absolute inset-0 flex items-center justify-center rounded-full glass-card"
             animate={
               reduceMotion
                 ? undefined
@@ -142,12 +143,10 @@ export function SyncCoreVisual() {
             }
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           />
-          <div className="relative z-10 flex flex-col items-center">
-            <span className="font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-[0.25em] text-pearl-dim">
-              Sync
-            </span>
-            <span className="text-xl font-bold text-honey md:text-2xl">
-              Core
+          <div className="relative z-10 flex flex-col items-center gap-1">
+            <AppLogo size="lg" glow animate priority />
+            <span className="font-[family-name:var(--font-mono)] text-[9px] uppercase tracking-[0.28em] text-pearl-dim">
+              Sync Core
             </span>
           </div>
         </motion.div>
