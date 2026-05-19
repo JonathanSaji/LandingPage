@@ -1,10 +1,9 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { AppLogo } from "@/components/brand/AppLogo";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Reveal } from "@/components/ui/Reveal";
-import { products } from "@/lib/design-system";
+import { InteractiveEcosystemGraph } from "@/components/ecosystem/InteractiveEcosystemGraph";
 
 const flowSteps = [
   {
@@ -83,83 +82,7 @@ export function EcosystemSection() {
             viewport={{ once: true }}
             transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <motion.div
-              className="relative mb-10 flex h-24 w-24 items-center justify-center rounded-full glass-card md:h-28 md:w-28"
-              animate={
-                reduceMotion
-                  ? undefined
-                  : {
-                      boxShadow: [
-                        "0 0 60px rgb(255 214 10 / 0.3)",
-                        "0 0 100px rgb(255 229 102 / 0.45)",
-                        "0 0 60px rgb(255 214 10 / 0.3)",
-                      ],
-                    }
-              }
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <AppLogo size="md" glow animate />
-            </motion.div>
-
-            <div className="relative mx-auto grid w-full max-w-4xl grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-7 md:gap-4">
-              {products.map((product, i) => (
-                <motion.div
-                  key={product.id}
-                  className="group flex flex-col items-center gap-2"
-                  initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{
-                    delay: 0.1 + i * 0.06,
-                    duration: 0.6,
-                    ease: [0.16, 1, 0.3, 1],
-                  }}
-                >
-                  <motion.div
-                    className="relative flex h-12 w-12 items-center justify-center rounded-2xl glass-pill transition-colors group-hover:border-honey/30 md:h-14 md:w-14"
-                    whileHover={{ scale: 1.08, y: -2 }}
-                    style={{
-                      boxShadow: `0 0 30px -8px rgb(${product.accentRgb} / 0.5)`,
-                    }}
-                  >
-                    <span
-                      className="h-3 w-3 rounded-full md:h-3.5 md:w-3.5"
-                      style={{
-                        backgroundColor: product.accent,
-                        boxShadow: `0 0 16px rgb(${product.accentRgb} / 0.8)`,
-                      }}
-                    />
-                  </motion.div>
-                  <span className="text-center text-[10px] font-medium text-pearl-dim transition-colors group-hover:text-pearl-muted md:text-xs">
-                    {product.name}
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-
-            <svg
-              className="pointer-events-none absolute inset-0 h-full w-full opacity-25"
-              aria-hidden
-            >
-              {products.map((_, i) => {
-                const angle = (360 / products.length) * i - 90;
-                const rad = (angle * Math.PI) / 180;
-                const x = 50 + Math.cos(rad) * 38;
-                const y = 50 + Math.sin(rad) * 32;
-                return (
-                  <line
-                    key={i}
-                    x1="50%"
-                    y1="42%"
-                    x2={`${x}%`}
-                    y2={`${y}%`}
-                    stroke="rgba(255, 214, 10, 0.35)"
-                    strokeWidth="0.5"
-                    strokeDasharray="4 4"
-                  />
-                );
-              })}
-            </svg>
+            <InteractiveEcosystemGraph />
           </motion.div>
         </motion.div>
 

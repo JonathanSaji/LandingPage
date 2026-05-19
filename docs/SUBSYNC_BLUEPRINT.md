@@ -74,7 +74,7 @@
 | **BrainSync** | `#9B7BFF` Electric Violet | *Think faster. Remember everything.* | The oracle — calm, omniscient | **Neural hub** — all apps feed insights here |
 | **FluencySync** | `#FFB84A` Solar Amber | *Fluency without friction.* | The polyglot — playful, encouraging | Vocabulary from travel + notes |
 | **SteadySync** | `#3DDB8C` Verdant Mint | *Balance that actually sticks.* | The anchor — warm, grounded | Routines from goals + travel schedules |
-| **Subtracker** | `#FF6B4A` Ember Coral | *Subscriptions, finally under control.* | The guardian — sharp, protective | Spend → BrainSync budgets |
+| **TrackerSync** | `#FF6B4A` Ember Coral | *Subscriptions, finally under control.* | The guardian — sharp, protective | Spend → BrainSync budgets |
 | **SeatSync** | `#4DA3FF` Cobalt Pulse | *Live moments, locked in.* | The maestro — electric, social | Events ↔ Travel + Photo |
 
 ---
