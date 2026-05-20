@@ -7,6 +7,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { useRef } from "react";
+import Image from "next/image";
 import { AppLogo } from "@/components/brand/AppLogo";
 import { Button } from "@/components/ui/Button";
 import { SyncCoreVisual } from "@/components/hero/SyncCoreVisual";
@@ -140,15 +141,21 @@ export function HeroSection() {
             >
               {products.map((product) => (
                 <li key={product.id}>
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full glass-pill px-3 py-1 text-xs text-pearl-dim transition-colors hover:border-honey/25 hover:text-pearl-muted"
+                  <motion.div
+                    className="inline-flex items-center gap-1.5 rounded-full glass-pill px-2 py-1 text-xs text-pearl-muted transition-colors hover:border-honey/25 hover:text-pearl"
+                    whileHover={{ scale: 1.05 }}
                   >
-                    <span
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ backgroundColor: product.accent }}
-                    />
-                    {product.name}
-                  </span>
+                    {product.logo && (
+                      <Image
+                        src={product.logo}
+                        alt={product.name}
+                        width={20}
+                        height={20}
+                        className="h-5 w-5 object-contain"
+                      />
+                    )}
+                    <span>{product.name}</span>
+                  </motion.div>
                 </li>
               ))}
             </motion.ul>
