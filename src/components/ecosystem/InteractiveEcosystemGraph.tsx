@@ -109,7 +109,6 @@ export function InteractiveEcosystemGraph() {
         return (
           <motion.div
             key={product.id}
-            layoutId={`product-node-${product.id}`}
             className="absolute"
             style={{
               x: position.x,
@@ -204,7 +203,6 @@ export function InteractiveEcosystemGraph() {
 
             {/* Detail card */}
             <motion.article
-              layoutId={`product-node-${selectedProduct.id}`}
               className="relative z-50 w-full max-w-2xl overflow-hidden rounded-3xl glass-panel p-8 specular-top md:p-12"
               initial={
                 reduceMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 }

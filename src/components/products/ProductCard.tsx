@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import type { Product } from "@/lib/design-system";
 import { cn } from "@/lib/utils";
@@ -12,6 +14,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, featured, index = 0 }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
+  const [imageError, setImageError] = useState(false);
 
   return (
     <motion.article
@@ -39,20 +42,32 @@ export function ProductCard({ product, featured, index = 0 }: ProductCardProps) 
       <div className="relative flex items-start justify-between gap-4">
         <div
           className={cn(
-            "flex items-center justify-center rounded-xl glass-pill",
+            "relative flex items-center justify-center overflow-hidden rounded-xl glass-pill",
             featured ? "h-14 w-14" : "h-11 w-11",
           )}
           style={{
             boxShadow: `0 0 24px -6px rgb(${product.accentRgb} / 0.5)`,
           }}
         >
-          <span
-            className={cn("rounded-full", featured ? "h-4 w-4" : "h-3 w-3")}
-            style={{
-              backgroundColor: product.accent,
-              boxShadow: `0 0 12px rgb(${product.accentRgb} / 0.8)`,
-            }}
-          />
+          {product.logo && !imageError ? (
+            <Image
+              src={product.logo}
+              alt={product.name}
+              width={featured ? 56 : 44}
+              height={featured ? 56 : 44}
+              className="h-full w-full object-contain p-1"
+              priority
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <span
+              className={cn("rounded-full", featured ? "h-4 w-4" : "h-3 w-3")}
+              style={{
+                backgroundColor: product.accent,
+                boxShadow: `0 0 12px rgb(${product.accentRgb} / 0.8)`,
+              }}
+            />
+          )}
         </div>
         <span className="font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-[0.18em] text-pearl-dim">
           App {String(index + 1).padStart(2, "0")}

@@ -7,6 +7,7 @@ export const products = [
   {
     id: "travel-sync",
     name: "TravelSync",
+    logo: "/TravelSync.png",
     accent: "#FFD60A",
     accentRgb: "255 214 10",
     tagline: "Every journey, perfectly in rhythm.",
@@ -17,6 +18,7 @@ export const products = [
   {
     id: "photo-sync",
     name: "PhotoSync",
+    logo: "/PhotoSync.png",
     accent: "#FFE566",
     accentRgb: "255 229 102",
     tagline: "Memories that move with you.",
@@ -27,6 +29,7 @@ export const products = [
   {
     id: "brain-sync",
     name: "BrainSync",
+    logo: "/BrainSync.png",
     accent: "#FFEB3B",
     accentRgb: "255 235 59",
     tagline: "Think faster. Remember everything.",
@@ -37,6 +40,7 @@ export const products = [
   {
     id: "fluency-sync",
     name: "FluencySync",
+    logo: "/FluencySync.png",
     accent: "#FFC400",
     accentRgb: "255 196 0",
     tagline: "Fluency without friction.",
@@ -47,6 +51,7 @@ export const products = [
   {
     id: "steady-sync",
     name: "SteadySync",
+    logo: "/SteadySync.png",
     accent: "#F5A623",
     accentRgb: "245 166 35",
     tagline: "Balance that actually sticks.",
@@ -57,6 +62,7 @@ export const products = [
   {
     id: "subtracker",
     name: "Subtracker",
+    logo: "/SubSync.png",
     accent: "#E6B800",
     accentRgb: "230 184 0",
     tagline: "Subscriptions, finally under control.",
@@ -67,6 +73,7 @@ export const products = [
   {
     id: "seat-sync",
     name: "SeatSync",
+    logo: "/SeatSync.png",
     accent: "#FFF176",
     accentRgb: "255 241 118",
     tagline: "Live moments, locked in.",
