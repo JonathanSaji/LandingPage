@@ -120,9 +120,9 @@ Adapted from the provided `radial-orbital-timeline.tsx`. Changes from the origin
     date:'Focus', content:'Focus, amplified. Deep work sessions powered by your personal rhythm.',
     category:'Focus', relatedIds:[1,4], status:'in-progress', energy:72 },
 
-  { id:4, title:'SeatSync',    color:'#F59E0B', icon: BookOpen,
-    date:'Learning', content:'Learn smarter, every day. Courses, notes, and retention — all synced.',
-    category:'Learning', relatedIds:[3,6], status:'in-progress', energy:65 },
+  { id:4, title:'SeatSync',    color:'#F59E0B', icon: Calendar,
+    date:'Scheduling', content:'Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.',
+    category:'Scheduling', relatedIds:[3,6], status:'in-progress', energy:65 },
 
   { id:5, title:'PhotoSync',   color:'#EC4899', icon: Camera,
     date:'Memory', content:'Memories, beautifully organized. Every photo in context.',
