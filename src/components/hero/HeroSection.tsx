@@ -141,12 +141,13 @@ export function HeroSection() {
         </span>
         <div className="flex items-center gap-8">
           {["Apps", "Features", "Pricing"].map((link) => (
-            <button
+            <a
               key={link}
+              href={`#${link.toLowerCase()}`}
               className="font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
             >
               {link}
-            </button>
+            </a>
           ))}
         </div>
         <button className="font-heading text-sm font-bold bg-[#FFD700] text-black px-5 py-2 rounded-lg hover:bg-[#ffe033] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black transition-transform duration-150">
@@ -165,22 +166,17 @@ export function HeroSection() {
             The Sync Core Ecosystem
           </motion.p>
 
-          <div className="flex flex-col">
-            <motion.h1
-              className="font-heading font-black text-white leading-[0.95] tracking-[-0.03em]"
-              style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
-              {...fadeUp(0.4)}
-            >
+          <h1
+            className="font-heading font-black leading-[0.95] tracking-[-0.03em] flex flex-col"
+            style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
+          >
+            <motion.span className="text-white" {...fadeUp(0.4)}>
               Seven apps. Onesync.
-            </motion.h1>
-            <motion.h1
-              className="font-heading font-black text-[#FFD700] leading-[0.95] tracking-[-0.03em]"
-              style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
-              {...fadeUp(0.6)}
-            >
+            </motion.span>
+            <motion.span className="text-[#FFD700]" {...fadeUp(0.6)}>
               Infinite possibility.
-            </motion.h1>
-          </div>
+            </motion.span>
+          </h1>
 
           <motion.p
             className="font-body font-light text-[#94A3B8] text-[16px] leading-[1.75] max-w-[440px]"
