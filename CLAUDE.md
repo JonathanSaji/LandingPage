@@ -2,6 +2,8 @@
 
 > Cinematic landing page for the SubSync ecosystem. Next.js 15 · Tailwind CSS v4 · Framer Motion 12.
 
+**Brand assets:** `docs/brand/` — logo files, color swatches, and the full brand guidelines sheet. Read these before any visual work.
+
 ---
 
 ## Project DNA

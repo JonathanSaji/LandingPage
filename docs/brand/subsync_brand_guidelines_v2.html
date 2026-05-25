@@ -1,0 +1,142 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#0a0a0a;color:#fff;font-family:'DM Sans',sans-serif;padding:40px 32px;}
+  .page{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:48px;}
+
+  .brand-header{border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:24px;}
+  .brand-title{font-family:'Poppins',sans-serif;font-size:13px;letter-spacing:0.18em;color:#FFD700;text-transform:uppercase;margin-bottom:6px;font-weight:700;}
+  .brand-name{font-family:'Poppins',sans-serif;font-size:48px;letter-spacing:-0.02em;color:#fff;line-height:1;font-weight:750;}
+  .brand-tagline{font-size:13px;color:#475569;margin-top:6px;font-weight:300;letter-spacing:0.02em;}
+
+  .section-label{font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#475569;font-weight:500;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06);}
+
+  .color-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .color-swatch{border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+  .swatch-block{height:56px;}
+  .swatch-info{padding:8px 10px;background:#111;border-top:1px solid rgba(255,255,255,0.06);}
+  .swatch-name{font-size:11px;font-weight:500;color:#e2e8f0;line-height:1.3;}
+  .swatch-hex{font-size:10px;color:#475569;font-family:monospace;margin-top:2px;}
+  .swatch-role{font-size:9px;color:#334155;margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;}
+
+  .type-stack{display:flex;flex-direction:column;gap:20px;}
+  .type-row{display:flex;align-items:baseline;gap:20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .type-row:last-child{border-bottom:none;padding-bottom:0;}
+  .type-meta{width:140px;flex-shrink:0;}
+  .type-meta-name{font-size:10px;color:#FFD700;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;}
+  .type-meta-spec{font-size:10px;color:#334155;margin-top:3px;font-family:monospace;line-height:1.6;}
+  .type-sample{flex:1;}
+
+  .spacing-row{display:flex;align-items:center;gap:16px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .spacing-bar-wrap{width:200px;}
+  .spacing-bar{height:6px;background:#FFD700;border-radius:3px;}
+  .spacing-label{font-size:11px;color:#94A3B8;font-family:monospace;}
+  .spacing-desc{font-size:11px;color:#334155;margin-left:auto;}
+
+  .motion-block{background:#111;border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;}
+  .motion-row{display:flex;align-items:center;gap:12px;}
+  .motion-label{font-size:10px;color:#475569;width:80px;flex-shrink:0;letter-spacing:0.06em;text-transform:uppercase;}
+  .motion-value{font-size:11px;color:#94A3B8;font-family:monospace;}
+  .motion-accent{color:#FFD700;}
+
+  .rule-list{display:flex;flex-direction:column;gap:8px;}
+  .rule-item{display:flex;align-items:flex-start;gap:10px;font-size:12px;color:#94A3B8;line-height:1.5;}
+  .rule-bullet{width:16px;height:16px;border-radius:50%;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.25);display:flex;align-items:center;justify-content:center;font-size:8px;color:#FFD700;flex-shrink:0;margin-top:1px;}
+
+  .footer-strip{border-top:1px solid rgba(255,255,255,0.06);padding-top:20px;display:flex;justify-content:space-between;align-items:center;}
+  .footer-wordmark{font-family:'Poppins',sans-serif;font-size:22px;letter-spacing:-0.02em;color:#FFD700;font-weight:900;}
+  .footer-meta{font-size:10px;color:#334155;text-align:right;line-height:1.6;}
+</style>
+
+<div class="page">
+
+  <div class="brand-header">
+    <div class="brand-title">Brand Guidelines</div>
+    <div class="brand-name">SubSync</div>
+    <div class="brand-tagline">Cyber-Glass Design System · v1.0 · Grade 12 CS Summative</div>
+  </div>
+
+  <div>
+    <div class="section-label">01 — Color Tokens</div>
+    <div class="color-grid">
+      <div class="color-swatch"><div class="swatch-block" style="background:#000000;"></div><div class="swatch-info"><div class="swatch-name">Canvas Black</div><div class="swatch-hex">#000000</div><div class="swatch-role">Page background</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#FFD700;"></div><div class="swatch-info"><div class="swatch-name">Cyber Yellow</div><div class="swatch-hex">#FFD700</div><div class="swatch-role">Primary accent / CTA</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#FFFFFF;"></div><div class="swatch-info"><div class="swatch-name">Pure White</div><div class="swatch-hex">#FFFFFF</div><div class="swatch-role">Headings / titles</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#94A3B8;"></div><div class="swatch-info"><div class="swatch-name">Cool Slate</div><div class="swatch-hex">#94A3B8</div><div class="swatch-role">Body copy / muted</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#475569;"></div><div class="swatch-info"><div class="swatch-name">Deep Slate</div><div class="swatch-hex">#475569</div><div class="swatch-role">Captions / hints</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);"></div><div class="swatch-info"><div class="swatch-name">Glass Surface</div><div class="swatch-hex">rgba(255,255,255,0.04)</div><div class="swatch-role">Card backgrounds</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);"></div><div class="swatch-info"><div class="swatch-name">Gold Tint</div><div class="swatch-hex">rgba(255,215,0,0.08)</div><div class="swatch-role">Accent fills / badges</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#111111;"></div><div class="swatch-info"><div class="swatch-name">Elevated Surface</div><div class="swatch-hex">#111111</div><div class="swatch-role">Raised cards / nav</div></div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">02 — Typography Scale</div>
+    <div class="type-stack">
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">Display</div><div class="type-meta-spec">Poppins 750<br>clamp(3rem,9vw,7rem)<br>tracking: -0.03em<br>leading: 0.95</div></div>
+        <div class="type-sample"><span style="font-family:'Poppins',sans-serif;font-size:52px;color:#fff;letter-spacing:-0.03em;line-height:0.95;font-weight:750;">Seven <span style="color:#FFD700;">Apps.</span></span></div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">Heading</div><div class="type-meta-spec">Poppins 700<br>28–36px<br>tracking: -0.02em</div></div>
+        <div class="type-sample"><span style="font-family:'Poppins',sans-serif;font-size:30px;color:#fff;letter-spacing:-0.02em;font-weight:700;">The Financial Engine</span></div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">Eyebrow</div><div class="type-meta-spec">DM Sans 500<br>11px<br>tracking: 0.14em<br>uppercase</div></div>
+        <div class="type-sample"><span style="font-size:11px;font-weight:500;color:#FFD700;letter-spacing:0.14em;text-transform:uppercase;">The Sync Core Ecosystem</span></div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">Body</div><div class="type-meta-spec">DM Sans 300<br>15–17px<br>leading: 1.75</div></div>
+        <div class="type-sample"><span style="font-size:14px;font-weight:300;color:#94A3B8;line-height:1.75;">SubSync isn't another app — it's a connected universe where travel, memory, and mind pulse through one intelligent Sync Core.</span></div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">Caption</div><div class="type-meta-spec">DM Sans 400<br>11–12px<br>tracking: 0.04em</div></div>
+        <div class="type-sample"><span style="font-size:11px;color:#475569;letter-spacing:0.04em;">Last synced 2 minutes ago · 7 apps active</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">03 — Spacing Tokens</div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="spacing-row"><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:8px;"></div></div><span class="spacing-label">4px — xs</span><span class="spacing-desc">Icon gaps, tight pairs</span></div>
+      <div class="spacing-row"><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:16px;"></div></div><span class="spacing-label">8px — sm</span><span class="spacing-desc">Badge padding, inline gaps</span></div>
+      <div class="spacing-row"><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:32px;"></div></div><span class="spacing-label">16px — md</span><span class="spacing-desc">Card inner padding</span></div>
+      <div class="spacing-row"><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:48px;"></div></div><span class="spacing-label">24px — lg</span><span class="spacing-desc">Section sub-gaps</span></div>
+      <div class="spacing-row"><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:64px;"></div></div><span class="spacing-label">32px — xl</span><span class="spacing-desc">Between components</span></div>
+      <div class="spacing-row"><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:96px;"></div></div><span class="spacing-label">48px — 2xl</span><span class="spacing-desc">Section vertical rhythm</span></div>
+      <div class="spacing-row"><div class="spacing-bar-wrap"><div class="spacing-bar" style="width:128px;"></div></div><span class="spacing-label">80px — 3xl</span><span class="spacing-desc">Major page sections</span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">04 — Motion &amp; Animation Rules</div>
+    <div class="rule-list">
+      <div class="rule-item"><div class="rule-bullet">1</div><span>Only animate <strong style="color:#e2e8f0;">transform</strong> and <strong style="color:#e2e8f0;">opacity</strong> — never transition-all, never color or width</span></div>
+      <div class="rule-item"><div class="rule-bullet">2</div><span>Entrance animations use <strong style="color:#e2e8f0;">cubic-bezier(0.16, 1, 0.3, 1)</strong> — overshoot spring feel</span></div>
+      <div class="rule-item"><div class="rule-bullet">3</div><span>Stagger delays: eyebrow 0.15s → headline lines 0.4/0.6/0.8s → subhead 1.2s → CTAs 1.5s</span></div>
+      <div class="rule-item"><div class="rule-bullet">4</div><span>Scroll reveals: <strong style="color:#e2e8f0;">translateY(40px) → 0</strong> with opacity 0→1, triggered at 80% viewport threshold</span></div>
+      <div class="rule-item"><div class="rule-bullet">5</div><span>Background SVG paths use <strong style="color:#e2e8f0;">stroke-dashoffset</strong> animation only — no fill transitions</span></div>
+      <div class="rule-item"><div class="rule-bullet">6</div><span>Every interactive element needs hover + focus-visible + active states — no exceptions</span></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">05 — App Identity Colors</div>
+    <div class="color-grid">
+      <div class="color-swatch"><div class="swatch-block" style="background:#10B981;"></div><div class="swatch-info"><div class="swatch-name">TrackerSync</div><div class="swatch-hex">#10B981 Emerald</div><div class="swatch-role">Finance / growth</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#3B82F6;"></div><div class="swatch-info"><div class="swatch-name">TravelSync</div><div class="swatch-hex">#3B82F6 Sky Blue</div><div class="swatch-role">Travel / horizon</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#8B5CF6;"></div><div class="swatch-info"><div class="swatch-name">BrainSync</div><div class="swatch-hex">#8B5CF6 Violet</div><div class="swatch-role">Focus / mind</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#F59E0B;"></div><div class="swatch-info"><div class="swatch-name">SeatSync</div><div class="swatch-hex">#F59E0B Amber</div><div class="swatch-role">Learning / energy</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#EC4899;"></div><div class="swatch-info"><div class="swatch-name">PhotoSync</div><div class="swatch-hex">#EC4899 Pink</div><div class="swatch-role">Memory / warmth</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#06B6D4;"></div><div class="swatch-info"><div class="swatch-name">FluencySync</div><div class="swatch-hex">#06B6D4 Cyan</div><div class="swatch-role">Voice / clarity</div></div></div>
+      <div class="color-swatch"><div class="swatch-block" style="background:#FFD700;"></div><div class="swatch-info"><div class="swatch-name">SteadySync</div><div class="swatch-hex">#FFD700 Gold</div><div class="swatch-role">Access / universal</div></div></div>
+    </div>
+  </div>
+
+  <div class="footer-strip">
+    <div class="footer-wordmark">SubSync</div>
+    <div class="footer-meta">Cyber-Glass Design System · v1.0<br>Grade 12 Computer Science · 2026</div>
+  </div>
+
+</div>
