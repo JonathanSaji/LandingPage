@@ -4,3 +4,13 @@
   --font-heading: var(--font-poppins), sans-serif;
   --font-body: var(--font-dm-sans), sans-serif;
 }
+
+@layer utilities {
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
