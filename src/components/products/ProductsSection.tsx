@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { TrendingUp, Plane } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 
@@ -77,6 +77,8 @@ const FADE_UP = {
 
 export function ProductsSection() {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
+  const fadeUpProps = reduceMotion ? {} : FADE_UP;
 
   function scroll(dir: "left" | "right") {
     if (!scrollRef.current) return;
@@ -96,7 +98,7 @@ export function ProductsSection() {
       <div className="px-20 mb-10">
         <motion.p
           className="font-body font-medium text-[11px] tracking-[0.14em] uppercase text-[#FFD700] mb-3"
-          {...FADE_UP}
+          {...fadeUpProps}
         >
           The Sync Core Ecosystem
         </motion.p>
@@ -104,7 +106,7 @@ export function ProductsSection() {
           id="products-heading"
           className="font-heading font-bold text-white tracking-tight"
           style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
-          {...FADE_UP}
+          {...fadeUpProps}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
           Seven apps.{" "}
@@ -124,7 +126,7 @@ export function ProductsSection() {
           }}
           aria-label="Scroll left"
         >
-          ←
+          <span aria-hidden="true">←</span>
         </button>
 
         {/* Cards row */}
@@ -150,7 +152,7 @@ export function ProductsSection() {
           }}
           aria-label="Scroll right"
         >
-          →
+          <span aria-hidden="true">→</span>
         </button>
       </div>
     </section>
