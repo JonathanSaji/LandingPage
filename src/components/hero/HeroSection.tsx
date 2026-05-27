@@ -1,212 +1,271 @@
 "use client";
 
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
-import { useRef } from "react";
-import Image from "next/image";
-import { AppLogo } from "@/components/brand/AppLogo";
-import { Button } from "@/components/ui/Button";
-import { SyncCoreVisual } from "@/components/hero/SyncCoreVisual";
-import { products } from "@/lib/design-system";
+  TrendingUp,
+  Plane,
+  Brain,
+  Calendar,
+  Camera,
+  Mic,
+  Shield,
+  CircleUserRound,
+} from "lucide-react";
+import { HeroWave } from "./HeroWave";
+import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
+import { AuthModal } from "@/components/auth/AuthModal";
 
-const headlineWords = ["Seven", "apps.", "One", "sync.", "Infinite", "possibility."];
+const EASE = [0.16, 1, 0.3, 1] as const;
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.15 },
+function fadeUp(delay: number) {
+  return {
+    initial: { opacity: 0, y: 40 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.7, ease: EASE, delay },
+  };
+}
+
+const APPS = [
+  {
+    id: 1,
+    title: "TrackerSync",
+    color: "#10B981",
+    icon: TrendingUp,
+    date: "Finance",
+    content: "Your financial engine. Track every dollar, spot every pattern.",
+    category: "Finance",
+    relatedIds: [2, 3],
+    status: "completed" as const,
+    energy: 95,
   },
-};
-
-const wordVariants = {
-  hidden: { opacity: 0, y: 48, rotateX: -40 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    rotateX: 0,
-    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const },
+  {
+    id: 2,
+    title: "TravelSync",
+    color: "#3B82F6",
+    icon: Plane,
+    date: "Travel",
+    content:
+      "Every trip, perfectly synced. Itineraries, bookings, memories - one place.",
+    category: "Travel",
+    relatedIds: [1, 5],
+    status: "completed" as const,
+    energy: 88,
   },
-};
+  {
+    id: 3,
+    title: "BrainSync",
+    color: "#8B5CF6",
+    icon: Brain,
+    date: "Focus",
+    content:
+      "Focus, amplified. Deep work sessions powered by your personal rhythm.",
+    category: "Focus",
+    relatedIds: [1, 4],
+    status: "in-progress" as const,
+    energy: 72,
+  },
+  {
+    id: 4,
+    title: "SeatSync",
+    color: "#F59E0B",
+    icon: Calendar,
+    date: "Scheduling",
+    content:
+      "Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.",
+    category: "Scheduling",
+    relatedIds: [3, 6],
+    status: "in-progress" as const,
+    energy: 65,
+  },
+  {
+    id: 5,
+    title: "PhotoSync",
+    color: "#EC4899",
+    icon: Camera,
+    date: "Memory",
+    content: "Memories, beautifully organized. Every photo in context.",
+    category: "Memory",
+    relatedIds: [2, 7],
+    status: "completed" as const,
+    energy: 91,
+  },
+  {
+    id: 6,
+    title: "FluencySync",
+    color: "#06B6D4",
+    icon: Mic,
+    date: "Voice",
+    content: "Your voice, perfected. Language learning that feels natural.",
+    category: "Voice",
+    relatedIds: [4, 7],
+    status: "in-progress" as const,
+    energy: 58,
+  },
+  {
+    id: 7,
+    title: "SteadySync",
+    color: "#FFD700",
+    icon: Shield,
+    date: "Access",
+    content:
+      "Stability at the core. One account, one subscription, all seven apps.",
+    category: "Access",
+    relatedIds: [5, 6],
+    status: "completed" as const,
+    energy: 100,
+  },
+];
 
 export function HeroSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const reduceMotion = useReducedMotion();
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
-
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
-  const contentY = useTransform(scrollYProgress, [0, 0.35], [0, -80]);
-  const scrollCueOpacity = useTransform(scrollYProgress, [0, 0.08], [1, 0]);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   return (
-    <section
-      ref={sectionRef}
-      id="hero"
-      className="relative min-h-dvh overflow-hidden pt-28 pb-16 md:pt-32 md:pb-24"
-      aria-labelledby="hero-heading"
-    >
-      <div className="mx-auto max-w-[1400px] px-[var(--spacing-container)]">
-        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-8 xl:gap-12">
-          <motion.div
-            style={
-              reduceMotion
-                ? undefined
-                : { opacity: contentOpacity, y: contentY }
-            }
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="mb-6 inline-flex items-center gap-3 rounded-full glass-pill py-1.5 pl-1.5 pr-4"
-            >
-              <AppLogo size="sm" glow />
-              <span className="font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.2em] text-pearl-muted">
-                Ecosystem launch · 7 products live
-              </span>
-            </motion.div>
+    <>
+      <section className="relative min-h-screen overflow-hidden bg-black">
+        {/* Wave canvas - z-0 */}
+        <HeroWave />
 
-            <motion.h1
-              id="hero-heading"
-              className="text-hero-display font-[family-name:var(--font-display)] font-bold text-pearl"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              style={{ perspective: 1200 }}
-            >
-              {headlineWords.map((word, i) => (
-                <span key={word + i} className="mr-[0.2em] inline-block overflow-hidden">
-                  <motion.span
-                    variants={wordVariants}
-                    className={
-                      i === 2 || i === 3
-                        ? "text-gradient-honey"
-                        : undefined
-                    }
-                  >
-                    {word}
-                  </motion.span>
-                  {(i === 1 || i === 3) && <br className="hidden sm:block" />}
-                </span>
-              ))}
-            </motion.h1>
+        {/* Left vignette - z-1 */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)",
+          }}
+        />
 
-            <motion.p
-              className="mt-6 max-w-xl text-lg leading-relaxed text-pearl-muted md:text-xl"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
-            >
-              SubSync isn&apos;t another app — it&apos;s a connected universe where
-              travel, memory, mind, language, wellness, money, and live experiences
-              pulse through one intelligent{" "}
-              <span className="font-medium text-honey">Sync Core</span>.
-            </motion.p>
-
-            <motion.div
-              className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <Button className="group px-8 py-3.5 text-base">
-                Enter the ecosystem
-                <motion.span
-                  className="inline-block"
-                  animate={reduceMotion ? undefined : { x: [0, 4, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  →
-                </motion.span>
-              </Button>
-              <Button variant="secondary" className="px-8 py-3.5 text-base">
-                Watch the film
-              </Button>
-            </motion.div>
-
-            <motion.ul
-              className="mt-12 flex flex-wrap gap-2"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.95, duration: 0.8 }}
-              aria-label="SubSync products"
-            >
-              {products.map((product) => (
-                <li key={product.id}>
-                  <motion.div
-                    className="inline-flex items-center gap-1.5 rounded-full glass-pill px-2 py-1 text-xs text-pearl-muted transition-colors hover:border-honey/25 hover:text-pearl"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    {product.logo && (
-                      <Image
-                        src={product.logo}
-                        alt={product.name}
-                        width={20}
-                        height={20}
-                        className="h-5 w-5 object-contain"
-                      />
-                    )}
-                    <span>{product.name}</span>
-                  </motion.div>
-                </li>
-              ))}
-            </motion.ul>
-          </motion.div>
-
-          <motion.div
-            className="relative lg:pl-4"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-honey/15 via-transparent to-transparent blur-3xl" />
-            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.07]">
-              <AppLogo size="hero" />
-            </div>
-            <div className="relative rounded-[2rem] glass-panel p-4 specular-top md:p-6">
-              <SyncCoreVisual />
-            </div>
-            <motion.p
-              className="mt-6 text-center font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.22em] text-pearl-dim"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-            >
-              All seven apps · One neural layer
-            </motion.p>
-          </motion.div>
-        </div>
-      </div>
-
-      <motion.div
-        className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2"
-        style={{ opacity: reduceMotion ? 1 : scrollCueOpacity }}
-        aria-hidden
-      >
-        <span className="font-[family-name:var(--font-mono)] text-[10px] uppercase tracking-[0.25em] text-pearl-dim">
-          Scroll to explore
-        </span>
-        <motion.div
-          className="flex h-10 w-6 items-start justify-center rounded-full glass-pill p-1.5"
-          animate={reduceMotion ? undefined : { y: [0, 6, 0] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+        {/* Navigation - z-10 */}
+        <nav
+          className="absolute left-0 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-white/[0.06] px-10"
+          style={{
+            background: "rgba(0,0,0,0.3)",
+            backdropFilter: "blur(12px)",
+          }}
         >
-          <motion.span className="h-2 w-1 rounded-full bg-honey" />
-        </motion.div>
-      </motion.div>
+          <span className="font-heading text-[22px] font-black tracking-tight text-[#FFD700]">
+            SubSync
+          </span>
+          <div className="flex items-center gap-8">
+            {["Apps", "Features", "Pricing"].map((link) => (
+              <a
+                key={link}
+                href={`#${link.toLowerCase()}`}
+                className="rounded font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                {link}
+              </a>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            {isLoggedIn && (
+              <button
+                type="button"
+                onClick={() => {}}
+                aria-label="Open profile"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                <CircleUserRound size={20} />
+              </button>
+            )}
 
-      <motion.div
-        className="pointer-events-none absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-void to-transparent"
-        aria-hidden
-      />
-    </section>
+            <button
+              onClick={() => {
+                if (isLoggedIn) {
+                  setIsLoggedIn(false);
+                  setAuthOpen(false);
+                  return;
+                }
+
+                setAuthOpen((prev) => !prev);
+              }}
+              className="font-heading rounded-lg bg-[#FFD700] px-5 py-2 text-sm font-bold text-black transition-transform duration-150 hover:bg-[#ffe033] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            >
+              {isLoggedIn ? "Logout" : authOpen ? "Back to Orbital" : "Sign In"}
+            </button>
+          </div>
+        </nav>
+
+        {/* Main grid - z-2 */}
+        <div className="relative z-[2] grid min-h-screen grid-cols-2 pt-16">
+          {/* Left: hero copy */}
+          <div className="flex flex-col justify-center gap-6 pl-20 pr-8">
+            <motion.p
+              className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700]"
+              {...fadeUp(0.15)}
+            >
+              The Sync Core Ecosystem
+            </motion.p>
+
+            <h1
+              className="flex flex-col font-heading font-black leading-[0.95] tracking-[-0.03em]"
+              style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
+            >
+              <motion.span className="text-white" {...fadeUp(0.4)}>
+                Seven apps. Onesync.
+              </motion.span>
+              <motion.span className="text-[#FFD700]" {...fadeUp(0.6)}>
+                Infinite possibility.
+              </motion.span>
+            </h1>
+
+            <motion.p
+              className="max-w-[440px] font-body text-[16px] font-light leading-[1.75] text-[#94A3B8]"
+              {...fadeUp(1.2)}
+            >
+              SubSync isn&apos;t another app - it&apos;s a connected universe where
+              travel, memory, and focus pulse through one intelligent Sync Core.
+            </motion.p>
+
+            <motion.div className="flex items-center gap-3" {...fadeUp(1.5)}>
+              <button
+                onClick={() => setAuthOpen((prev) => !prev)}
+                className="font-heading rounded-lg bg-[#FFD700] px-7 py-3 text-sm font-bold text-black transition-transform duration-150 hover:bg-[#ffe033] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                {authOpen ? "Back to Orbital" : "Get Started"}
+              </button>
+              <button className="font-body rounded-lg border border-white/20 px-7 py-3 text-sm text-white transition-transform duration-150 hover:bg-white/5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+                Explore the Apps -&gt;
+              </button>
+            </motion.div>
+          </div>
+
+          {/* Right: orbital/login swap */}
+          <div className="relative flex min-h-[640px] items-center justify-center overflow-visible">
+            <AnimatePresence mode="wait" initial={false}>
+              {!authOpen ? (
+                <motion.div
+                  key="orbital"
+                  className="absolute inset-0 flex items-center justify-center"
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.45, ease: EASE }}
+                >
+                  <RadialOrbitalTimeline timelineData={APPS} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="auth-inline"
+                  className="absolute inset-0 flex items-center justify-center px-4"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                >
+                  <AuthModal
+                    variant="inline"
+                    onClose={() => setAuthOpen(false)}
+                    onAuthSuccess={() => setIsLoggedIn(true)}
+                    className="w-full"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
