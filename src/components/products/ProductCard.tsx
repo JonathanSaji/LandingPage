@@ -27,91 +27,122 @@ export function ProductCard({
 
   return (
     <motion.article
-      className="relative flex-shrink-0 w-[300px] rounded-2xl overflow-hidden group"
+      className="relative flex-shrink-0 w-[280px] rounded-2xl group"
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: `1px solid rgba(255,255,255,0.08)`,
-        borderTop: `2px solid ${color}`,
+        background: "rgba(10,10,10,0.9)",
+        border: "1px solid rgba(255,255,255,0.07)",
       }}
       initial={reduceMotion ? false : { opacity: 0, y: 40 }}
       whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{
-        duration: 0.6,
-        delay: index * 0.07,
-        ease: [0.16, 1, 0.3, 1],
-      }}
-      whileHover={reduceMotion ? undefined : { y: -6, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } }}
+      transition={{ duration: 0.6, delay: index * 0.07, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={
+        reduceMotion
+          ? undefined
+          : { y: -8, scale: 1.02, transition: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] } }
+      }
     >
+      {/* Hover glow ring — CSS opacity transition only */}
+      <div
+        className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ boxShadow: `0 0 0 1px ${color}50, 0 24px 64px ${color}20` }}
+        aria-hidden
+      />
+
       <a
         href="#"
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-2xl"
         aria-label={`Learn more about ${title}`}
       >
-        {/* Logo area */}
-        <div className="relative h-48 flex items-center justify-center overflow-hidden">
-          {/* Ambient glow behind logo */}
+        {/* App preview area */}
+        <div className="relative h-44 overflow-hidden rounded-t-2xl">
+          {/* Accent gradient top stripe */}
+          <div
+            className="absolute top-0 left-0 right-0 h-[2px] z-10"
+            style={{ background: `linear-gradient(90deg, transparent 0%, ${color} 40%, transparent 100%)` }}
+            aria-hidden
+          />
+
+          {/* Preview background — colored mesh gradient placeholder */}
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse 80% 60% at 50% 70%, ${color}22, transparent 70%)`,
+              background: `radial-gradient(ellipse 90% 80% at 20% 30%, ${color}20 0%, transparent 55%), radial-gradient(ellipse 60% 60% at 80% 80%, ${color}10 0%, transparent 50%), rgba(10,10,10,1)`,
             }}
             aria-hidden
           />
 
-          {logoSrc ? (
-            /* PNG logos — white app-icon container so gray backgrounds look intentional */
-            <div
-              className="relative z-10 w-24 h-24 rounded-2xl overflow-hidden bg-white p-1.5 shadow-lg"
-              style={{ boxShadow: `0 0 32px ${color}44` }}
-            >
-              <Image
-                src={logoSrc}
-                alt={`${title} logo`}
-                fill
-                className="object-contain"
-              />
-            </div>
-          ) : LogoIcon ? (
-            /* Icon fallback — colored glass container */
-            <div
-              className="relative z-10 w-24 h-24 rounded-2xl flex items-center justify-center shadow-lg"
-              style={{
-                background: `${color}20`,
-                border: `1px solid ${color}40`,
-                boxShadow: `0 0 32px ${color}44`,
-              }}
-            >
-              <LogoIcon className="w-12 h-12" style={{ color }} aria-hidden />
-            </div>
-          ) : null}
+          {/* Subtle grid overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage: `linear-gradient(${color} 1px, transparent 1px), linear-gradient(90deg, ${color} 1px, transparent 1px)`,
+              backgroundSize: "28px 28px",
+            }}
+            aria-hidden
+          />
+
+          {/* Placeholder label */}
+          <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+            <span className="font-body text-[9px] tracking-[0.2em] uppercase text-white opacity-15">
+              App Preview
+            </span>
+          </div>
+
+          {/* Logo chip — bottom-left corner */}
+          <div className="absolute bottom-3 left-3 z-10">
+            {logoSrc ? (
+              <div
+                className="w-9 h-9 rounded-xl overflow-hidden bg-white"
+                style={{ boxShadow: `0 4px 16px ${color}60` }}
+              >
+                <Image
+                  src={logoSrc}
+                  alt={`${title} logo`}
+                  width={36}
+                  height={36}
+                  className="object-contain w-full h-full"
+                />
+              </div>
+            ) : LogoIcon ? (
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{
+                  background: `${color}20`,
+                  border: `1px solid ${color}50`,
+                  boxShadow: `0 4px 16px ${color}40`,
+                }}
+              >
+                <LogoIcon className="w-4 h-4" style={{ color }} aria-hidden />
+              </div>
+            ) : null}
+          </div>
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-6 pt-4">
-          {/* Category badge */}
+        <div className="px-5 pb-5 pt-4">
           <span
-            className="inline-block font-body text-[10px] font-medium tracking-[0.12em] uppercase px-2.5 py-1 rounded-full mb-3"
+            className="inline-block font-body text-[10px] font-medium tracking-[0.14em] uppercase px-2.5 py-1 rounded-full mb-3"
             style={{
               color,
-              background: `${color}18`,
-              border: `1px solid ${color}30`,
+              background: `${color}12`,
+              border: `1px solid ${color}25`,
             }}
           >
             {category}
           </span>
 
-          <h3 className="font-heading font-bold text-xl text-white tracking-tight mb-2">
+          <h3 className="font-heading font-semibold text-[16px] text-white tracking-tight mb-2 leading-snug">
             {title}
           </h3>
 
-          <p className="font-body font-light text-sm text-[#94A3B8] leading-relaxed">
+          <p className="font-body text-[13px] leading-relaxed" style={{ color: "#6E6E73" }}>
             {description}
           </p>
 
-          {/* Explore link — visible on hover only */}
+          {/* Explore — slides in on hover */}
           <div
-            className="mt-5 flex items-center gap-1 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className="mt-4 flex items-center gap-1.5 text-[12px] font-medium opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300"
             style={{ color }}
           >
             Explore <span aria-hidden>→</span>

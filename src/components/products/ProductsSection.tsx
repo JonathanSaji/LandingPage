@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { TrendingUp, Plane } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 
 const PRODUCTS = [
@@ -11,26 +11,24 @@ const PRODUCTS = [
     title: "TrackerSync",
     category: "Finance",
     description: "Your financial engine. Track every dollar, spot every pattern.",
-    color: "#10B981",
+    color: "#FFD700",
     LogoIcon: TrendingUp,
   },
   {
     id: 2,
     title: "TravelSync",
     category: "Travel",
-    description:
-      "Every trip, perfectly synced. Itineraries, bookings, memories — one place.",
-    color: "#3B82F6",
-    LogoIcon: Plane,
+    description: "Every trip, perfectly synced. Itineraries, bookings, memories — one place.",
+    color: "#F2994A",
+    logoSrc: "/logos/TravelSync.avif",
   },
   {
     id: 3,
     title: "BrainSync",
     category: "Focus",
-    description:
-      "Focus, amplified. Deep work sessions powered by your personal rhythm.",
-    color: "#8B5CF6",
-    logoSrc: "/logos/BrainSync.png",
+    description: "Focus, amplified. Deep work sessions powered by your personal rhythm.",
+    color: "#FFD700",
+    logoSrc: "/logos/BrainSync.avif",
   },
   {
     id: 4,
@@ -38,24 +36,24 @@ const PRODUCTS = [
     category: "Scheduling",
     description:
       "Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.",
-    color: "#F59E0B",
-    logoSrc: "/logos/SeatSync.png",
+    color: "#39FF14",
+    logoSrc: "/logos/SeatSync.avif",
   },
   {
     id: 5,
     title: "PhotoSync",
     category: "Memory",
     description: "Memories, beautifully organized. Every photo in context.",
-    color: "#EC4899",
-    logoSrc: "/logos/PhotoSync.png",
+    color: "#A259FF",
+    logoSrc: "/logos/PhotoSync.avif",
   },
   {
     id: 6,
     title: "FluencySync",
     category: "Voice",
     description: "Your voice, perfected. Language learning that feels natural.",
-    color: "#06B6D4",
-    logoSrc: "/logos/FluencySync.png",
+    color: "#FF3C38",
+    logoSrc: "/logos/Fluency.avif",
   },
   {
     id: 7,
@@ -63,8 +61,8 @@ const PRODUCTS = [
     category: "Access",
     description:
       "Stability at the core. One account, one subscription, all seven apps.",
-    color: "#FFD700",
-    logoSrc: "/logos/SteadySync.png",
+    color: "#3A7B7B",
+    logoSrc: "/logos/SteadySync.avif",
   },
 ] as const;
 
@@ -83,7 +81,7 @@ export function ProductsSection() {
   function scroll(dir: "left" | "right") {
     if (!scrollRef.current) return;
     scrollRef.current.scrollBy({
-      left: dir === "left" ? -324 : 324,
+      left: dir === "left" ? -300 : 300,
       behavior: "smooth",
     });
   }
@@ -91,13 +89,22 @@ export function ProductsSection() {
   return (
     <section
       id="apps"
-      className="relative py-20 bg-black overflow-hidden"
+      className="relative py-24 overflow-hidden"
+      style={{ background: "#000" }}
       aria-labelledby="products-heading"
     >
+      {/* Ambient background glow */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full blur-[120px] opacity-10"
+        style={{ background: "radial-gradient(ellipse, #FFD700 0%, transparent 70%)" }}
+        aria-hidden
+      />
+
       {/* Section header */}
-      <div className="px-20 mb-10">
+      <div className="mx-auto max-w-[1400px] px-10 mb-10">
         <motion.p
-          className="font-body font-medium text-[11px] tracking-[0.14em] uppercase text-[#FFD700] mb-3"
+          className="font-body font-medium text-[11px] tracking-[0.14em] uppercase mb-3"
+          style={{ color: "#FFD700" }}
           {...fadeUpProps}
         >
           The Sync Core Ecosystem
@@ -110,19 +117,19 @@ export function ProductsSection() {
           transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
           Seven apps.{" "}
-          <span className="text-[#FFD700]">One ecosystem.</span>
+          <span style={{ color: "#FFD700" }}>One ecosystem.</span>
         </motion.h2>
       </div>
 
-      {/* Scroll container + arrow buttons */}
+      {/* Scroll carousel */}
       <div className="relative">
         {/* Left arrow */}
         <button
           onClick={() => scroll("left")}
           className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center text-white text-lg transition-transform duration-150 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
           }}
           aria-label="Scroll left"
         >
@@ -132,7 +139,7 @@ export function ProductsSection() {
         {/* Cards row */}
         <div
           ref={scrollRef}
-          className="flex gap-5 overflow-x-auto scrollbar-hide px-20 pb-4"
+          className="flex gap-4 overflow-x-auto scrollbar-hide px-10 pb-4"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {PRODUCTS.map((product, i) => (
@@ -147,8 +154,8 @@ export function ProductsSection() {
           onClick={() => scroll("right")}
           className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center text-white text-lg transition-transform duration-150 hover:scale-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           style={{
-            background: "rgba(255,255,255,0.08)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
           }}
           aria-label="Scroll right"
         >
