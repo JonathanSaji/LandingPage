@@ -1,5 +1,7 @@
 "use client";
-import { motion } from "framer-motion";
+
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   TrendingUp,
   Plane,
@@ -8,9 +10,11 @@ import {
   Camera,
   Mic,
   Shield,
+  CircleUserRound,
 } from "lucide-react";
 import { HeroWave } from "./HeroWave";
 import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -42,7 +46,7 @@ const APPS = [
     icon: Plane,
     date: "Travel",
     content:
-      "Every trip, perfectly synced. Itineraries, bookings, memories — one place.",
+      "Every trip, perfectly synced. Itineraries, bookings, memories - one place.",
     category: "Travel",
     relatedIds: [1, 5],
     status: "completed" as const,
@@ -114,94 +118,154 @@ const APPS = [
 ];
 
 export function HeroSection() {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   return (
-    <section className="relative min-h-screen overflow-hidden bg-black">
-      {/* Wave canvas — z-0 */}
-      <HeroWave />
+    <>
+      <section className="relative min-h-screen overflow-hidden bg-black">
+        {/* Wave canvas - z-0 */}
+        <HeroWave />
 
-      {/* Left vignette — z-1 */}
-      <div
-        className="absolute inset-0 z-[1] pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)",
-        }}
-      />
+        {/* Left vignette - z-1 */}
+        <div
+          className="pointer-events-none absolute inset-0 z-[1]"
+          style={{
+            background:
+              "linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)",
+          }}
+        />
 
-      {/* Navigation — z-10 */}
-      <nav
-        className="absolute top-0 left-0 right-0 z-10 h-16 flex items-center justify-between px-10 border-b border-white/[0.06]"
-        style={{
-          background: "rgba(0,0,0,0.3)",
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <span className="font-heading text-[22px] font-black text-[#FFD700] tracking-tight">
-          SubSync
-        </span>
-        <div className="flex items-center gap-8">
-          {["Apps", "Features", "Pricing"].map((link) => (
-            <a
-              key={link}
-              href={`#${link.toLowerCase()}`}
-              className="font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
+        {/* Navigation - z-10 */}
+        <nav
+          className="absolute left-0 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-white/[0.06] px-10"
+          style={{
+            background: "rgba(0,0,0,0.3)",
+            backdropFilter: "blur(12px)",
+          }}
+        >
+          <span className="font-heading text-[22px] font-black tracking-tight text-[#FFD700]">
+            SubSync
+          </span>
+          <div className="flex items-center gap-8">
+            {["Apps", "Features", "Pricing"].map((link) => (
+              <a
+                key={link}
+                href={`#${link.toLowerCase()}`}
+                className="rounded font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                {link}
+              </a>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            {isLoggedIn && (
+              <button
+                type="button"
+                onClick={() => {}}
+                aria-label="Open profile"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                <CircleUserRound size={20} />
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                if (isLoggedIn) {
+                  setIsLoggedIn(false);
+                  setAuthOpen(false);
+                  return;
+                }
+
+                setAuthOpen((prev) => !prev);
+              }}
+              className="font-heading rounded-lg bg-[#FFD700] px-5 py-2 text-sm font-bold text-black transition-transform duration-150 hover:bg-[#ffe033] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
-              {link}
-            </a>
-          ))}
-        </div>
-        <button className="font-heading text-sm font-bold bg-[#FFD700] text-black px-5 py-2 rounded-lg hover:bg-[#ffe033] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black transition-transform duration-150">
-          Get Started
-        </button>
-      </nav>
-
-      {/* Main grid — z-2 */}
-      <div className="relative z-[2] min-h-screen pt-16 grid grid-cols-2">
-        {/* Left: hero copy */}
-        <div className="flex flex-col justify-center pl-20 pr-8 gap-6">
-          <motion.p
-            className="font-body text-[11px] font-medium text-[#FFD700] uppercase tracking-[0.14em]"
-            {...fadeUp(0.15)}
-          >
-            The Sync Core Ecosystem
-          </motion.p>
-
-          <h1
-            className="font-heading font-black leading-[0.95] tracking-[-0.03em] flex flex-col"
-            style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
-          >
-            <motion.span className="text-white" {...fadeUp(0.4)}>
-              Seven apps. Onesync.
-            </motion.span>
-            <motion.span className="text-[#FFD700]" {...fadeUp(0.6)}>
-              Infinite possibility.
-            </motion.span>
-          </h1>
-
-          <motion.p
-            className="font-body font-light text-[#94A3B8] text-[16px] leading-[1.75] max-w-[440px]"
-            {...fadeUp(1.2)}
-          >
-            SubSync isn&apos;t another app — it&apos;s a connected universe
-            where travel, memory, and focus pulse through one intelligent Sync
-            Core.
-          </motion.p>
-
-          <motion.div className="flex items-center gap-3" {...fadeUp(1.5)}>
-            <button className="font-heading text-sm font-bold bg-[#FFD700] text-black px-7 py-3 rounded-lg hover:bg-[#ffe033] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black transition-transform duration-150">
-              Get Started
+              {isLoggedIn ? "Logout" : authOpen ? "Back to Orbital" : "Sign In"}
             </button>
-            <button className="font-body text-sm text-white px-7 py-3 rounded-lg border border-white/20 hover:bg-white/5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black transition-transform duration-150">
-              Explore the Apps →
-            </button>
-          </motion.div>
-        </div>
+          </div>
+        </nav>
 
-        {/* Right: orbital diagram */}
-        <div className="relative flex items-center justify-center overflow-visible">
-          <RadialOrbitalTimeline timelineData={APPS} />
+        {/* Main grid - z-2 */}
+        <div className="relative z-[2] grid min-h-screen grid-cols-2 pt-16">
+          {/* Left: hero copy */}
+          <div className="flex flex-col justify-center gap-6 pl-20 pr-8">
+            <motion.p
+              className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700]"
+              {...fadeUp(0.15)}
+            >
+              The Sync Core Ecosystem
+            </motion.p>
+
+            <h1
+              className="flex flex-col font-heading font-black leading-[0.95] tracking-[-0.03em]"
+              style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
+            >
+              <motion.span className="text-white" {...fadeUp(0.4)}>
+                Seven apps. Onesync.
+              </motion.span>
+              <motion.span className="text-[#FFD700]" {...fadeUp(0.6)}>
+                Infinite possibility.
+              </motion.span>
+            </h1>
+
+            <motion.p
+              className="max-w-[440px] font-body text-[16px] font-light leading-[1.75] text-[#94A3B8]"
+              {...fadeUp(1.2)}
+            >
+              SubSync isn&apos;t another app - it&apos;s a connected universe where
+              travel, memory, and focus pulse through one intelligent Sync Core.
+            </motion.p>
+
+            <motion.div className="flex items-center gap-3" {...fadeUp(1.5)}>
+              <button
+                onClick={() => setAuthOpen((prev) => !prev)}
+                className="font-heading rounded-lg bg-[#FFD700] px-7 py-3 text-sm font-bold text-black transition-transform duration-150 hover:bg-[#ffe033] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                {authOpen ? "Back to Orbital" : "Get Started"}
+              </button>
+              <button className="font-body rounded-lg border border-white/20 px-7 py-3 text-sm text-white transition-transform duration-150 hover:bg-white/5 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black">
+                Explore the Apps -&gt;
+              </button>
+            </motion.div>
+          </div>
+
+          {/* Right: orbital/login swap */}
+          <div className="relative flex min-h-[640px] items-center justify-center overflow-visible">
+            <AnimatePresence mode="wait" initial={false}>
+              {!authOpen ? (
+                <motion.div
+                  key="orbital"
+                  className="absolute inset-0 flex items-center justify-center"
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.45, ease: EASE }}
+                >
+                  <RadialOrbitalTimeline timelineData={APPS} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="auth-inline"
+                  className="absolute inset-0 flex items-center justify-center px-4"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                >
+                  <AuthModal
+                    variant="inline"
+                    onClose={() => setAuthOpen(false)}
+                    onAuthSuccess={() => setIsLoggedIn(true)}
+                    className="w-full"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
