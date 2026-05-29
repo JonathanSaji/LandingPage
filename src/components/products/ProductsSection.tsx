@@ -93,15 +93,8 @@ export function ProductsSection() {
       style={{ background: "#000" }}
       aria-labelledby="products-heading"
     >
-      {/* Ambient background glow */}
-      <div
-        className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full blur-[120px] opacity-10"
-        style={{ background: "radial-gradient(ellipse, #FFD700 0%, transparent 70%)" }}
-        aria-hidden
-      />
-
       {/* Section header */}
-      <div className="mx-auto max-w-[1400px] px-10 mb-10">
+      <div className="mx-auto max-w-[1400px] px-10 mb-10 text-center">
         <motion.p
           className="font-body font-medium text-[11px] tracking-[0.14em] uppercase mb-3"
           style={{ color: "#FFD700" }}
@@ -139,7 +132,7 @@ export function ProductsSection() {
         {/* Cards row */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide px-10 pb-4"
+          className="flex gap-4 overflow-x-auto scrollbar-hide px-10 pt-6 pb-6"
           style={{ scrollSnapType: "x mandatory" }}
         >
           {PRODUCTS.map((product, i) => (

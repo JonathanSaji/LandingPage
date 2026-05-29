@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   TrendingUp,
@@ -30,7 +30,7 @@ const APPS = [
   {
     id: 1,
     title: "TrackerSync",
-    color: "#10B981",
+    color: "#FFD700",
     icon: TrendingUp,
     date: "Finance",
     content: "Your financial engine. Track every dollar, spot every pattern.",
@@ -42,7 +42,7 @@ const APPS = [
   {
     id: 2,
     title: "TravelSync",
-    color: "#3B82F6",
+    color: "#F2994A",
     icon: Plane,
     date: "Travel",
     content:
@@ -55,7 +55,7 @@ const APPS = [
   {
     id: 3,
     title: "BrainSync",
-    color: "#8B5CF6",
+    color: "#FFD700",
     icon: Brain,
     date: "Focus",
     content:
@@ -68,7 +68,7 @@ const APPS = [
   {
     id: 4,
     title: "SeatSync",
-    color: "#F59E0B",
+    color: "#39FF14",
     icon: Calendar,
     date: "Scheduling",
     content:
@@ -81,7 +81,7 @@ const APPS = [
   {
     id: 5,
     title: "PhotoSync",
-    color: "#EC4899",
+    color: "#A259FF",
     icon: Camera,
     date: "Memory",
     content: "Memories, beautifully organized. Every photo in context.",
@@ -93,7 +93,7 @@ const APPS = [
   {
     id: 6,
     title: "FluencySync",
-    color: "#06B6D4",
+    color: "#FF3C38",
     icon: Mic,
     date: "Voice",
     content: "Your voice, perfected. Language learning that feels natural.",
@@ -105,7 +105,7 @@ const APPS = [
   {
     id: 7,
     title: "SteadySync",
-    color: "#FFD700",
+    color: "#3A7B7B",
     icon: Shield,
     date: "Access",
     content:
@@ -120,6 +120,12 @@ const APPS = [
 export function HeroSection() {
   const [authOpen, setAuthOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setAuthOpen(true);
+    window.addEventListener("subsync:openAuth", handler);
+    return () => window.removeEventListener("subsync:openAuth", handler);
+  }, []);
 
   return (
     <>

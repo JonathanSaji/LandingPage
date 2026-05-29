@@ -40,13 +40,13 @@ export function ProductCard({
       whileHover={
         reduceMotion
           ? undefined
-          : { y: -8, scale: 1.02, transition: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] } }
+          : { y: -14, scale: 1.04, transition: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] } }
       }
     >
       {/* Hover glow ring — CSS opacity transition only */}
       <div
         className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ boxShadow: `0 0 0 1px ${color}50, 0 24px 64px ${color}20` }}
+        style={{ boxShadow: `0 0 0 1px ${color}80, 0 20px 60px ${color}50, 0 0 120px ${color}20` }}
         aria-hidden
       />
 
