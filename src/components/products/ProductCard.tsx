@@ -24,6 +24,7 @@ export function ProductCard({
   index,
 }: ProductCardProps) {
   const reduceMotion = useReducedMotion();
+  const exploreUrl = `https://${title.toLowerCase()}.sub-sync.ca`;
 
   return (
     <motion.article
@@ -50,9 +51,9 @@ export function ProductCard({
       />
 
       <a
-        href="#"
+        href={exploreUrl}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-2xl"
-        aria-label={`Learn more about ${title}`}
+        aria-label={`Explore ${title}`}
       >
         {/* App preview area */}
         <div className="relative h-44 overflow-hidden rounded-t-2xl">
