@@ -271,6 +271,16 @@ export function HeroSection() {
             </AnimatePresence>
           </div>
         </div>
+
+        {/* Bottom fade — blends wave canvas into ProductsSection black */}
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 right-0 z-[3]"
+          style={{
+            height: "80px",
+            background: "linear-gradient(to bottom, transparent, #000000)",
+          }}
+          aria-hidden
+        />
       </section>
     </>
   );
