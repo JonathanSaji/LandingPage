@@ -16,6 +16,7 @@ type AccountRow = {
   organization_name: string | null;
   is_active: boolean;
   email_verified: boolean;
+  welcome_email_sent_at: string | null;
   created_at: string;
 };
 
@@ -50,6 +51,7 @@ async function ensureAuthSchema() {
         organization_name TEXT,
         is_active BOOLEAN NOT NULL DEFAULT TRUE,
         email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+        welcome_email_sent_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         CHECK (char_length(username) >= 3),
         CHECK (position('@' in email) > 1),
@@ -81,6 +83,9 @@ async function ensureAuthSchema() {
     );
     await dbQuery(
       "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE",
+    );
+    await dbQuery(
+      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS welcome_email_sent_at TIMESTAMPTZ",
     );
     await dbQuery(
       "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()",
@@ -196,6 +201,7 @@ export async function createAccount(input: {
           organization_name,
           is_active,
           email_verified,
+          welcome_email_sent_at,
           created_at
       `,
       [
@@ -248,6 +254,7 @@ export async function loginWithPassword(input: {
         organization_name,
         is_active,
         email_verified,
+        welcome_email_sent_at,
         created_at
       FROM accounts
       WHERE LOWER(username) = $1 OR LOWER(email) = $1
@@ -272,4 +279,17 @@ export async function loginWithPassword(input: {
   void password_hash;
 
   return publicAccount;
+}
+
+export async function markWelcomeEmailSent(accountId: number) {
+  await ensureAuthSchema();
+
+  await dbQuery(
+    `
+      UPDATE accounts
+      SET welcome_email_sent_at = NOW()
+      WHERE id = $1 AND welcome_email_sent_at IS NULL
+    `,
+    [accountId],
+  );
 }

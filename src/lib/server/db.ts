@@ -1,4 +1,4 @@
-import { Pool, type QueryResultRow } from "pg";
+import { Pool, type PoolClient, type QueryResultRow } from "pg";
 
 let pool: Pool | undefined;
 
@@ -21,4 +21,22 @@ export async function dbQuery<T extends QueryResultRow>(
   values?: unknown[],
 ) {
   return getPool().query<T>(text, values);
+}
+
+export async function dbWithTransaction<T>(
+  callback: (client: PoolClient) => Promise<T>,
+) {
+  const client = await getPool().connect();
+
+  try {
+    await client.query("BEGIN");
+    const result = await callback(client);
+    await client.query("COMMIT");
+    return result;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
 }

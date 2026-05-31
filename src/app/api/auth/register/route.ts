@@ -3,7 +3,9 @@ import {
   AuthConflictError,
   AuthInputError,
   createAccount,
+  markWelcomeEmailSent,
 } from "@/lib/server/auth-db";
+import { sendWelcomeEmail } from "@/lib/server/email";
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +19,19 @@ export async function POST(request: Request) {
     };
 
     const account = await createAccount(body);
+
+    try {
+      const emailSent = await sendWelcomeEmail({
+        to: account.email,
+        username: account.display_name || account.username,
+      });
+
+      if (emailSent) {
+        await markWelcomeEmailSent(account.id);
+      }
+    } catch (emailError) {
+      console.error("Welcome email send failed", emailError);
+    }
 
     return NextResponse.json({ ok: true, account }, { status: 201 });
   } catch (error) {
