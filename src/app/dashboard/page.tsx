@@ -1,34 +1,584 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { TrendingUp, X, ArrowUpRight } from "lucide-react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-interface TrackerSyncData {
-  totalSpendingThisMonth: string;
-  topCategory: string;
-  transactionCount: number;
-  aiInsight: string;
+interface AppTile {
+  name: string;
+  category: string;
+  accent: string;
+  logo: string | null;
+  description: string;
+  features: string[];
+  colSpan: number;
+  rowSpan: number;
 }
 
-interface TravelSyncData {
-  nextTripDestination: string;
-  nextTripDate: string;
-  tripsThisYear: number;
-  aiInsight: string;
+const TILES: AppTile[] = [
+  {
+    name: "TrackerSync",
+    category: "FINANCE",
+    accent: "#CCFF00",
+    logo: null,
+    description:
+      "Your financial engine. Track every dollar, spot every pattern, and let AI surface insights you'd never find alone.",
+    features: [
+      "Real-time expense tracking",
+      "AI-powered spending insights",
+      "Multi-account sync",
+      "Smart categorization",
+    ],
+    colSpan: 2,
+    rowSpan: 2,
+  },
+  {
+    name: "TravelSync",
+    category: "TRAVEL",
+    accent: "#F2994A",
+    logo: "/logos/TravelSync.avif",
+    description:
+      "Every trip, perfectly synced. Itineraries, bookings, and memories flow through one intelligent timeline.",
+    features: [
+      "Itinerary management",
+      "Flight & hotel sync",
+      "Travel memory journal",
+      "Smart packing lists",
+    ],
+    colSpan: 1,
+    rowSpan: 1,
+  },
+  {
+    name: "BrainSync",
+    category: "FOCUS",
+    accent: "#FFD700",
+    logo: "/logos/BrainSync.avif",
+    description:
+      "Focus, amplified. Deep work sessions powered by your personal rhythm and cognitive patterns.",
+    features: [
+      "Deep work timer",
+      "Focus pattern analysis",
+      "Distraction blocking",
+      "Energy optimization",
+    ],
+    colSpan: 1,
+    rowSpan: 1,
+  },
+  {
+    name: "SeatSync",
+    category: "SCHEDULING",
+    accent: "#39FF14",
+    logo: "/logos/SeatSync.avif",
+    description:
+      "Book your desk, your shift, your day. Workplace scheduling, simplified and intelligent.",
+    features: [
+      "Desk booking",
+      "Shift management",
+      "Team coordination",
+      "Space optimization",
+    ],
+    colSpan: 1,
+    rowSpan: 1,
+  },
+  {
+    name: "PhotoSync",
+    category: "MEMORY",
+    accent: "#A259FF",
+    logo: "/logos/PhotoSync.avif",
+    description:
+      "Memories, beautifully organized. Every photo finds its context, story, and meaning.",
+    features: [
+      "AI photo organization",
+      "Memory timelines",
+      "Smart albums",
+      "Cross-device sync",
+    ],
+    colSpan: 1,
+    rowSpan: 1,
+  },
+  {
+    name: "FluencySync",
+    category: "VOICE",
+    accent: "#FF3C38",
+    logo: "/logos/Fluency.avif",
+    description:
+      "Your voice, perfected. Language learning that adapts to how you actually speak and think.",
+    features: [
+      "Speech recognition",
+      "Pronunciation coach",
+      "Conversation practice",
+      "Progress tracking",
+    ],
+    colSpan: 1,
+    rowSpan: 1,
+  },
+  {
+    name: "SteadySync",
+    category: "ACCESS",
+    accent: "#3A7B7B",
+    logo: "/logos/SteadySync.avif",
+    description:
+      "Stability at the core. One account, one subscription, all seven apps unified under one roof.",
+    features: [
+      "Unified account",
+      "Single subscription",
+      "Cross-app data",
+      "Priority support",
+    ],
+    colSpan: 2,
+    rowSpan: 1,
+  },
+];
+
+/* ─── 3D Tilt Card ─── */
+function BentoCard({
+  tile,
+  index,
+  onExpand,
+}: {
+  tile: AppTile;
+  index: number;
+  onExpand: () => void;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!cardRef.current) return;
+      const rect = cardRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      const tiltX = (y - 0.5) * -8;
+      const tiltY = (x - 0.5) * 8;
+      setTilt({ rotateX: tiltX, rotateY: tiltY });
+      setGlowPos({ x: x * 100, y: y * 100 });
+    },
+    [],
+  );
+
+  const handleMouseLeave = useCallback(() => {
+    setTilt({ rotateX: 0, rotateY: 0 });
+    setIsHovered(false);
+  }, []);
+
+  const isTall = tile.rowSpan === 2;
+  const isWide = tile.colSpan === 2;
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 32 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.7,
+        ease: EASE,
+        delay: 0.12 + index * 0.06,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      onClick={onExpand}
+      className="relative cursor-pointer overflow-hidden"
+      style={{
+        gridColumn: `span ${tile.colSpan}`,
+        gridRow: `span ${tile.rowSpan}`,
+        perspective: "800px",
+        minHeight: isTall ? "380px" : "190px",
+      }}
+    >
+      <motion.div
+        className="relative h-full w-full overflow-hidden"
+        animate={{
+          rotateX: tilt.rotateX,
+          rotateY: tilt.rotateY,
+        }}
+        transition={{ type: "spring", stiffness: 260, damping: 25 }}
+        style={{
+          transformStyle: "preserve-3d",
+          borderRadius: "24px",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          boxShadow: isHovered
+            ? `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 ${tile.accent}15`
+            : `0 2px 8px rgba(0,0,0,0.2), inset 0 1px 0 ${tile.accent}10`,
+        }}
+      >
+        {/* Accent top edge glow */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "2px",
+            background: `linear-gradient(90deg, transparent 0%, ${tile.accent}88 30%, ${tile.accent} 50%, ${tile.accent}88 70%, transparent 100%)`,
+          }}
+        />
+
+        {/* Hover shine / spotlight */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: isHovered ? 1 : 0,
+            transition: "opacity 0.4s ease",
+            background: `radial-gradient(circle at ${glowPos.x}% ${glowPos.y}%, ${tile.accent}08 0%, transparent 60%)`,
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Content */}
+        <div
+          className="relative z-10 flex h-full flex-col justify-between"
+          style={{ padding: isTall || isWide ? "28px" : "22px" }}
+        >
+          {/* Top: Category + Logo */}
+          <div className="flex items-start justify-between">
+            <div>
+              <p
+                className="font-body font-semibold uppercase"
+                style={{
+                  color: tile.accent,
+                  fontSize: "10px",
+                  letterSpacing: "0.16em",
+                  opacity: 0.9,
+                }}
+              >
+                {tile.category}
+              </p>
+              <h2
+                className="font-heading font-bold text-white mt-1"
+                style={{ fontSize: isTall || isWide ? "22px" : "18px" }}
+              >
+                {tile.name}
+              </h2>
+            </div>
+
+            <motion.div
+              className="flex items-center justify-center"
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "14px",
+                background: `${tile.accent}0D`,
+                border: `1px solid ${tile.accent}1A`,
+                flexShrink: 0,
+              }}
+              animate={{
+                scale: isHovered ? 1.08 : 1,
+                borderColor: isHovered
+                  ? `${tile.accent}40`
+                  : `${tile.accent}1A`,
+              }}
+              transition={{ duration: 0.3, ease: EASE }}
+            >
+              {tile.logo ? (
+                <Image
+                  src={tile.logo}
+                  alt={`${tile.name} logo`}
+                  width={26}
+                  height={26}
+                  style={{ objectFit: "contain" }}
+                />
+              ) : (
+                <TrendingUp size={22} color={tile.accent} />
+              )}
+            </motion.div>
+          </div>
+
+          {/* Middle: Divider */}
+          <div
+            style={{
+              height: "1px",
+              background: `linear-gradient(90deg, ${tile.accent}15, rgba(255,255,255,0.04), transparent)`,
+              margin: isTall ? "20px 0" : "14px 0",
+            }}
+          />
+
+          {/* Bottom: Coming Soon + expand hint */}
+          <div className="flex flex-1 flex-col items-center justify-center gap-3">
+            <span
+              className="font-body font-semibold uppercase"
+              style={{
+                border: `1px solid ${tile.accent}25`,
+                color: `${tile.accent}99`,
+                background: `${tile.accent}08`,
+                borderRadius: "999px",
+                padding: "7px 20px",
+                fontSize: "10px",
+                letterSpacing: "0.14em",
+              }}
+            >
+              COMING SOON
+            </span>
+
+            {/* Expand hint on hover */}
+            <motion.div
+              className="flex items-center gap-1 font-body"
+              style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px" }}
+              animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+              transition={{ duration: 0.25, ease: EASE }}
+            >
+              <span>Tap to preview</span>
+              <ArrowUpRight size={11} />
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Bottom ambient glow */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-40%",
+            left: "10%",
+            right: "10%",
+            height: "60%",
+            background: `radial-gradient(ellipse at center, ${tile.accent}06 0%, transparent 70%)`,
+            pointerEvents: "none",
+            filter: "blur(20px)",
+          }}
+        />
+      </motion.div>
+    </motion.div>
+  );
 }
 
+/* ─── Expanded Modal ─── */
+function ExpandedTile({
+  tile,
+  onClose,
+}: {
+  tile: AppTile;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      style={{ padding: "40px" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, ease: EASE }}
+    >
+      {/* Backdrop */}
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          background: "rgba(0,0,0,0.75)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+        }}
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      />
+
+      {/* Card */}
+      <motion.div
+        className="relative z-10 w-full overflow-hidden"
+        style={{
+          maxWidth: "580px",
+          borderRadius: "28px",
+          background: "rgba(18,18,20,0.95)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: `0 40px 100px rgba(0,0,0,0.6), 0 0 80px ${tile.accent}08`,
+          backdropFilter: "blur(40px)",
+          WebkitBackdropFilter: "blur(40px)",
+        }}
+        initial={{ opacity: 0, scale: 0.92, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ duration: 0.4, ease: EASE }}
+      >
+        {/* Accent gradient top */}
+        <div
+          style={{
+            height: "3px",
+            background: `linear-gradient(90deg, transparent, ${tile.accent}, transparent)`,
+          }}
+        />
+
+        <div style={{ padding: "32px" }}>
+          {/* Header */}
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div
+                className="flex items-center justify-center"
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "16px",
+                  background: `${tile.accent}10`,
+                  border: `1px solid ${tile.accent}20`,
+                }}
+              >
+                {tile.logo ? (
+                  <Image
+                    src={tile.logo}
+                    alt={`${tile.name} logo`}
+                    width={32}
+                    height={32}
+                    style={{ objectFit: "contain" }}
+                  />
+                ) : (
+                  <TrendingUp size={28} color={tile.accent} />
+                )}
+              </div>
+              <div>
+                <p
+                  className="font-body font-semibold uppercase"
+                  style={{
+                    color: tile.accent,
+                    fontSize: "10px",
+                    letterSpacing: "0.16em",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {tile.category}
+                </p>
+                <h2
+                  className="font-heading font-bold text-white"
+                  style={{ fontSize: "26px" }}
+                >
+                  {tile.name}
+                </h2>
+              </div>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="flex items-center justify-center transition-colors duration-150"
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                color: "rgba(255,255,255,0.5)",
+              }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Description */}
+          <p
+            className="font-body font-light"
+            style={{
+              color: "#94A3B8",
+              fontSize: "15px",
+              lineHeight: 1.7,
+              marginBottom: "28px",
+            }}
+          >
+            {tile.description}
+          </p>
+
+          {/* Divider */}
+          <div
+            style={{
+              height: "1px",
+              background: `linear-gradient(90deg, ${tile.accent}15, rgba(255,255,255,0.04), transparent)`,
+              marginBottom: "24px",
+            }}
+          />
+
+          {/* Features */}
+          <p
+            className="font-body font-semibold uppercase mb-4"
+            style={{
+              color: "rgba(255,255,255,0.35)",
+              fontSize: "10px",
+              letterSpacing: "0.14em",
+            }}
+          >
+            PLANNED FEATURES
+          </p>
+          <div className="grid grid-cols-2 gap-3 mb-8">
+            {tile.features.map((feature, i) => (
+              <motion.div
+                key={feature}
+                className="flex items-center gap-3"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + i * 0.06, ease: EASE }}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: "12px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.05)",
+                }}
+              >
+                <div
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    background: tile.accent,
+                    opacity: 0.6,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  className="font-body"
+                  style={{ color: "#CBD5E1", fontSize: "13px" }}
+                >
+                  {feature}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div
+            className="flex items-center justify-center"
+            style={{
+              padding: "14px",
+              borderRadius: "14px",
+              background: `${tile.accent}08`,
+              border: `1px solid ${tile.accent}18`,
+            }}
+          >
+            <span
+              className="font-body font-semibold uppercase"
+              style={{
+                color: `${tile.accent}88`,
+                fontSize: "11px",
+                letterSpacing: "0.12em",
+              }}
+            >
+              Launching Soon — Stay Tuned
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ─── Dashboard Page ─── */
 export default function DashboardPage() {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
-  const [trackerSyncData, setTrackerSyncData] = useState<TrackerSyncData | null>(null);
-  const [trackerSyncLoading, setTrackerSyncLoading] = useState(true);
-  const [trackerSyncError, setTrackerSyncError] = useState(false);
-  const [travelSyncData, setTravelSyncData] = useState<TravelSyncData | null>(null);
-  const [travelSyncLoading, setTravelSyncLoading] = useState(true);
-  const [travelSyncError, setTravelSyncError] = useState(false);
+  const [authed, setAuthed] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [expandedTile, setExpandedTile] = useState<AppTile | null>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("subsync_token");
@@ -36,109 +586,74 @@ export default function DashboardPage() {
       router.replace("/");
       return;
     }
-    setToken(storedToken);
-
-    // Fetch data in parallel
-    Promise.allSettled([
-      fetchTrackerSyncData(storedToken),
-      fetchTravelSyncData(storedToken),
-    ]);
+    setAuthed(true);
   }, [router]);
 
-  async function fetchTrackerSyncData(authToken: string) {
-    setTrackerSyncLoading(true);
-    setTrackerSyncError(false);
-    try {
-      const response = await fetch("https://trackersync.ca/api/ai/dashboard-summary", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${authToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: "Give me a dashboard summary for this user. Return ONLY a raw JSON object with no markdown, no code fences, no explanation. The object must have exactly these keys: totalSpendingThisMonth (string, formatted as currency e.g. '$1,284.50'), topCategory (string), transactionCount (number), aiInsight (string, one sentence)."
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch TrackerSync data");
-      }
-
-      const text = await response.text();
-      const clean = text.replace(/```json|```/g, "").trim();
-      const data = JSON.parse(clean) as TrackerSyncData;
-      setTrackerSyncData(data);
-    } catch (error) {
-      console.error("TrackerSync error:", error);
-      setTrackerSyncError(true);
-    } finally {
-      setTrackerSyncLoading(false);
+  // Lock body scroll when expanded
+  useEffect(() => {
+    if (expandedTile) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
-  }
-
-  async function fetchTravelSyncData(authToken: string) {
-    setTravelSyncLoading(true);
-    setTravelSyncError(false);
-    try {
-      const response = await fetch("https://travelsync.ca/api/ai/dashboard-summary", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${authToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query: "Give me a dashboard summary for this user. Return ONLY a raw JSON object with no markdown, no code fences, no explanation. The object must have exactly these keys: nextTripDestination (string), nextTripDate (string, human-readable e.g. 'Jun 14, 2025'), tripsThisYear (number), aiInsight (string, one sentence)."
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch TravelSync data");
-      }
-
-      const text = await response.text();
-      const clean = text.replace(/```json|```/g, "").trim();
-      const data = JSON.parse(clean) as TravelSyncData;
-      setTravelSyncData(data);
-    } catch (error) {
-      console.error("TravelSync error:", error);
-      setTravelSyncError(true);
-    } finally {
-      setTravelSyncLoading(false);
-    }
-  }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [expandedTile]);
 
   function handleLogout() {
+    setIsTransitioning(true);
     localStorage.removeItem("subsync_token");
-    router.replace("/");
+    setTimeout(() => {
+      router.replace("/");
+    }, 850);
   }
 
+  if (!authed) return null;
+
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ background: "#0A0A0A" }}>
+      <motion.div
+        animate={
+          isTransitioning
+            ? { opacity: 0, scale: 0.97, filter: "blur(8px)" }
+            : { opacity: 1, scale: 1, filter: "blur(0px)" }
+        }
+        transition={{ duration: 0.8, ease: EASE }}
+      >
       {/* Nav Bar */}
       <nav
-        className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-white/[0.06]"
+        className="sticky top-0 z-50 flex h-16 items-center justify-between"
         style={{
-          background: "#111111",
+          background: "rgba(10,10,10,0.8)",
           padding: "0 40px",
-          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
         }}
       >
-        <a
+        <Link
           href="/"
-          className="font-heading text-[22px] font-black tracking-tight text-[#FFD700] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          className="font-heading text-[22px] font-black tracking-tight"
+          style={{ color: "#FFD700" }}
         >
           SubSync
-        </a>
+        </Link>
         <div className="flex items-center gap-6">
-          <a
+          <Link
             href="/"
-            className="font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="font-body text-sm transition-colors duration-150 hover:text-white"
+            style={{ color: "#94A3B8" }}
           >
             ← Home
-          </a>
+          </Link>
           <button
             onClick={handleLogout}
-            className="font-body rounded-lg border border-white/10 px-4 py-2 text-sm text-white transition-colors duration-150 hover:bg-red-500/20 hover:border-red-500/40 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="font-body rounded-xl px-5 py-2 text-sm text-white transition-all duration-200 hover:text-red-400"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
           >
             Logout
           </button>
@@ -146,260 +661,89 @@ export default function DashboardPage() {
       </nav>
 
       {/* Page Header */}
-      <div className="py-16" style={{ paddingLeft: "40px" }}>
-        <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-3">
+      <div style={{ padding: "56px 40px 36px" }}>
+        <motion.p
+          className="font-body font-semibold uppercase mb-3"
+          style={{ color: "#FFD700", fontSize: "10px", letterSpacing: "0.16em" }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE, delay: 0.05 }}
+        >
           YOUR SYNC CORE
-        </p>
-        <h1 className="font-heading font-bold text-white tracking-tight mb-3" style={{ fontSize: "36px", letterSpacing: "-0.02em" }}>
+        </motion.p>
+        <motion.h1
+          className="font-heading font-bold text-white mb-3"
+          style={{ fontSize: "38px", letterSpacing: "-0.025em" }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
+        >
           Welcome back.
-        </h1>
-        <p className="font-body text-[16px] font-light leading-[1.75] text-[#94A3B8]">
+        </motion.h1>
+        <motion.p
+          className="font-body text-[15px] font-light"
+          style={{ color: "#94A3B8", lineHeight: 1.75 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: EASE, delay: 0.12 }}
+        >
           Everything synced. All in one place.
-        </p>
+        </motion.p>
       </div>
 
-      {/* Dashboard Grid */}
-      <div className="px-10 pb-16">
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {/* TrackerSync Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderLeft: "4px solid #CCFF00",
-            }}
-          >
-            <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-1">
-              Finance
-            </p>
-            <h2 className="font-heading font-bold text-white text-xl mb-2">TrackerSync</h2>
-            <div className="h-px bg-white/[0.06] mb-4" />
-            
-            {trackerSyncLoading ? (
-              <div className="space-y-2">
-                <div className="h-8 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
-                <div className="h-4 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
-                <div className="h-4 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
-              </div>
-            ) : trackerSyncError ? (
-              <p className="font-body text-[13px] text-[#475569] text-center">
-                Could not load TrackerSync data.
-              </p>
-            ) : trackerSyncData ? (
-              <div>
-                <p className="font-heading font-bold text-white" style={{ fontSize: "28px" }}>
-                  {trackerSyncData.totalSpendingThisMonth}
-                </p>
-                <div className="flex items-center gap-2 mt-2 mb-4">
-                  <span className="px-2 py-1 rounded-full text-[11px] font-medium uppercase tracking-[0.08em]" style={{ background: "rgba(255,215,0,0.08)", color: "#FFD700" }}>
-                    {trackerSyncData.topCategory}
-                  </span>
-                  <span className="font-body text-[12px] text-[#475569]">
-                    {trackerSyncData.transactionCount} transactions
-                  </span>
-                </div>
-                <div className="h-px bg-white/[0.06] mb-3" />
-                <p className="font-body text-[14px] font-light italic text-[#94A3B8]">
-                  {trackerSyncData.aiInsight}
-                </p>
-              </div>
-            ) : null}
-          </motion.div>
-
-          {/* TravelSync Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.28 }}
-            viewport={{ once: true }}
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderLeft: "4px solid #F2994A",
-            }}
-          >
-            <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-1">
-              Travel
-            </p>
-            <h2 className="font-heading font-bold text-white text-xl mb-2">TravelSync</h2>
-            <div className="h-px bg-white/[0.06] mb-4" />
-            
-            {travelSyncLoading ? (
-              <div className="space-y-2">
-                <div className="h-8 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
-                <div className="h-4 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
-                <div className="h-4 rounded animate-pulse" style={{ background: "rgba(255,255,255,0.07)" }} />
-              </div>
-            ) : travelSyncError ? (
-              <p className="font-body text-[13px] text-[#475569] text-center">
-                Could not load TravelSync data.
-              </p>
-            ) : travelSyncData ? (
-              <div>
-                <p className="font-heading font-bold text-white" style={{ fontSize: "24px" }}>
-                  {travelSyncData.nextTripDestination}
-                </p>
-                <p className="font-body text-[12px] text-[#475569] mt-1 mb-2">
-                  {travelSyncData.nextTripDate}
-                </p>
-                <p className="font-body text-[13px] text-[#94A3B8] mb-4">
-                  ✈ {travelSyncData.tripsThisYear} trips completed this year
-                </p>
-                <div className="h-px bg-white/[0.06] mb-3" />
-                <p className="font-body text-[14px] font-light italic text-[#94A3B8]">
-                  {travelSyncData.aiInsight}
-                </p>
-              </div>
-            ) : null}
-          </motion.div>
-
-          {/* BrainSync Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.36 }}
-            viewport={{ once: true }}
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderLeft: "4px solid #FFD700",
-            }}
-          >
-            <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-1">
-              Focus
-            </p>
-            <h2 className="font-heading font-bold text-white text-xl mb-2">BrainSync</h2>
-            <div className="h-px bg-white/[0.06] mb-4" />
-            <div className="flex flex-col items-center justify-center py-4">
-              <span className="px-4 py-2 rounded-full text-[12px] font-medium uppercase tracking-[0.08em] text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#475569" }}>
-                Coming Soon
-              </span>
-              <p className="font-body text-[12px] text-[#334155] text-center mt-3">
-                Focus, amplified. Deep work sessions powered by your personal rhythm.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* SeatSync Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.44 }}
-            viewport={{ once: true }}
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderLeft: "4px solid #39FF14",
-            }}
-          >
-            <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-1">
-              Scheduling
-            </p>
-            <h2 className="font-heading font-bold text-white text-xl mb-2">SeatSync</h2>
-            <div className="h-px bg-white/[0.06] mb-4" />
-            <div className="flex flex-col items-center justify-center py-4">
-              <span className="px-4 py-2 rounded-full text-[12px] font-medium uppercase tracking-[0.08em] text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#475569" }}>
-                Coming Soon
-              </span>
-              <p className="font-body text-[12px] text-[#334155] text-center mt-3">
-                Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* PhotoSync Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.52 }}
-            viewport={{ once: true }}
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderLeft: "4px solid #A259FF",
-            }}
-          >
-            <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-1">
-              Memory
-            </p>
-            <h2 className="font-heading font-bold text-white text-xl mb-2">PhotoSync</h2>
-            <div className="h-px bg-white/[0.06] mb-4" />
-            <div className="flex flex-col items-center justify-center py-4">
-              <span className="px-4 py-2 rounded-full text-[12px] font-medium uppercase tracking-[0.08em] text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#475569" }}>
-                Coming Soon
-              </span>
-              <p className="font-body text-[12px] text-[#334155] text-center mt-3">
-                Memories, beautifully organized. Every photo in context.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* FluencySync Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.6 }}
-            viewport={{ once: true }}
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderLeft: "4px solid #FF3C38",
-            }}
-          >
-            <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-1">
-              Voice
-            </p>
-            <h2 className="font-heading font-bold text-white text-xl mb-2">FluencySync</h2>
-            <div className="h-px bg-white/[0.06] mb-4" />
-            <div className="flex flex-col items-center justify-center py-4">
-              <span className="px-4 py-2 rounded-full text-[12px] font-medium uppercase tracking-[0.08em] text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#475569" }}>
-                Coming Soon
-              </span>
-              <p className="font-body text-[12px] text-[#334155] text-center mt-3">
-                Your voice, perfected. Language learning that feels natural.
-              </p>
-            </div>
-          </motion.div>
-
-          {/* SteadySync Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.68 }}
-            viewport={{ once: true }}
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderLeft: "4px solid #3A7B7B",
-            }}
-          >
-            <p className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700] mb-1">
-              Access
-            </p>
-            <h2 className="font-heading font-bold text-white text-xl mb-2">SteadySync</h2>
-            <div className="h-px bg-white/[0.06] mb-4" />
-            <div className="flex flex-col items-center justify-center py-4">
-              <span className="px-4 py-2 rounded-full text-[12px] font-medium uppercase tracking-[0.08em] text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "#475569" }}>
-                Coming Soon
-              </span>
-              <p className="font-body text-[12px] text-[#334155] text-center mt-3">
-                Stability at the core. One account, one subscription, all seven apps.
-              </p>
-            </div>
-          </motion.div>
+      {/* Bento Grid */}
+      <div style={{ padding: "0 40px 60px" }}>
+        <div
+          className="grid gap-4"
+          style={{
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gridAutoRows: "190px",
+          }}
+        >
+          {TILES.map((tile, i) => (
+            <BentoCard
+              key={tile.name}
+              tile={tile}
+              index={i}
+              onExpand={() => setExpandedTile(tile)}
+            />
+          ))}
         </div>
       </div>
+
+      {/* Expanded Modal */}
+      <AnimatePresence>
+        {expandedTile && (
+          <ExpandedTile
+            tile={expandedTile}
+            onClose={() => setExpandedTile(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Responsive override */}
+      <style>{`
+        @media (max-width: 768px) {
+          .grid {
+            grid-template-columns: 1fr !important;
+            grid-auto-rows: auto !important;
+          }
+          .grid > * {
+            grid-column: span 1 !important;
+            grid-row: span 1 !important;
+            min-height: 200px !important;
+          }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+          }
+          .grid > * {
+            min-height: 200px !important;
+          }
+        }
+      `}</style>
+      </motion.div>
     </div>
   );
 }

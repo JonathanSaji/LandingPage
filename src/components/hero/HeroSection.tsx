@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   TrendingUp,
   Plane,
@@ -121,15 +122,16 @@ const APPS = [
 
 export function HeroSection() {
   const [authOpen, setAuthOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [devAdminOpen, setDevAdminOpen] = useState(false);
   const clickCountRef = useRef(0);
   const clickWindowRef = useRef<number>(0);
+  const router = useRouter();
 
   useEffect(() => {
-    // Set a mock token for development
-    const token = btoa(JSON.stringify({ accountId: 1, timestamp: Date.now() }));
-    localStorage.setItem("subsync_token", token);
+    const token = localStorage.getItem("subsync_token");
+    setIsLoggedIn(!!token);
   }, []);
 
   function handleBrandClick() {
@@ -153,6 +155,14 @@ export function HeroSection() {
 
   return (
     <>
+      <motion.div
+        animate={
+          isTransitioning
+            ? { opacity: 0, scale: 0.97, filter: "blur(8px)" }
+            : { opacity: 1, scale: 1, filter: "blur(0px)" }
+        }
+        transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+      >
       <section className="relative min-h-screen overflow-hidden bg-black">
         {/* Wave canvas - z-0 */}
         <HeroWave />
@@ -222,6 +232,7 @@ export function HeroSection() {
             <button
               onClick={() => {
                 if (isLoggedIn) {
+                  localStorage.removeItem("subsync_token");
                   setIsLoggedIn(false);
                   setAuthOpen(false);
                   return;
@@ -306,7 +317,11 @@ export function HeroSection() {
                   <AuthModal
                     variant="inline"
                     onClose={() => setAuthOpen(false)}
-                    onAuthSuccess={() => setIsLoggedIn(true)}
+                    onAuthSuccess={() => {
+                      setIsLoggedIn(true);
+                      setIsTransitioning(true);
+                      setTimeout(() => router.push("/dashboard"), 900);
+                    }}
                     className="w-full"
                   />
                 </motion.div>
@@ -315,6 +330,7 @@ export function HeroSection() {
           </div>
         </div>
       </section>
+      </motion.div>
 
       <DevAdminModal open={devAdminOpen} onClose={() => setDevAdminOpen(false)} />
     </>
