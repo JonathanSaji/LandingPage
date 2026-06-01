@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, DM_Sans } from "next/font/google";
 import "./globals.css";
+import { RightSideDock } from "@/components/ui/right-side-dock";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -26,7 +27,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${poppins.variable} ${dmSans.variable}`}>
-      <body className="bg-black text-white antialiased">{children}</body>
+      <body className="bg-black text-white antialiased">
+        {children}
+        <RightSideDock />
+      </body>
     </html>
   );
 }
