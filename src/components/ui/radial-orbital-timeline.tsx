@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { ArrowRight, Link, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,8 @@ interface TimelineItem {
   date: string;
   content: string;
   category: string;
-  icon: React.ElementType;
+  icon?: React.ElementType;
+  logoSrc?: string;
   relatedIds: number[];
   status: "completed" | "in-progress" | "pending";
   energy: number;
@@ -130,23 +132,14 @@ export function RadialOrbitalTimeline({
           ref={orbitRef}
           style={{ perspective: "1000px" }}
         >
-          {/* Gold Sync Core */}
-          <div
-            className="absolute w-16 h-16 rounded-full animate-pulse flex items-center justify-center z-10"
-            style={{ background: "radial-gradient(circle, #FFD700, #B8860B)" }}
-          >
+          {/* Sync Core — SubSync logo */}
+          <div className="absolute w-16 h-16 rounded-full flex items-center justify-center z-10">
             <div className="absolute w-20 h-20 rounded-full border border-[#FFD700]/30 animate-ping opacity-70" />
             <div
               className="absolute w-24 h-24 rounded-full border border-[#FFD700]/15 animate-ping opacity-50"
               style={{ animationDelay: "0.5s" }}
             />
-            <div className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center">
-              <span className="text-[7px] font-black text-[#FFD700] leading-tight text-center font-heading">
-                Sync
-                <br />
-                Core
-              </span>
-            </div>
+            <Image src="/logos/SubSync.png" alt="SubSync" width={64} height={64} className="rounded-full object-contain" />
           </div>
 
           {/* Orbit ring */}
@@ -158,6 +151,7 @@ export function RadialOrbitalTimeline({
             const isRelated = isRelatedToActive(item.id);
             const isPulsing = pulseEffect[item.id];
             const Icon = item.icon;
+            const logoSrc = item.logoSrc;
 
             return (
               <div
@@ -187,18 +181,22 @@ export function RadialOrbitalTimeline({
 
                 {/* Node circle */}
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-[transform,box-shadow] duration-300 ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 overflow-hidden transition-[transform,box-shadow] duration-300 ${
                     isRelated ? "animate-pulse" : ""
                   }`}
                   style={{
-                    backgroundColor: isExpanded ? item.color : `${item.color}33`,
+                    backgroundColor: logoSrc ? "#000" : isExpanded ? item.color : `${item.color}33`,
                     borderColor: isRelated ? item.color : `${item.color}80`,
                     color: isExpanded ? "#000" : "#fff",
                     transform: isExpanded ? "scale(1.5)" : "scale(1)",
                     boxShadow: isExpanded ? `0 0 20px ${item.color}60` : "none",
                   }}
                 >
-                  <Icon size={16} />
+                  {logoSrc ? (
+                    <Image src={logoSrc} alt={item.title} width={40} height={40} className="object-contain w-full h-full" />
+                  ) : Icon ? (
+                    <Icon size={16} />
+                  ) : null}
                 </div>
 
                 {/* Label */}

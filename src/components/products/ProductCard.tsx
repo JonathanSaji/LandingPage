@@ -94,7 +94,7 @@ export function ProductCard({
           <div className="absolute bottom-3 left-3 z-10">
             {logoSrc ? (
               <div
-                className="w-9 h-9 rounded-xl overflow-hidden bg-white"
+                className="w-9 h-9 rounded-xl overflow-hidden bg-black"
                 style={{ boxShadow: `0 4px 16px ${color}60` }}
               >
                 <Image
@@ -133,7 +133,7 @@ export function ProductCard({
             {category}
           </span>
 
-          <h3 className="font-heading font-semibold text-[16px] text-white tracking-tight mb-2 leading-snug">
+          <h3 className="font-heading font-extrabold text-[16px] text-white tracking-tight mb-2 leading-snug">
             {title}
           </h3>
 

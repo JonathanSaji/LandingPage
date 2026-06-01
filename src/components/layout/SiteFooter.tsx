@@ -20,8 +20,10 @@ export function SiteFooter() {
   return (
     <footer
       id="footer"
-      className="relative bg-black border-t border-white/[0.06] py-16 px-10"
+      className="relative bg-black py-16 px-10"
     >
+      {/* Section divider */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-white/10" aria-hidden />
       <motion.div
         className="mx-auto max-w-[1400px]"
         {...(reduceMotion ? {} : {

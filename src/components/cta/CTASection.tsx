@@ -2,18 +2,16 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { TrendingUp } from "lucide-react";
-
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const LOGOS = [
-  { name: "TravelSync",  src: "/logos/TravelSync.avif" },
-  { name: "BrainSync",   src: "/logos/BrainSync.avif" },
-  { name: "SeatSync",    src: "/logos/SeatSync.avif" },
-  { name: "PhotoSync",   src: "/logos/PhotoSync.avif" },
-  { name: "FluencySync", src: "/logos/Fluency.avif" },
-  { name: "SteadySync",  src: "/logos/SteadySync.avif" },
-  { name: "TrackerSync", src: null },
+  { name: "TravelSync",  src: "/logos/TravelSync.png" },
+  { name: "BrainSync",   src: "/logos/BrainSync.png" },
+  { name: "SeatSync",    src: "/logos/SeatSync.png" },
+  { name: "PhotoSync",   src: "/logos/PhotoSync.png" },
+  { name: "FluencySync", src: "/logos/FluencySync.png" },
+  { name: "SteadySync",  src: "/logos/SteadySync.png" },
+  { name: "TrackerSync", src: "/logos/TrackerSync.png" },
 ] as const;
 
 export function CTASection() {
@@ -41,7 +39,7 @@ export function CTASection() {
 
       <div className="relative mx-auto max-w-[1400px] px-10">
         <motion.div
-          className="relative mx-auto max-w-5xl rounded-3xl px-12 py-16 text-center"
+          className="relative mx-auto w-[85vw] rounded-3xl px-12 py-16 text-center"
           style={{
             background: "rgba(255, 255, 255, 0.03)",
             border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -73,17 +71,13 @@ export function CTASection() {
                   transition: { duration: 0.5, delay: 0.1 + i * 0.05, ease: EASE },
                 })}
               >
-                {logo.src ? (
-                  <Image
-                    src={logo.src}
-                    alt={logo.name}
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                ) : (
-                  <TrendingUp size={20} color="#FFD700" aria-hidden />
-                )}
+                <Image
+                  src={logo.src}
+                  alt={logo.name}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </motion.div>
             ))}
           </div>
@@ -91,7 +85,7 @@ export function CTASection() {
           {/* Headline */}
           <motion.h2
             id="cta-heading"
-            className="font-heading font-black text-white mb-8"
+            className="font-heading font-extrabold text-white mb-8"
             style={{
               fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
               letterSpacing: "-0.035em",

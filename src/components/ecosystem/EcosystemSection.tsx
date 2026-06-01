@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
+import { TrendingUp } from "lucide-react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -9,8 +11,8 @@ const SYNC_CORE_COLOR = "#FFD60A";
 const CONNECTIONS = [
   {
     id: 1,
-    topApp: { name: "TravelSync", color: "#F2994A", icon: "✈" },
-    bottomApp: { name: "TrackerSync", color: "#FFD700", icon: "📈" },
+    topApp: { name: "TravelSync", color: "#F2994A", logoSrc: "/logos/TravelSync.png" as string | null },
+    bottomApp: { name: "TrackerSync", color: "#FFD700", logoSrc: "/logos/TrackerSync.png" as string | null },
     title: "Trip coming up? Your finances already know.",
     description:
       "TravelSync shares your upcoming trip with TrackerSync, which surfaces active subscriptions and payments during your travel window — nothing slips through while you're away.",
@@ -19,8 +21,8 @@ const CONNECTIONS = [
   },
   {
     id: 2,
-    topApp: { name: "SeatSync", color: "#39FF14", icon: "🪑" },
-    bottomApp: { name: "TrackerSync", color: "#FFD700", icon: "📈" },
+    topApp: { name: "SeatSync", color: "#39FF14", logoSrc: "/logos/SeatSync.png" as string | null },
+    bottomApp: { name: "TrackerSync", color: "#FFD700", logoSrc: "/logos/TrackerSync.png" as string | null },
     title: "One company account. Every subscription, tracked.",
     description:
       "Companies set up their workspace in SeatSync and link it to TrackerSync — giving a live view of app subscriptions, per-employee costs, and renewal dates all in one place.",
@@ -33,7 +35,7 @@ export function EcosystemSection() {
   return (
     <section
       id="ecosystem"
-      className="relative py-20 bg-black overflow-hidden"
+      className="relative pt-14 pb-20 bg-black overflow-hidden"
       aria-labelledby="ecosystem-heading"
     >
       {/* Ambient background glow */}
@@ -58,7 +60,7 @@ export function EcosystemSection() {
           </motion.p>
           <motion.h2
             id="ecosystem-heading"
-            className="font-heading font-black text-white tracking-tight"
+            className="font-heading font-extrabold text-white tracking-tight"
             style={{ fontSize: "clamp(2rem, 4vw, 3rem)", letterSpacing: "-0.03em" }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -95,14 +97,14 @@ export function EcosystemSection() {
               {/* Horizontal connector: left app → line → dot → line → right app */}
               <div className="relative flex items-center gap-2">
                 <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{
-                    background: `${conn.topApp.color}18`,
-                    border: `1px solid ${conn.topApp.color}44`,
-                  }}
+                  className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
                   aria-label={conn.topApp.name}
                 >
-                  {conn.topApp.icon}
+                  {conn.topApp.logoSrc ? (
+                    <Image src={conn.topApp.logoSrc} alt={conn.topApp.name} width={56} height={56} className="object-contain" />
+                  ) : (
+                    <TrendingUp size={24} color="#FFD700" aria-hidden />
+                  )}
                 </div>
 
                 <div
@@ -127,20 +129,20 @@ export function EcosystemSection() {
                 />
 
                 <div
-                  className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{
-                    background: `${conn.bottomApp.color}18`,
-                    border: `1px solid ${conn.bottomApp.color}44`,
-                  }}
+                  className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden"
                   aria-label={conn.bottomApp.name}
                 >
-                  {conn.bottomApp.icon}
+                  {conn.bottomApp.logoSrc ? (
+                    <Image src={conn.bottomApp.logoSrc} alt={conn.bottomApp.name} width={56} height={56} className="object-contain" />
+                  ) : (
+                    <TrendingUp size={24} color="#FFD700" aria-hidden />
+                  )}
                 </div>
               </div>
 
               {/* Copy below the connector */}
               <div className="relative">
-                <h3 className="font-heading font-bold text-white text-[17px] leading-snug mb-2">
+                <h3 className="font-heading font-extrabold text-white text-[17px] leading-snug mb-2">
                   {conn.title}
                 </h3>
                 <p className="font-body font-light text-[#666] text-[14px] leading-relaxed">

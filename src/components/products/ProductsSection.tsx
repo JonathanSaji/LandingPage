@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { TrendingUp } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 
 const PRODUCTS = [
@@ -12,7 +11,7 @@ const PRODUCTS = [
     category: "Finance",
     description: "Your financial engine. Track every dollar, spot every pattern.",
     color: "#FFD700",
-    LogoIcon: TrendingUp,
+    logoSrc: "/logos/TrackerSync.png",
   },
   {
     id: 2,
@@ -20,7 +19,7 @@ const PRODUCTS = [
     category: "Travel",
     description: "Every trip, perfectly synced. Itineraries, bookings, memories — one place.",
     color: "#F2994A",
-    logoSrc: "/logos/TravelSync.avif",
+    logoSrc: "/logos/TravelSync.png",
   },
   {
     id: 3,
@@ -28,7 +27,7 @@ const PRODUCTS = [
     category: "Focus",
     description: "Focus, amplified. Deep work sessions powered by your personal rhythm.",
     color: "#FFD700",
-    logoSrc: "/logos/BrainSync.avif",
+    logoSrc: "/logos/BrainSync.png",
   },
   {
     id: 4,
@@ -37,7 +36,7 @@ const PRODUCTS = [
     description:
       "Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.",
     color: "#39FF14",
-    logoSrc: "/logos/SeatSync.avif",
+    logoSrc: "/logos/SeatSync.png",
   },
   {
     id: 5,
@@ -45,7 +44,7 @@ const PRODUCTS = [
     category: "Memory",
     description: "Memories, beautifully organized. Every photo in context.",
     color: "#A259FF",
-    logoSrc: "/logos/PhotoSync.avif",
+    logoSrc: "/logos/PhotoSync.png",
   },
   {
     id: 6,
@@ -53,7 +52,7 @@ const PRODUCTS = [
     category: "Voice",
     description: "Your voice, perfected. Language learning that feels natural.",
     color: "#FF3C38",
-    logoSrc: "/logos/Fluency.avif",
+    logoSrc: "/logos/FluencySync.png",
   },
   {
     id: 7,
@@ -62,7 +61,7 @@ const PRODUCTS = [
     description:
       "Stability at the core. One account, one subscription, all seven apps.",
     color: "#3A7B7B",
-    logoSrc: "/logos/SteadySync.avif",
+    logoSrc: "/logos/SteadySync.png",
   },
 ] as const;
 
@@ -89,7 +88,7 @@ export function ProductsSection() {
   return (
     <section
       id="apps"
-      className="relative py-24 overflow-hidden"
+      className="relative pt-24 pb-14 overflow-hidden"
       style={{ background: "#000" }}
       aria-labelledby="products-heading"
     >
@@ -104,7 +103,7 @@ export function ProductsSection() {
         </motion.p>
         <motion.h2
           id="products-heading"
-          className="font-heading font-bold text-white tracking-tight"
+          className="font-heading font-extrabold text-white tracking-tight"
           style={{ fontSize: "clamp(2rem, 4vw, 3rem)" }}
           {...fadeUpProps}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}

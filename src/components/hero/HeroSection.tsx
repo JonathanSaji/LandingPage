@@ -2,16 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  TrendingUp,
-  Plane,
-  Brain,
-  Calendar,
-  Camera,
-  Mic,
-  Shield,
-  CircleUserRound,
-} from "lucide-react";
+import { CircleUserRound } from "lucide-react";
 import { HeroWave } from "./HeroWave";
 import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -31,7 +22,7 @@ const APPS = [
     id: 1,
     title: "TrackerSync",
     color: "#FFD700",
-    icon: TrendingUp,
+    logoSrc: "/logos/TrackerSync.png",
     date: "Finance",
     content: "Your financial engine. Track every dollar, spot every pattern.",
     category: "Finance",
@@ -43,7 +34,7 @@ const APPS = [
     id: 2,
     title: "TravelSync",
     color: "#F2994A",
-    icon: Plane,
+    logoSrc: "/logos/TravelSync.png",
     date: "Travel",
     content:
       "Every trip, perfectly synced. Itineraries, bookings, memories - one place.",
@@ -56,7 +47,7 @@ const APPS = [
     id: 3,
     title: "BrainSync",
     color: "#FFD700",
-    icon: Brain,
+    logoSrc: "/logos/BrainSync.png",
     date: "Focus",
     content:
       "Focus, amplified. Deep work sessions powered by your personal rhythm.",
@@ -69,7 +60,7 @@ const APPS = [
     id: 4,
     title: "SeatSync",
     color: "#39FF14",
-    icon: Calendar,
+    logoSrc: "/logos/SeatSync.png",
     date: "Scheduling",
     content:
       "Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.",
@@ -82,7 +73,7 @@ const APPS = [
     id: 5,
     title: "PhotoSync",
     color: "#A259FF",
-    icon: Camera,
+    logoSrc: "/logos/PhotoSync.png",
     date: "Memory",
     content: "Memories, beautifully organized. Every photo in context.",
     category: "Memory",
@@ -94,7 +85,7 @@ const APPS = [
     id: 6,
     title: "FluencySync",
     color: "#FF3C38",
-    icon: Mic,
+    logoSrc: "/logos/FluencySync.png",
     date: "Voice",
     content: "Your voice, perfected. Language learning that feels natural.",
     category: "Voice",
@@ -106,7 +97,7 @@ const APPS = [
     id: 7,
     title: "SteadySync",
     color: "#3A7B7B",
-    icon: Shield,
+    logoSrc: "/logos/SteadySync.png",
     date: "Access",
     content:
       "Stability at the core. One account, one subscription, all seven apps.",
@@ -205,7 +196,7 @@ export function HeroSection() {
             </motion.p>
 
             <h1
-              className="flex flex-col font-heading font-black leading-[0.95] tracking-[-0.03em]"
+              className="flex flex-col font-heading font-extrabold leading-[0.95] tracking-[-0.03em]"
               style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
             >
               <motion.span className="text-white" {...fadeUp(0.4)}>
