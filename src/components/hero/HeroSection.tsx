@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   TrendingUp,
@@ -15,6 +15,7 @@ import {
 import { HeroWave } from "./HeroWave";
 import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { DevAdminModal } from "@/components/admin/DevAdminModal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -120,6 +121,28 @@ const APPS = [
 export function HeroSection() {
   const [authOpen, setAuthOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [devAdminOpen, setDevAdminOpen] = useState(false);
+  const clickCountRef = useRef(0);
+  const clickWindowRef = useRef<number>(0);
+
+  function handleBrandClick() {
+    const now = Date.now();
+
+    if (now - clickWindowRef.current > 1500) {
+      clickCountRef.current = 1;
+      clickWindowRef.current = now;
+      return;
+    }
+
+    clickCountRef.current += 1;
+    clickWindowRef.current = now;
+
+    if (clickCountRef.current >= 3) {
+      clickCountRef.current = 0;
+      clickWindowRef.current = 0;
+      setDevAdminOpen(true);
+    }
+  }
 
   return (
     <>
@@ -144,9 +167,13 @@ export function HeroSection() {
             backdropFilter: "blur(12px)",
           }}
         >
-          <span className="font-heading text-[22px] font-black tracking-tight text-[#FFD700]">
+          <button
+            type="button"
+            onClick={handleBrandClick}
+            className="font-heading text-[22px] font-black tracking-tight text-[#FFD700]"
+          >
             SubSync
-          </span>
+          </button>
           <div className="flex items-center gap-8">
             {["Apps", "Features", "Pricing"].map((link) => (
               <a
@@ -266,6 +293,8 @@ export function HeroSection() {
           </div>
         </div>
       </section>
+
+      <DevAdminModal open={devAdminOpen} onClose={() => setDevAdminOpen(false)} />
     </>
   );
 }
