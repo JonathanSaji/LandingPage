@@ -10,7 +10,13 @@ export function HeroWave() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const SCALE = 2;
+    // Offscreen canvas holds the low-res pixel data so we never
+    // read from and write to the same canvas in the same frame.
+    const offscreen = document.createElement("canvas");
+    const offCtx = offscreen.getContext("2d");
+    if (!offCtx) return;
+
+    const SCALE = 4; // lower res = less CPU, still smooth when upscaled
     let width = 0;
     let height = 0;
     let imageData: ImageData;
@@ -22,7 +28,9 @@ export function HeroWave() {
       canvas.height = window.innerHeight;
       width = Math.floor(canvas.width / SCALE);
       height = Math.floor(canvas.height / SCALE);
-      imageData = ctx.createImageData(width, height);
+      offscreen.width = width;
+      offscreen.height = height;
+      imageData = offCtx.createImageData(width, height);
       data = imageData.data;
     };
 
@@ -31,6 +39,7 @@ export function HeroWave() {
 
     const startTime = Date.now();
 
+    // Lookup tables for cheap trig
     const SIN_TABLE = new Float32Array(1024);
     const COS_TABLE = new Float32Array(1024);
     for (let i = 0; i < 1024; i++) {
@@ -42,15 +51,13 @@ export function HeroWave() {
     const fastSin = (x: number): number => {
       let norm = x % (Math.PI * 2);
       if (norm < 0) norm += Math.PI * 2;
-      const index = Math.floor((norm / (Math.PI * 2)) * 1024) & 1023;
-      return SIN_TABLE[index];
+      return SIN_TABLE[Math.floor((norm / (Math.PI * 2)) * 1024) & 1023];
     };
 
     const fastCos = (x: number): number => {
       let norm = x % (Math.PI * 2);
       if (norm < 0) norm += Math.PI * 2;
-      const index = Math.floor((norm / (Math.PI * 2)) * 1024) & 1023;
-      return COS_TABLE[index];
+      return COS_TABLE[Math.floor((norm / (Math.PI * 2)) * 1024) & 1023];
     };
 
     const render = () => {
@@ -76,21 +83,20 @@ export function HeroWave() {
 
           const r = Math.max(0, Math.min(1, baseVal + purpleAccent * 0.8)) * intensity;
           const g = Math.max(0, Math.min(1, baseVal + blueAccent * 0.6)) * intensity;
-          const b =
-            Math.max(0, Math.min(1, baseVal + blueAccent * 1.2 + purpleAccent * 0.4)) *
-            intensity;
+          const b = Math.max(0, Math.min(1, baseVal + blueAccent * 1.2 + purpleAccent * 0.4)) * intensity;
 
           const idx = (y * width + x) * 4;
-          data[idx] = r * 255;
+          data[idx]     = r * 255;
           data[idx + 1] = g * 255;
           data[idx + 2] = b * 255;
           data[idx + 3] = 255;
         }
       }
 
-      ctx.putImageData(imageData, 0, 0);
+      // Write pixels to offscreen, then stretch-draw to main canvas — no self-read glitch
+      offCtx.putImageData(imageData, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(canvas, 0, 0, width, height, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
 
       animId = requestAnimationFrame(render);
     };

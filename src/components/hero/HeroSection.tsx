@@ -1,17 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  TrendingUp,
-  Plane,
-  Brain,
-  Calendar,
-  Camera,
-  Mic,
-  Shield,
-  CircleUserRound,
-} from "lucide-react";
+import { CircleUserRound } from "lucide-react";
 import { HeroWave } from "./HeroWave";
 import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -31,8 +22,8 @@ const APPS = [
   {
     id: 1,
     title: "TrackerSync",
-    color: "#10B981",
-    icon: TrendingUp,
+    color: "#FFD700",
+    logoSrc: "/logos/TrackerSync.png",
     date: "Finance",
     content: "Your financial engine. Track every dollar, spot every pattern.",
     category: "Finance",
@@ -43,8 +34,8 @@ const APPS = [
   {
     id: 2,
     title: "TravelSync",
-    color: "#3B82F6",
-    icon: Plane,
+    color: "#F2994A",
+    logoSrc: "/logos/TravelSync.png",
     date: "Travel",
     content:
       "Every trip, perfectly synced. Itineraries, bookings, memories - one place.",
@@ -56,8 +47,8 @@ const APPS = [
   {
     id: 3,
     title: "BrainSync",
-    color: "#8B5CF6",
-    icon: Brain,
+    color: "#FFD700",
+    logoSrc: "/logos/BrainSync.png",
     date: "Focus",
     content:
       "Focus, amplified. Deep work sessions powered by your personal rhythm.",
@@ -69,8 +60,8 @@ const APPS = [
   {
     id: 4,
     title: "SeatSync",
-    color: "#F59E0B",
-    icon: Calendar,
+    color: "#39FF14",
+    logoSrc: "/logos/SeatSync.png",
     date: "Scheduling",
     content:
       "Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.",
@@ -82,8 +73,8 @@ const APPS = [
   {
     id: 5,
     title: "PhotoSync",
-    color: "#EC4899",
-    icon: Camera,
+    color: "#A259FF",
+    logoSrc: "/logos/PhotoSync.png",
     date: "Memory",
     content: "Memories, beautifully organized. Every photo in context.",
     category: "Memory",
@@ -94,8 +85,8 @@ const APPS = [
   {
     id: 6,
     title: "FluencySync",
-    color: "#06B6D4",
-    icon: Mic,
+    color: "#FF3C38",
+    logoSrc: "/logos/FluencySync.png",
     date: "Voice",
     content: "Your voice, perfected. Language learning that feels natural.",
     category: "Voice",
@@ -106,8 +97,8 @@ const APPS = [
   {
     id: 7,
     title: "SteadySync",
-    color: "#FFD700",
-    icon: Shield,
+    color: "#3A7B7B",
+    logoSrc: "/logos/SteadySync.png",
     date: "Access",
     content:
       "Stability at the core. One account, one subscription, all seven apps.",
@@ -127,22 +118,25 @@ export function HeroSection() {
 
   function handleBrandClick() {
     const now = Date.now();
-
     if (now - clickWindowRef.current > 1500) {
       clickCountRef.current = 1;
       clickWindowRef.current = now;
       return;
     }
-
     clickCountRef.current += 1;
     clickWindowRef.current = now;
-
     if (clickCountRef.current >= 3) {
       clickCountRef.current = 0;
       clickWindowRef.current = 0;
       setDevAdminOpen(true);
     }
   }
+
+  useEffect(() => {
+    const handler = () => setAuthOpen(true);
+    window.addEventListener("subsync:openAuth", handler);
+    return () => window.removeEventListener("subsync:openAuth", handler);
+  }, []);
 
   return (
     <>
@@ -226,7 +220,7 @@ export function HeroSection() {
             </motion.p>
 
             <h1
-              className="flex flex-col font-heading font-black leading-[0.95] tracking-[-0.03em]"
+              className="flex flex-col font-heading font-extrabold leading-[0.95] tracking-[-0.03em]"
               style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
             >
               <motion.span className="text-white" {...fadeUp(0.4)}>
@@ -292,6 +286,16 @@ export function HeroSection() {
             </AnimatePresence>
           </div>
         </div>
+
+        {/* Bottom fade — blends wave canvas into ProductsSection black */}
+        <div
+          className="pointer-events-none absolute bottom-0 left-0 right-0 z-[3]"
+          style={{
+            height: "80px",
+            background: "linear-gradient(to bottom, transparent, #000000)",
+          }}
+          aria-hidden
+        />
       </section>
 
       <DevAdminModal open={devAdminOpen} onClose={() => setDevAdminOpen(false)} />

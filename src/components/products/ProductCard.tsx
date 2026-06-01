@@ -40,13 +40,13 @@ export function ProductCard({
       whileHover={
         reduceMotion
           ? undefined
-          : { y: -8, scale: 1.02, transition: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] } }
+          : { y: -14, scale: 1.04, transition: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] } }
       }
     >
       {/* Hover glow ring — CSS opacity transition only */}
       <div
         className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-        style={{ boxShadow: `0 0 0 1px ${color}50, 0 24px 64px ${color}20` }}
+        style={{ boxShadow: `0 0 0 1px ${color}80, 0 20px 60px ${color}50, 0 0 120px ${color}20` }}
         aria-hidden
       />
 
@@ -94,7 +94,7 @@ export function ProductCard({
           <div className="absolute bottom-3 left-3 z-10">
             {logoSrc ? (
               <div
-                className="w-9 h-9 rounded-xl overflow-hidden bg-white"
+                className="w-9 h-9 rounded-xl overflow-hidden bg-black"
                 style={{ boxShadow: `0 4px 16px ${color}60` }}
               >
                 <Image
@@ -133,7 +133,7 @@ export function ProductCard({
             {category}
           </span>
 
-          <h3 className="font-heading font-semibold text-[16px] text-white tracking-tight mb-2 leading-snug">
+          <h3 className="font-heading font-extrabold text-[16px] text-white tracking-tight mb-2 leading-snug">
             {title}
           </h3>
 
