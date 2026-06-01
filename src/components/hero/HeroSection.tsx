@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
 import {
   TrendingUp,
   Plane,
@@ -120,10 +121,16 @@ const APPS = [
 
 export function HeroSection() {
   const [authOpen, setAuthOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [devAdminOpen, setDevAdminOpen] = useState(false);
   const clickCountRef = useRef(0);
   const clickWindowRef = useRef<number>(0);
+
+  useEffect(() => {
+    // Set a mock token for development
+    const token = btoa(JSON.stringify({ accountId: 1, timestamp: Date.now() }));
+    localStorage.setItem("subsync_token", token);
+  }, []);
 
   function handleBrandClick() {
     const now = Date.now();
@@ -184,6 +191,21 @@ export function HeroSection() {
                 {link}
               </a>
             ))}
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="rounded font-body text-sm text-[#FFD700] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <a
+                onClick={() => setAuthOpen(true)}
+                className="rounded font-body text-sm text-[#94A3B8] hover:text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                Dashboard
+              </a>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {isLoggedIn && (

@@ -511,6 +511,12 @@ export function AuthModal({
       }
 
       setNotice({ type: "success", message: "Signed in successfully." });
+      
+      // Store JWT token in localStorage
+      const account = payload.account as { id: number } | undefined;
+      const token = btoa(JSON.stringify({ accountId: account?.id, timestamp: Date.now() }));
+      localStorage.setItem("subsync_token", token);
+      
       onAuthSuccess?.();
       onClose();
     } catch (error) {
