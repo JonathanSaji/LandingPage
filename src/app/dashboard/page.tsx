@@ -135,15 +135,32 @@ const TILES: AppTile[] = [
   },
 ];
 
+interface Subscription {
+  id: string;
+  name: string;
+  amount: string;
+  date: string;
+  color: string;
+  billingCycle: string;
+  subscriptionType: string;
+  isTrial: boolean;
+  amountPerCycle: string;
+  personalValue: number;
+}
+
 /* ─── 3D Tilt Card ─── */
 function BentoCard({
   tile,
   index,
   onExpand,
+  subscriptions = [],
+  loading = false,
 }: {
   tile: AppTile;
   index: number;
   onExpand: () => void;
+  subscriptions?: Subscription[];
+  loading?: boolean;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
@@ -171,6 +188,32 @@ function BentoCard({
 
   const isTall = tile.rowSpan === 2;
   const isWide = tile.colSpan === 2;
+
+  // Sorting closest upcoming subscriptions
+  const getSortedUpcoming = (): Subscription[] => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const sorted = [...subscriptions].sort((a, b) => {
+      const dateA = new Date(a.date + "T00:00:00");
+      const dateB = new Date(b.date + "T00:00:00");
+      
+      const diffA = dateA.getTime() - now.getTime();
+      const diffB = dateB.getTime() - now.getTime();
+
+      // If both are in the future/today, sort ascending (closest renewal first)
+      if (diffA >= 0 && diffB >= 0) return diffA - diffB;
+      // If one is in the future and one in the past, prioritize future
+      if (diffA >= 0 && diffB < 0) return -1;
+      if (diffB >= 0 && diffA < 0) return 1;
+      // If both are in the past, sort descending (most recent past first)
+      return diffB - diffA;
+    });
+
+    return sorted.slice(0, 3);
+  };
+
+  const displaySubs = getSortedUpcoming();
 
   return (
     <motion.div
@@ -294,43 +337,158 @@ function BentoCard({
             </motion.div>
           </div>
 
-          {/* Middle: Divider */}
-          <div
-            style={{
-              height: "1px",
-              background: `linear-gradient(90deg, ${tile.accent}15, rgba(255,255,255,0.04), transparent)`,
-              margin: isTall ? "20px 0" : "14px 0",
-            }}
-          />
+          {/* Body Section */}
+          {tile.name === "TrackerSync" ? (
+            <div className="flex flex-1 flex-col justify-between mt-4" style={{ minHeight: "180px" }}>
+              <p
+                className="font-body font-bold"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  textTransform: "uppercase",
+                  marginBottom: "8px",
+                }}
+              >
+                Upcoming Renewals
+              </p>
 
-          {/* Bottom: Coming Soon + expand hint */}
-          <div className="flex flex-1 flex-col items-center justify-center gap-3">
-            <span
-              className="font-body font-semibold uppercase"
-              style={{
-                border: `1px solid ${tile.accent}25`,
-                color: `${tile.accent}99`,
-                background: `${tile.accent}08`,
-                borderRadius: "999px",
-                padding: "7px 20px",
-                fontSize: "10px",
-                letterSpacing: "0.14em",
-              }}
-            >
-              COMING SOON
-            </span>
+              {loading ? (
+                <div className="flex flex-1 items-center justify-center">
+                  <div 
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(255, 215, 0, 0.1)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : displaySubs.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-4 bg-white/[0.01]">
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No active subscriptions tracked.
+                  </p>
+                  <p className="font-body text-[10px] text-white/20 text-center mt-1">
+                    Ready to track your first recurring expense.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 flex-1 justify-center">
+                  {displaySubs.map((sub) => {
+                    const now = new Date();
+                    now.setHours(0, 0, 0, 0);
+                    const renewalDate = new Date(sub.date + "T00:00:00");
+                    const diffTime = renewalDate.getTime() - now.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    let daysLabel = "";
+                    if (diffDays === 0) daysLabel = "Today";
+                    else if (diffDays === 1) daysLabel = "Tomorrow";
+                    else if (diffDays === -1) daysLabel = "Yesterday";
+                    else if (diffDays < 0) daysLabel = `${Math.abs(diffDays)}d ago`;
+                    else daysLabel = `in ${diffDays}d`;
 
-            {/* Expand hint on hover */}
-            <motion.div
-              className="flex items-center gap-1 font-body"
-              style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px" }}
-              animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
-              transition={{ duration: 0.25, ease: EASE }}
-            >
-              <span>Tap to preview</span>
-              <ArrowUpRight size={11} />
-            </motion.div>
-          </div>
+                    const formattedDate = renewalDate.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+
+                    return (
+                      <div
+                        key={sub.id}
+                        className="flex items-center justify-between rounded-xl transition-all duration-300 hover:bg-white/[0.04] group"
+                        style={{
+                          padding: "10px 14px",
+                          background: "rgba(255, 255, 255, 0.02)",
+                          border: `1px solid rgba(255, 255, 255, 0.05)`,
+                          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.01)`,
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            style={{
+                              width: "10px",
+                              height: "10px",
+                              borderRadius: "3px",
+                              background: sub.color || tile.accent,
+                              boxShadow: `0 0 8px ${sub.color || tile.accent}`,
+                            }}
+                          />
+                          <div>
+                            <p className="font-body text-[13px] font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                              {sub.name}
+                            </p>
+                            <p className="font-body text-[10px] text-white/40">
+                              {formattedDate} • <span style={{ color: diffDays >= 0 ? "#FFD700" : "rgba(255, 100, 100, 0.6)" }}>{daysLabel}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-body text-[13px] font-bold" style={{ color: tile.accent }}>
+                            ${parseFloat(sub.amount).toFixed(2)}
+                          </p>
+                          <p className="font-body text-[9px] text-white/30 uppercase tracking-wide">
+                            {sub.billingCycle}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* Tap to preview hint */}
+              <motion.div
+                className="flex items-center gap-1 font-body justify-center mt-3"
+                style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px" }}
+                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                <span>Tap to preview</span>
+                <ArrowUpRight size={11} />
+              </motion.div>
+            </div>
+          ) : (
+            <>
+              <div
+                style={{
+                  height: "1px",
+                  background: `linear-gradient(90deg, ${tile.accent}15, rgba(255,255,255,0.04), transparent)`,
+                  margin: isTall ? "20px 0" : "14px 0",
+                }}
+              />
+
+              <div className="flex flex-1 flex-col items-center justify-center gap-3">
+                <span
+                  className="font-body font-semibold uppercase"
+                  style={{
+                    border: `1px solid ${tile.accent}25`,
+                    color: `${tile.accent}99`,
+                    background: `${tile.accent}08`,
+                    borderRadius: "999px",
+                    padding: "7px 20px",
+                    fontSize: "10px",
+                    letterSpacing: "0.14em",
+                  }}
+                >
+                  COMING SOON
+                </span>
+
+                <motion.div
+                  className="flex items-center gap-1 font-body"
+                  style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px" }}
+                  animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                  transition={{ duration: 0.25, ease: EASE }}
+                >
+                  <span>Tap to preview</span>
+                  <ArrowUpRight size={11} />
+                </motion.div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Bottom ambient glow */}
@@ -579,6 +737,8 @@ export default function DashboardPage() {
   const [authed, setAuthed] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [expandedTile, setExpandedTile] = useState<AppTile | null>(null);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [loadingSubs, setLoadingSubs] = useState(true);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("subsync_token");
@@ -587,6 +747,28 @@ export default function DashboardPage() {
       return;
     }
     setAuthed(true);
+
+    try {
+      const payload = JSON.parse(atob(storedToken));
+      const accountId = payload.accountId;
+      if (accountId) {
+        setLoadingSubs(true);
+        fetch(`/api/subscriptions?userId=${accountId}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.ok && Array.isArray(data.subscriptions)) {
+              setSubscriptions(data.subscriptions);
+            }
+          })
+          .catch((err) => console.error("Error fetching subscriptions:", err))
+          .finally(() => setLoadingSubs(false));
+      } else {
+        setLoadingSubs(false);
+      }
+    } catch (e) {
+      console.error("Error decoding token:", e);
+      setLoadingSubs(false);
+    }
   }, [router]);
 
   // Lock body scroll when expanded
@@ -706,6 +888,8 @@ export default function DashboardPage() {
               tile={tile}
               index={i}
               onExpand={() => setExpandedTile(tile)}
+              subscriptions={subscriptions}
+              loading={loadingSubs}
             />
           ))}
         </div>
@@ -723,6 +907,10 @@ export default function DashboardPage() {
 
       {/* Responsive override */}
       <style>{`
+        @keyframes sb-spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
         @media (max-width: 768px) {
           .grid {
             grid-template-columns: 1fr !important;

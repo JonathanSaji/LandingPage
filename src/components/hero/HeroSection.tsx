@@ -5,15 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CircleUserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  TrendingUp,
-  Plane,
-  Brain,
-  Calendar,
-  Camera,
-  Mic,
-  Shield,
-} from "lucide-react";
+
 import { HeroWave } from "./HeroWave";
 import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
 import { AuthModal } from "@/components/auth/AuthModal";
