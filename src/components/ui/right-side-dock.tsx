@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { TrendingUp, LucideIcon } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 interface DockItem {
