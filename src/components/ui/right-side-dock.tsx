@@ -14,7 +14,7 @@ interface DockItem {
 }
 
 const DOCK_ITEMS: DockItem[] = [
-  { id: 'tracker',  label: 'TrackerSync',  color: '#FFD700',  logoIcon: '/logos/TrackerSync.avif' },
+  { id: 'tracker',  label: 'TrackerSync',  color: '#FFD700',  logoSrc: '/logos/TrackerSync.avif' },
   { id: 'travel',   label: 'TravelSync',   color: '#F2994A',  logoSrc: '/logos/TravelSync.avif' },
   { id: 'brain',    label: 'BrainSync',    color: '#FFD700',  logoSrc: '/logos/BrainSync.avif' },
   { id: 'seat',     label: 'SeatSync',     color: '#39FF14',  logoSrc: '/logos/SeatSync.avif' },
