@@ -278,8 +278,8 @@ function PersonalScreen({
         <h2 className="font-heading font-black text-2xl text-white leading-tight">Create your profile</h2>
         <p className="font-body text-sm text-[#475569] leading-relaxed">It only takes a moment.</p>
       </div>
-      <Field label="Email" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
       <Field label="Username" placeholder="your_username" value={username} onChange={setUsername} />
+      <Field label="Email" type="email" placeholder="you@example.com" value={email} onChange={setEmail} />
       <Field label="Password" type="password" placeholder="••••••••" value={pass} onChange={setPass} />
       <PrimaryBtn
         onClick={() =>
@@ -378,8 +378,8 @@ function CEOScreen({
         <p className="font-body text-sm text-[#475569] leading-relaxed">You&apos;ll be the admin of your SubSync workspace.</p>
       </div>
       <Field label="Organization Name" placeholder="Acme Corp" value={org} onChange={setOrg} />
-      <Field label="Work Email" type="email" placeholder="ceo@company.com" value={email} onChange={setEmail} />
       <Field label="Username" placeholder="your_username" value={username} onChange={setUsername} />
+      <Field label="Work Email" type="email" placeholder="ceo@company.com" value={email} onChange={setEmail} />
       <Field label="Password" type="password" placeholder="••••••••" value={pass} onChange={setPass} />
       <PrimaryBtn
         onClick={() =>
@@ -427,8 +427,8 @@ function EmployeeScreen({
         <h2 className="font-heading font-black text-2xl text-white leading-tight">Join your team</h2>
         <p className="font-body text-sm text-[#475569] leading-relaxed">Your employer will grant you access once registered.</p>
       </div>
-      <Field label="Work Email" type="email" placeholder="you@company.com" value={email} onChange={setEmail} />
       <Field label="Username" placeholder="your_username" value={username} onChange={setUsername} />
+      <Field label="Work Email" type="email" placeholder="you@company.com" value={email} onChange={setEmail} />
       <Field label="Password" type="password" placeholder="••••••••" value={pass} onChange={setPass} />
       <PrimaryBtn
         onClick={() =>
