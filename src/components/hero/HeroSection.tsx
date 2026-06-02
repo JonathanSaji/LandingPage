@@ -134,6 +134,16 @@ export function HeroSection() {
     setIsLoggedIn(!!token);
   }, []);
 
+  // ── SyncBot voice: open auth modal on custom event ─────────────────────────
+  useEffect(() => {
+    function handleSyncBotOpenAuth() {
+      setAuthOpen(true);
+    }
+    window.addEventListener("syncbot:open-auth-modal", handleSyncBotOpenAuth);
+    return () => window.removeEventListener("syncbot:open-auth-modal", handleSyncBotOpenAuth);
+  }, []);
+
+
   function handleBrandClick() {
     const now = Date.now();
 

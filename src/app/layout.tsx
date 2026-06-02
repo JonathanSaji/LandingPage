@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { RightSideDock } from "@/components/ui/right-side-dock";
+import { SyncBotVoiceControl } from "@/components/ui/syncbot-voice-control";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body className="bg-black text-white antialiased">
         {children}
         <RightSideDock />
+        <SyncBotVoiceControl />
       </body>
     </html>
   );

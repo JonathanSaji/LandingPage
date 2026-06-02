@@ -1,6 +1,6 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Eye, EyeOff, ArrowLeft, User, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -479,6 +479,17 @@ export function AuthModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notice, setNotice] = useState<AuthNotice | null>(null);
   const isOverlay = variant === "overlay";
+
+  // ── SyncBot voice: open modal on custom event ──────────────────────────────
+  useEffect(() => {
+    function handleSyncBotOpen() {
+      // The parent controls visibility — re-dispatch as a detail for parent wrappers
+      // that wrap AuthModal in a conditional. We signal via another event.
+      window.dispatchEvent(new CustomEvent("syncbot:force-open-auth"));
+    }
+    window.addEventListener("syncbot:open-auth-modal", handleSyncBotOpen);
+    return () => window.removeEventListener("syncbot:open-auth-modal", handleSyncBotOpen);
+  }, []);
 
   async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
     const body = (await response.json().catch(() => null)) as ApiResponse<T> | null;

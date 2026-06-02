@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 import { ProductCard } from "./ProductCard";
@@ -85,6 +85,19 @@ export function ProductsSection() {
       behavior: "smooth",
     });
   }
+
+  // ── SyncBot voice: carousel scroll events ────────────────────────────────
+  useEffect(() => {
+    function onSyncBotLeft()  { scroll("left"); }
+    function onSyncBotRight() { scroll("right"); }
+    window.addEventListener("syncbot:scroll-carousel-left",  onSyncBotLeft);
+    window.addEventListener("syncbot:scroll-carousel-right", onSyncBotRight);
+    return () => {
+      window.removeEventListener("syncbot:scroll-carousel-left",  onSyncBotLeft);
+      window.removeEventListener("syncbot:scroll-carousel-right", onSyncBotRight);
+    };
+  }, []);
+
 
   return (
     <section
