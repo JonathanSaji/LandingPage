@@ -13,7 +13,6 @@ import {
   Camera,
   Mic,
   Shield,
-  CircleUserRound,
 } from "lucide-react";
 import { HeroWave } from "./HeroWave";
 import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
