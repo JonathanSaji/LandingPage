@@ -227,12 +227,13 @@ export function HeroSection() {
                   Dashboard
                 </Link>
               ) : (
-                <a
+                <button
+                  type="button"
                   onClick={() => setAuthOpen(true)}
-                  className="rounded font-body text-sm text-[#94A3B8] hover:text-white cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  className="cursor-pointer rounded font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                   Dashboard
-                </a>
+                </button>
               )}
             </div>
             <div className="flex items-center gap-2">
