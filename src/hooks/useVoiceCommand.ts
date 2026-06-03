@@ -199,14 +199,26 @@ export function useVoiceCommand(): VoiceCommandHook {
   }, [_rawSpeak]);
 
   // ── Unlock speech synthesis ────────────────────────────────────────────────
+  // Browsers block speechSynthesis.speak() until the user has interacted.
+  // We fire a silent zero-volume utterance on the first user gesture to
+  // permanently unlock the audio context for all future speak() calls.
   const unlockSpeech = useCallback(() => {
     if (unlockedRef.current) return;
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     unlockedRef.current = true;
-    
+
     // Pre-load voices
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) voicesLoaded.current = true;
+
+    // Fire a silent utterance to unlock the audio context
+    try {
+      const silent = new SpeechSynthesisUtterance(" ");
+      silent.volume = 0;
+      window.speechSynthesis.speak(silent);
+    } catch (e) {
+      console.warn("[SyncBot] Silent speak for unlock failed", e);
+    }
   }, []);
 
   const cancelSpeech = useCallback(() => {
@@ -329,7 +341,6 @@ export function useVoiceCommand(): VoiceCommandHook {
     setTranscript("");
     setInterimTranscript("");
     recRef.current?.stop();
-    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
   }, []);
 
   const setActiveListening = useCallback((v: boolean) => {

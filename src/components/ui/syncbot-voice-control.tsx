@@ -269,6 +269,61 @@ export function SyncBotVoiceControl() {
   const handleLocalCommand = useCallback(async (cmd: string): Promise<boolean> => {
     const c = cmd.toLowerCase().trim();
 
+    // ── NAVIGATION / SCROLL ──────────────────────────────────────────────────
+    if (settings.allowNavigation) {
+      if (has(c, "open dashboard", "go to dashboard", "take me to dashboard", "dashboard")) {
+        const reply = "Navigating to your dashboard.";
+        speak(reply); addMsg("bot", reply);
+        router.push("/dashboard");
+        return true;
+      }
+      if (has(c, "go home", "go to homepage", "open home", "landing page", "home page")) {
+        const reply = "Going back to the landing page.";
+        speak(reply); addMsg("bot", reply);
+        router.push("/");
+        return true;
+      }
+    }
+    if (settings.allowScrollControl) {
+      if (has(c, "scroll to bottom", "take me to the bottom", "scroll all the way down", "go to bottom", "go to the bottom")) {
+        const reply = "Scrolling to the bottom.";
+        speak(reply); addMsg("bot", reply);
+        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        return true;
+      }
+      if (has(c, "scroll to top", "take me to the top", "scroll all the way up", "go to top", "go to the top")) {
+        const reply = "Scrolling to the top.";
+        speak(reply); addMsg("bot", reply);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return true;
+      }
+      if (has(c, "scroll down", "scroll page down")) {
+        const reply = "Scrolling down.";
+        speak(reply); addMsg("bot", reply);
+        window.scrollBy({ top: 400, behavior: "smooth" });
+        return true;
+      }
+      if (has(c, "scroll up", "scroll page up")) {
+        const reply = "Scrolling up.";
+        speak(reply); addMsg("bot", reply);
+        window.scrollBy({ top: -400, behavior: "smooth" });
+        return true;
+      }
+    }
+    if (settings.allowAuthActions) {
+      if (has(c, "logout", "log me out", "log out", "sign out")) {
+        const reply = "Logging you out. Goodbye!";
+        addMsg("bot", reply);
+        speak(reply, () => {
+          localStorage.removeItem("subsync_token");
+          window.dispatchEvent(new Event("storage"));
+          stopListening();
+          router.push("/");
+        });
+        return true;
+      }
+    }
+
     // ── MUTE ────────────────────────────────────────────────────────────────
     if (has(c, "mute", "be quiet", "stop talking", "silence", "shut up")) {
       cancelSpeech(); setMuted(true); setIsMutedLocal(true);
@@ -308,14 +363,13 @@ export function SyncBotVoiceControl() {
 
     // ── APPS (Strict Local Matcher) ───────────────────────────────────────────
     if (settings.allowOpenApps) {
-      if (c.startsWith("open ") || c.includes("open the ") || c.includes("launch ")) {
+      if (has(c, "open", "opne", "launch", "start", "run", "go to", "show", "load")) {
         for (const app of APPS) {
           if (app.names.some((n) => c.includes(n))) {
             const reply = `Opening ${app.label} now.`;
             addMsg("bot", reply);
-            speak(reply, () => {
-              window.open(app.url, "_blank");
-            });
+            speak(reply);
+            window.open(app.url, "_blank");
             return true;
           }
         }
@@ -355,7 +409,7 @@ export function SyncBotVoiceControl() {
     }
 
     return false; // Not handled locally
-  }, [settings, speak, cancelSpeech, setMuted, setActiveListening, addMsg, isMutedLocal]);
+  }, [settings, speak, cancelSpeech, setMuted, setActiveListening, addMsg, isMutedLocal, router, stopListening]);
 
   // ── Register wake-word handler ───────────────────────────────────────────────
   useEffect(() => {
@@ -409,9 +463,8 @@ export function SyncBotVoiceControl() {
         const cleanReply = cleanStreamingText(reply);
         updateMsg(botMsgId, cleanReply);
 
-        speak(cleanReply, () => {
-          if (action) executeAction(action);
-        });
+        speak(cleanReply);
+        if (action) executeAction(action);
       } catch (error) {
         console.error("[SyncBot] Error fetching AI response:", error);
         setIsThinking(false);
