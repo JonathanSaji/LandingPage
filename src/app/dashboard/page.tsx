@@ -25,7 +25,7 @@ const TILES: AppTile[] = [
     name: "TrackerSync",
     category: "FINANCE",
     accent: "#CCFF00",
-    logo: null,
+    logo: "/logos/TrackerSync.png",
     description:
       "Your financial engine. Track every dollar, spot every pattern, and let AI surface insights you'd never find alone.",
     features: [
