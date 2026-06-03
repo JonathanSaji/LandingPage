@@ -795,8 +795,9 @@ export default function DashboardPage() {
   function handleLogout() {
     setIsTransitioning(true);
     localStorage.removeItem("subsync_token");
+    window.dispatchEvent(new Event("storage"));
     setTimeout(() => {
-      router.replace("/");
+      window.location.replace("/");
     }, 850);
   }
 

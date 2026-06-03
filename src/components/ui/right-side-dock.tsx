@@ -11,16 +11,17 @@ interface DockItem {
   color: string;
   logoIcon?: LucideIcon;
   logoSrc?: string;
+  url?: string;
 }
 
 const DOCK_ITEMS: DockItem[] = [
-  { id: 'tracker',  label: 'TrackerSync',  color: '#FFD700',  logoSrc: '/logos/TrackerSync.png' },
-  { id: 'travel',   label: 'TravelSync',   color: '#F2994A',  logoSrc: '/logos/TravelSync.avif' },
-  { id: 'brain',    label: 'BrainSync',    color: '#FFD700',  logoSrc: '/logos/BrainSync.avif' },
-  { id: 'seat',     label: 'SeatSync',     color: '#39FF14',  logoSrc: '/logos/SeatSync.avif' },
-  { id: 'photo',    label: 'PhotoSync',    color: '#A259FF',  logoSrc: '/logos/PhotoSync.avif' },
-  { id: 'fluency',  label: 'FluencySync',  color: '#FF3C38',  logoSrc: '/logos/Fluency.avif' },
-  { id: 'steady',   label: 'SteadySync',   color: '#3A7B7B',  logoSrc: '/logos/SteadySync.avif' },
+  { id: 'tracker',  label: 'TrackerSync',  color: '#FFD700',  logoSrc: '/logos/TrackerSync.png',  url: 'https://trackersync.sub-sync.ca' },
+  { id: 'travel',   label: 'TravelSync',   color: '#F2994A',  logoSrc: '/logos/TravelSync.png',   url: 'https://travelsync.sub-sync.ca' },
+  { id: 'brain',    label: 'BrainSync',    color: '#FFD700',  logoSrc: '/logos/BrainSync.png',    url: 'https://brainsync.sub-sync.ca' },
+  { id: 'seat',     label: 'SeatSync',     color: '#39FF14',  logoSrc: '/logos/SeatSync.png',     url: 'https://seatsync.sub-sync.ca' },
+  { id: 'photo',    label: 'PhotoSync',    color: '#A259FF',  logoSrc: '/logos/PhotoSync.png',    url: 'https://photosync.sub-sync.ca' },
+  { id: 'fluency',  label: 'FluencySync',  color: '#FF3C38',  logoSrc: '/logos/FluencySync.png',  url: 'https://fluencysync.sub-sync.ca' },
+  { id: 'steady',   label: 'SteadySync',   color: '#3A7B7B',  logoSrc: '/logos/SteadySync.png',   url: 'https://steadysync.sub-sync.ca' },
 ];
 
 export function RightSideDock() {
@@ -95,10 +96,11 @@ export function RightSideDock() {
             const Icon = item.logoIcon;
             return (
               <div key={item.id} className="relative group">
-                <button
-                  type="button"
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-200 ease-out hover:scale-125 hover:-translate-x-1 hover:shadow-[0_0_15px_rgba(255,215,0,0.25)] hover:border-[#FFD700]/30 cursor-pointer"
-                  onClick={() => console.log(`Navigating to ${item.label}`)}
                 >
                   {Icon ? (
                     <Icon className="w-7 h-7" style={{ color: item.color }} />
@@ -111,7 +113,7 @@ export function RightSideDock() {
                       priority
                     />
                   )}
-                </button>
+                </a>
 
                 {/* Tooltip (aligned to the left of the item) */}
                 <div className="absolute right-[calc(100%+12px)] top-1/2 -translate-y-1/2 bg-black/70 backdrop-blur text-white text-xs rounded-md px-2.5 py-1 opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-200 whitespace-nowrap border border-white/10 z-[10000] shadow-md translate-x-2 group-hover:translate-x-0">

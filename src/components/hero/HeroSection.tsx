@@ -252,6 +252,7 @@ export function HeroSection() {
                 onClick={() => {
                   if (isLoggedIn) {
                     localStorage.removeItem("subsync_token");
+                    window.dispatchEvent(new Event("storage"));
                     setIsLoggedIn(false);
                     setAuthOpen(false);
                     return;
