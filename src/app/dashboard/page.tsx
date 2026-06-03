@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { TrendingUp, X, ArrowUpRight } from "lucide-react";
+import { TrendingUp, X, ArrowUpRight, RefreshCw } from "lucide-react";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -740,6 +740,29 @@ export default function DashboardPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
 
+  const fetchSubscriptions = useCallback(() => {
+    const storedToken = localStorage.getItem("subsync_token");
+    if (!storedToken) return;
+    try {
+      const payload = JSON.parse(atob(storedToken));
+      const accountId = payload.accountId;
+      if (!accountId) { setLoadingSubs(false); return; }
+      setLoadingSubs(true);
+      fetch(`/api/subscriptions?userId=${accountId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.ok && Array.isArray(data.subscriptions)) {
+            setSubscriptions(data.subscriptions);
+          }
+        })
+        .catch((err) => console.error("Error fetching subscriptions:", err))
+        .finally(() => setLoadingSubs(false));
+    } catch (e) {
+      console.error("Error decoding token:", e);
+      setLoadingSubs(false);
+    }
+  }, []);
+
   useEffect(() => {
     const storedToken = localStorage.getItem("subsync_token");
     if (!storedToken) {
@@ -747,29 +770,8 @@ export default function DashboardPage() {
       return;
     }
     setAuthed(true);
-
-    try {
-      const payload = JSON.parse(atob(storedToken));
-      const accountId = payload.accountId;
-      if (accountId) {
-        setLoadingSubs(true);
-        fetch(`/api/subscriptions?userId=${accountId}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.ok && Array.isArray(data.subscriptions)) {
-              setSubscriptions(data.subscriptions);
-            }
-          })
-          .catch((err) => console.error("Error fetching subscriptions:", err))
-          .finally(() => setLoadingSubs(false));
-      } else {
-        setLoadingSubs(false);
-      }
-    } catch (e) {
-      console.error("Error decoding token:", e);
-      setLoadingSubs(false);
-    }
-  }, [router]);
+    fetchSubscriptions();
+  }, [router, fetchSubscriptions]);
 
   // Lock body scroll when expanded
   useEffect(() => {
@@ -843,34 +845,61 @@ export default function DashboardPage() {
       </nav>
 
       {/* Page Header */}
-      <div style={{ padding: "56px 40px 36px" }}>
-        <motion.p
-          className="font-body font-semibold uppercase mb-3"
-          style={{ color: "#FFD700", fontSize: "10px", letterSpacing: "0.16em" }}
+      <div className="flex items-end justify-between" style={{ padding: "56px 40px 36px" }}>
+        <div>
+          <motion.p
+            className="font-body font-semibold uppercase mb-3"
+            style={{ color: "#FFD700", fontSize: "10px", letterSpacing: "0.16em" }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE, delay: 0.05 }}
+          >
+            YOUR SYNC CORE
+          </motion.p>
+          <motion.h1
+            className="font-heading font-bold text-white mb-3"
+            style={{ fontSize: "38px", letterSpacing: "-0.025em" }}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
+          >
+            Welcome back.
+          </motion.h1>
+          <motion.p
+            className="font-body text-[15px] font-light"
+            style={{ color: "#94A3B8", lineHeight: 1.75 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: EASE, delay: 0.12 }}
+          >
+            Everything synced. All in one place.
+          </motion.p>
+        </div>
+
+        <motion.button
+          onClick={fetchSubscriptions}
+          disabled={loadingSubs}
+          className="font-body font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-50"
+          style={{
+            fontSize: "13px",
+            color: loadingSubs ? "#FFD700" : "#94A3B8",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "10px",
+            padding: "9px 18px",
+          }}
+          whileHover={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.18)" }}
+          whileTap={{ scale: 0.96 }}
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE, delay: 0.05 }}
+          transition={{ duration: 0.5, ease: EASE, delay: 0.18 }}
         >
-          YOUR SYNC CORE
-        </motion.p>
-        <motion.h1
-          className="font-heading font-bold text-white mb-3"
-          style={{ fontSize: "38px", letterSpacing: "-0.025em" }}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
-        >
-          Welcome back.
-        </motion.h1>
-        <motion.p
-          className="font-body text-[15px] font-light"
-          style={{ color: "#94A3B8", lineHeight: 1.75 }}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: EASE, delay: 0.12 }}
-        >
-          Everything synced. All in one place.
-        </motion.p>
+          <RefreshCw
+            size={13}
+            style={{ animation: loadingSubs ? "sb-spin 0.8s linear infinite" : "none" }}
+          />
+          Refresh
+        </motion.button>
       </div>
 
       {/* Bento Grid */}

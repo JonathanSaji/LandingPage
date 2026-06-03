@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CircleUserRound } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { HeroWave } from "./HeroWave";
 import { RadialOrbitalTimeline } from "@/components/ui/radial-orbital-timeline";
@@ -120,11 +120,19 @@ export function HeroSection() {
   const clickCountRef = useRef(0);
   const clickWindowRef = useRef<number>(0);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const token = localStorage.getItem("subsync_token");
-    setIsLoggedIn(!!token);
-  }, []);
+    if (token) {
+      setIsLoggedIn(true);
+      // Only redirect on first visit this session — not when user navigates back intentionally
+      if (!sessionStorage.getItem("subsync_landed")) {
+        sessionStorage.setItem("subsync_landed", "1");
+        router.replace("/dashboard");
+      }
+    }
+  }, [router]);
 
   // ── SyncBot voice: open auth modal on custom event ─────────────────────────
   useEffect(() => {
@@ -197,19 +205,24 @@ export function HeroSection() {
               SubSync
             </button>
             <div className="flex items-center gap-8">
-              {["Apps", "Features", "Pricing"].map((link) => (
-                <a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
-                  className="rounded font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-                >
-                  {link}
-                </a>
-              ))}
+              <a
+                href="/"
+                className="rounded font-body text-sm hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                style={{ color: pathname === "/" ? "#FFD700" : "#94A3B8" }}
+              >
+                Landing Page
+              </a>
+              <a
+                href="#about"
+                className="rounded font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              >
+                About Us
+              </a>
               {isLoggedIn ? (
                 <Link
                   href="/dashboard"
-                  className="rounded font-body text-sm text-[#FFD700] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  className="rounded font-body text-sm hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  style={{ color: pathname === "/dashboard" ? "#FFD700" : "#94A3B8" }}
                 >
                   Dashboard
                 </Link>
