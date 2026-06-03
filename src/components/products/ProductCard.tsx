@@ -47,6 +47,8 @@ export function ProductCard({
         opacity: cfg.opa,
       };
 
+  const exploreUrl = `https://${title.toLowerCase()}.sub-sync.ca`;
+
   return (
     <motion.article
       className="group absolute cursor-pointer"
@@ -67,7 +69,8 @@ export function ProductCard({
       }}
       transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
-      aria-label={`Explore ${title}`}
+      onDoubleClick={() => window.open(exploreUrl, "_blank", "noopener,noreferrer")}
+      aria-label={`Explore ${title} — double-click to open`}
     >
       {/* Card face — inner div handles hover expand without touching Framer's transform */}
       <div className="relative w-full h-full overflow-hidden rounded-[18px] border border-white/[0.06]">
