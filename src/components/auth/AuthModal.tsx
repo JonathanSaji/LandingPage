@@ -510,7 +510,7 @@ export function AuthModal({
 
     if (identifier === "user1" && password === "pass1") {
       setNotice({ type: "success", message: "Signed in successfully." });
-      const token = btoa(JSON.stringify({ accountId: 999, timestamp: Date.now() }));
+      const token = btoa(JSON.stringify({ accountId: 999, username: "user1", displayName: "User One", timestamp: Date.now() }));
       localStorage.setItem("subsync_token", token);
       setTimeout(() => {
         onAuthSuccess?.();
@@ -536,8 +536,13 @@ export function AuthModal({
       setNotice({ type: "success", message: "Signed in successfully." });
       
       // Store JWT token in localStorage
-      const account = payload.account as { id: number } | undefined;
-      const token = btoa(JSON.stringify({ accountId: account?.id, timestamp: Date.now() }));
+      const account = payload.account as { id: number; username: string; display_name?: string } | undefined;
+      const token = btoa(JSON.stringify({ 
+        accountId: account?.id, 
+        username: account?.username,
+        displayName: account?.display_name,
+        timestamp: Date.now() 
+      }));
       localStorage.setItem("subsync_token", token);
       
       onAuthSuccess?.();

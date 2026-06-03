@@ -735,6 +735,7 @@ function ExpandedTile({
 export default function DashboardPage() {
   const router = useRouter();
   const [authed, setAuthed] = useState(false);
+  const [username, setUsername] = useState("");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [expandedTile, setExpandedTile] = useState<AppTile | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -768,6 +769,12 @@ export default function DashboardPage() {
     if (!storedToken) {
       router.replace("/");
       return;
+    }
+    try {
+      const payload = JSON.parse(atob(storedToken));
+      setUsername(payload.displayName || payload.username || "");
+    } catch (e) {
+      console.error("Error decoding token in dashboard:", e);
     }
     setAuthed(true);
     fetchSubscriptions();
@@ -863,7 +870,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
           >
-            Welcome back.
+            Welcome{username ? `, ${username}` : " back"}.
           </motion.h1>
           <motion.p
             className="font-body text-[15px] font-light"
