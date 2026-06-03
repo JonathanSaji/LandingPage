@@ -205,13 +205,13 @@ export function HeroSection() {
               SubSync
             </button>
             <div className="flex items-center gap-8">
-              <a
+              <Link
                 href="/"
                 className="rounded font-body text-sm hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 style={{ color: pathname === "/" ? "#FFD700" : "#94A3B8" }}
               >
                 Landing Page
-              </a>
+              </Link>
               <a
                 href="#about"
                 className="rounded font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
