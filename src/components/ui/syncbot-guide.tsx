@@ -1,37 +1,34 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Sparkles, Lock } from "lucide-react";
 
 interface SyncBotGuideProps {
   onClose: () => void;
 }
 
-function CmdRow({ trigger, description }: { trigger: string; description: string }) {
+function CmdRow({ trigger, description, ai }: { trigger: string; description: string; ai?: boolean }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "baseline",
-        gap: 12,
-        padding: "7px 0",
-        borderBottom: "1px dashed rgba(255,255,255,0.06)",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "ui-monospace, 'Courier New', monospace",
-          fontSize: 12,
-          color: "#FFD700",
-          whiteSpace: "nowrap",
-          flexShrink: 0,
-          minWidth: 210,
-        }}
-      >
+    <div style={{
+      display: "flex", alignItems: "center", gap: 10,
+      padding: "7px 0", borderBottom: "1px dashed rgba(255,255,255,0.05)",
+    }}>
+      <span style={{
+        fontFamily: "ui-monospace,'Courier New',monospace",
+        fontSize: 11, color: "#FFD700", whiteSpace: "nowrap",
+        flexShrink: 0, minWidth: 190,
+      }}>
         &ldquo;{trigger}&rdquo;
       </span>
-      <div style={{ flex: 1, height: 1, borderTop: "1px dotted rgba(255,255,255,0.1)", alignSelf: "center" }} />
-      <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", textAlign: "right", flexShrink: 0, maxWidth: 200 }}>
+      <div style={{ flex: 1, height: 1, borderTop: "1px dotted rgba(255,255,255,0.08)", alignSelf: "center" }} />
+      {ai && (
+        <span style={{
+          fontSize: 9, fontWeight: 700, letterSpacing: "0.08em",
+          color: "rgba(255,215,0,0.6)", background: "rgba(255,215,0,0.08)",
+          borderRadius: 4, padding: "1px 5px", flexShrink: 0,
+        }}>AI</span>
+      )}
+      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textAlign: "right", flexShrink: 0, maxWidth: 180 }}>
         {description}
       </span>
     </div>
@@ -40,18 +37,11 @@ function CmdRow({ trigger, description }: { trigger: string; description: string
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: 24 }}>
-      <p
-        style={{
-          fontSize: 10,
-          fontWeight: 700,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: "#FFD700",
-          marginBottom: 10,
-          opacity: 0.8,
-        }}
-      >
+    <div style={{ marginBottom: 22 }}>
+      <p style={{
+        fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
+        color: "#FFD700", marginBottom: 8, opacity: 0.75,
+      }}>
         {title}
       </p>
       {children}
@@ -64,181 +54,143 @@ export function SyncBotGuide({ onClose }: SyncBotGuideProps) {
     <AnimatePresence>
       <motion.div
         key="sb-guide-overlay"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.22 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
         onClick={onClose}
         style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 10000,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          position: "fixed", inset: 0, zIndex: 10000,
+          display: "flex", alignItems: "center", justifyContent: "center",
           padding: 24,
-          background: "rgba(0,0,0,0.85)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
+          background: "rgba(0,0,0,0.88)", backdropFilter: "blur(24px)",
         }}
       >
         <motion.div
           key="sb-guide-panel"
-          initial={{ opacity: 0, scale: 0.92, y: 28 }}
+          initial={{ opacity: 0, scale: 0.93, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.93, y: 20 }}
-          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          exit={{ opacity: 0, scale: 0.94, y: 16 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           onClick={(e) => e.stopPropagation()}
           style={{
-            width: "100%",
-            maxWidth: 640,
-            maxHeight: "85vh",
-            borderRadius: 28,
-            background: "rgba(8,8,8,0.97)",
+            width: "100%", maxWidth: 620, maxHeight: "88vh",
+            borderRadius: 24, background: "rgba(8,8,10,0.98)",
             border: "1px solid rgba(255,255,255,0.07)",
             boxShadow: "0 40px 100px rgba(0,0,0,0.75), 0 0 60px rgba(255,215,0,0.04)",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
+            display: "flex", flexDirection: "column", overflow: "hidden",
           }}
         >
-          {/* Gold accent */}
-          <div
-            style={{
-              height: 3,
-              background: "linear-gradient(90deg, transparent, #FFD700, transparent)",
-              flexShrink: 0,
-            }}
-          />
+          {/* Gold accent bar */}
+          <div style={{ height: 2, background: "linear-gradient(90deg,transparent,#FFD700,transparent)", flexShrink: 0 }} />
 
           {/* Header */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "22px 28px 14px",
-              flexShrink: 0,
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: 10,
-                  fontWeight: 700,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color: "#FFD700",
-                  marginBottom: 4,
-                  opacity: 0.75,
-                }}
-              >
-                Sync Core Voice Interface
-              </p>
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-                SyncBot Commands
-              </h2>
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "20px 26px 12px", flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: "rgba(255,215,0,0.1)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Sparkles size={16} color="#FFD700" />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,215,0,0.65)", marginBottom: 2 }}>
+                  SyncBot · AI Voice Assistant
+                </p>
+                <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
+                  Voice Commands
+                </h2>
+              </div>
             </div>
-            <button
-              onClick={onClose}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "rgba(255,255,255,0.45)",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              <X size={16} />
+            <button onClick={onClose} style={{
+              width: 34, height: 34, borderRadius: "50%",
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "rgba(255,255,255,0.45)", cursor: "pointer", flexShrink: 0,
+            }}>
+              <X size={15} />
             </button>
           </div>
 
-          {/* Scrollable body */}
-          <div
-            style={{
-              overflowY: "auto",
-              padding: "4px 28px 28px",
-              flex: 1,
-              scrollbarWidth: "thin",
-              scrollbarColor: "rgba(255,215,0,0.2) transparent",
-            }}
-          >
-            <Section title="Activation">
-              <CmdRow trigger="[click the icon]" description="Start listening (always-on mode)" />
-              <CmdRow trigger="go to sleep" description="Stop listening, go idle" />
-              <CmdRow trigger="sleep" description="Stop listening" />
-              <CmdRow trigger="mute" description="Mute and ignore all commands except unmute" />
-              <CmdRow trigger="unmute" description="Unmute and resume processing commands" />
-              <CmdRow trigger="repeat that" description="Re-speak last response" />
+          {/* Body */}
+          <div style={{ overflowY: "auto", padding: "4px 26px 26px", flex: 1, scrollbarWidth: "thin", scrollbarColor: "rgba(255,215,0,0.2) transparent" }}>
+
+            <Section title="Wake &amp; Control">
+              <CmdRow trigger="SyncBot" description="Wake from sleep mode" />
+              <CmdRow trigger="[click the button]" description="Activate or deactivate" />
+              <CmdRow trigger="go to sleep" description="Return to passive mode" />
+              <CmdRow trigger="mute" description="Silence responses" />
+              <CmdRow trigger="unmute" description="Resume speaking" />
               <CmdRow trigger="help / show commands" description="Open this guide" />
+              <CmdRow trigger="settings" description="Open SyncBot settings" />
             </Section>
 
             <Section title="Navigation">
-              <CmdRow trigger="go home" description="Go to the landing page" />
+              <CmdRow trigger="go home" description="Go to landing page" />
               <CmdRow trigger="dashboard" description="Go to your dashboard" />
-              <CmdRow trigger="open [AppName]" description="Open app in new tab" />
             </Section>
 
-            <Section title="Apps">
-              <CmdRow trigger="TrackerSync / tracker" description="Finance tracker" />
-              <CmdRow trigger="TravelSync / travel" description="Trip planner" />
-              <CmdRow trigger="BrainSync / brain" description="Focus sessions" />
-              <CmdRow trigger="SeatSync / seat" description="Workplace scheduling" />
-              <CmdRow trigger="PhotoSync / photo" description="Memory organizer" />
-              <CmdRow trigger="FluencySync / fluency" description="Language learning" />
-              <CmdRow trigger="SteadySync / steady" description="Unified account hub" />
+            <Section title="SubSync Apps">
+              <CmdRow trigger="open TrackerSync" description="Finance tracker" />
+              <CmdRow trigger="open TravelSync" description="Trip planner" />
+              <CmdRow trigger="open BrainSync" description="Focus sessions" />
+              <CmdRow trigger="open SeatSync" description="Seat booking" />
+              <CmdRow trigger="open PhotoSync" description="Photo organiser" />
+              <CmdRow trigger="open FluencySync" description="Language learning" />
+              <CmdRow trigger="open SteadySync" description="Health &amp; wellness" />
             </Section>
 
-            <Section title="Account">
-              <CmdRow trigger="log out / logout" description="Sign out and go home" />
-              <CmdRow trigger="sign out" description="Sign out and go home" />
-              <CmdRow trigger="log in / sign in" description="Open the login modal" />
+            <Section title="Your Data">
+              <CmdRow trigger="summarize my subscriptions" description="Read upcoming renewals" />
+              <CmdRow trigger="what do I pay" description="Subscription overview" ai />
+              <CmdRow trigger="what are my apps" description="List your subscriptions" ai />
+            </Section>
+
+            <Section title="AI Questions">
+              <CmdRow trigger="Tell me about TrackerSync" description="Product info" ai />
+              <CmdRow trigger="How do I cancel a subscription?" description="Help & support" ai />
+              <CmdRow trigger="What does SubSync do?" description="Platform overview" ai />
+              <CmdRow trigger="Any question you like…" description="Powered by Groq AI" ai />
             </Section>
 
             <Section title="Page Control">
-              <CmdRow trigger="scroll down / scroll up" description="Scroll 400px" />
-              <CmdRow trigger="scroll to top / bottom" description="Jump to edge of page" />
-              <CmdRow trigger="scroll left / scroll right" description="Carousel navigation" />
-              <CmdRow trigger="close / dismiss" description="Close any open modal" />
-              <CmdRow trigger="click [button name]" description="Tap any visible button" />
+              <CmdRow trigger="scroll down / scroll up" description="Scroll page" />
+              <CmdRow trigger="scroll to top / bottom" description="Jump to edge" />
+              <CmdRow trigger="close / dismiss" description="Close open modal" />
+              <CmdRow trigger="click [button name]" description="Tap a visible button" />
             </Section>
 
-            <Section title="Information">
-              <CmdRow trigger="where am I" description="Current page name" />
-              <CmdRow trigger="list apps" description="Read all 7 app names" />
+            <Section title="Account">
+              <CmdRow trigger="log out" description="Sign out" />
+              <CmdRow trigger="log in / sign in" description="Open login modal" />
+            </Section>
+
+            <Section title="Info">
+              <CmdRow trigger="where am I" description="Current page" />
               <CmdRow trigger="what time is it" description="Current time" />
               <CmdRow trigger="what day is it" description="Today's date" />
             </Section>
 
-            {/* Privacy note */}
-            <div
-              style={{
-                marginTop: 8,
-                padding: "13px 18px",
-                borderRadius: 14,
-                background: "rgba(255,215,0,0.03)",
-                border: "1px solid rgba(255,215,0,0.1)",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.38)",
-                  lineHeight: 1.6,
-                  textAlign: "center",
-                  margin: 0,
-                }}
-              >
-                🔒 All commands run entirely in your browser using the Web Speech API.
-                <br />
-                No voice data is ever sent to any server.
-              </p>
+            {/* Notes */}
+            <div style={{
+              marginTop: 4, padding: "12px 16px", borderRadius: 12,
+              background: "rgba(255,215,0,0.03)", border: "1px solid rgba(255,215,0,0.08)",
+              display: "flex", flexDirection: "column", gap: 6,
+            }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <Lock size={11} color="rgba(255,215,0,0.5)" style={{ flexShrink: 0, marginTop: 1 }} />
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
+                  In sleep mode SyncBot only listens for its name — no audio is ever sent to a server.
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <Sparkles size={11} color="rgba(255,215,0,0.5)" style={{ flexShrink: 0, marginTop: 1 }} />
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
+                  Commands marked <span style={{ color: "rgba(255,215,0,0.6)", fontWeight: 700 }}>AI</span> use Groq (llama-3.1-8b-instant). Add your own key in Settings for unlimited use.
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
