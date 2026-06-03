@@ -870,7 +870,7 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
           >
-            Welcome{username ? `, ${username}` : " back"}.
+            Welcome back, {username ? `, ${username}` : " back"}.
           </motion.h1>
           <motion.p
             className="font-body text-[15px] font-light"
