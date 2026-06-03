@@ -281,7 +281,7 @@ export function HeroSection() {
                 style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
               >
                 <motion.span className="text-white" {...fadeUp(0.4)}>
-                  Seven apps. Onesync.
+                  Seven apps. OneSync.
                 </motion.span>
                 <motion.span className="text-[#FFD700]" {...fadeUp(0.6)}>
                   Infinite possibility.
