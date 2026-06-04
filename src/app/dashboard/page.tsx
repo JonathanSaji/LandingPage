@@ -1382,7 +1382,16 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: EASE, delay: 0.05 }}
             >
-              YOUR SYNC CORE
+              YOUR SYNC DASHBOARD
+            </motion.p>
+            <motion.p
+              className="font-body font-semibold uppercase mb-3"
+              style={{ color: "#94A3B8", fontSize: "11px", letterSpacing: "0.14em" }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.06 }}
+            >
+              Connected, Simplified, Synced.
             </motion.p>
             <motion.h1
               className="font-heading font-bold text-white mb-3"
@@ -1391,7 +1400,7 @@ export default function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
             >
-              Welcome back, {username ? `, ${username}` : " back"}.
+              Welcome {username}.
             </motion.h1>
             <motion.p
               className="font-body text-[15px] font-light"
