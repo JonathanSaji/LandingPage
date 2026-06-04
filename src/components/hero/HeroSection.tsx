@@ -240,7 +240,7 @@ export function HeroSection() {
               {isLoggedIn && (
                 <button
                   type="button"
-                  onClick={() => { }}
+                  onClick={() => router.push("/profile")}
                   aria-label="Open profile"
                   className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white transition-colors duration-150 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >

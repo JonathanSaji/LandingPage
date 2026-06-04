@@ -1,15 +1,59 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, forwardRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { TrendingUp, X, ArrowUpRight, RefreshCw } from "lucide-react";
+import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw } from "lucide-react";
+import Sidebar from "@/components/ui/sidebar-with-submenu";
+import { SettingsPopup } from "@/components/ui/settings-popup";
+import { createPortal } from "react-dom";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+function overlaps(
+  c1: { colStart: number; rowStart: number; colSpan: number; rowSpan: number },
+  c2: { colStart: number; rowStart: number; colSpan: number; rowSpan: number }
+) {
+  return !(
+    c1.colStart + c1.colSpan <= c2.colStart ||
+    c2.colStart + c2.colSpan <= c1.colStart ||
+    c1.rowStart + c1.rowSpan <= c2.rowStart ||
+    c2.rowStart + c2.rowSpan <= c1.rowStart
+  );
+}
+
+function isLayoutValid(tilesList: AppTile[]) {
+  for (let i = 0; i < tilesList.length; i++) {
+    const t1 = tilesList[i];
+    const c1 = {
+      colStart: t1.colStart ?? 1,
+      rowStart: t1.rowStart ?? 1,
+      colSpan: t1.colSpan,
+      rowSpan: t1.rowSpan,
+    };
+    if (c1.colStart < 1 || c1.colStart + c1.colSpan - 1 > 4) {
+      return false;
+    }
+    for (let j = i + 1; j < tilesList.length; j++) {
+      const t2 = tilesList[j];
+      const c2 = {
+        colStart: t2.colStart ?? 1,
+        rowStart: t2.rowStart ?? 1,
+        colSpan: t2.colSpan,
+        rowSpan: t2.rowSpan,
+      };
+      if (overlaps(c1, c2)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 interface AppTile {
+  id: string;
   name: string;
   category: string;
   accent: string;
@@ -18,10 +62,35 @@ interface AppTile {
   features: string[];
   colSpan: number;
   rowSpan: number;
+  colStart?: number;
+  rowStart?: number;
 }
 
-const TILES: AppTile[] = [
+interface TileLayout {
+  id: string;
+  colSpan: number;
+  rowSpan: number;
+  colStart: number;
+  rowStart: number;
+}
+
+const LAYOUT_KEY = "subsync_dashboard_layout";
+
+function loadLayout(): TileLayout[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LAYOUT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function saveLayout(layout: TileLayout[]) {
+  localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout));
+}
+
+const DEFAULT_TILES: AppTile[] = [
   {
+    id: "trackersync",
     name: "TrackerSync",
     category: "FINANCE",
     accent: "#CCFF00",
@@ -36,8 +105,11 @@ const TILES: AppTile[] = [
     ],
     colSpan: 2,
     rowSpan: 2,
+    colStart: 1,
+    rowStart: 1,
   },
   {
+    id: "travelsync",
     name: "TravelSync",
     category: "TRAVEL",
     accent: "#F2994A",
@@ -52,8 +124,11 @@ const TILES: AppTile[] = [
     ],
     colSpan: 1,
     rowSpan: 1,
+    colStart: 3,
+    rowStart: 1,
   },
   {
+    id: "brainsync",
     name: "BrainSync",
     category: "FOCUS",
     accent: "#FFD700",
@@ -68,8 +143,11 @@ const TILES: AppTile[] = [
     ],
     colSpan: 1,
     rowSpan: 1,
+    colStart: 4,
+    rowStart: 1,
   },
   {
+    id: "seatsync",
     name: "SeatSync",
     category: "SCHEDULING",
     accent: "#39FF14",
@@ -84,8 +162,11 @@ const TILES: AppTile[] = [
     ],
     colSpan: 1,
     rowSpan: 1,
+    colStart: 3,
+    rowStart: 2,
   },
   {
+    id: "photosync",
     name: "PhotoSync",
     category: "MEMORY",
     accent: "#A259FF",
@@ -100,8 +181,11 @@ const TILES: AppTile[] = [
     ],
     colSpan: 1,
     rowSpan: 1,
+    colStart: 4,
+    rowStart: 2,
   },
   {
+    id: "fluencysync",
     name: "FluencySync",
     category: "VOICE",
     accent: "#FF3C38",
@@ -116,8 +200,11 @@ const TILES: AppTile[] = [
     ],
     colSpan: 1,
     rowSpan: 1,
+    colStart: 1,
+    rowStart: 3,
   },
   {
+    id: "steadysync",
     name: "SteadySync",
     category: "ACCESS",
     accent: "#3A7B7B",
@@ -132,8 +219,18 @@ const TILES: AppTile[] = [
     ],
     colSpan: 2,
     rowSpan: 1,
+    colStart: 2,
+    rowStart: 3,
   },
 ];
+
+function applyLayoutToTiles(tiles: AppTile[], layout: TileLayout[]): AppTile[] {
+  const layoutMap = new Map(layout.map((l) => [l.id, l]));
+  return tiles.map((t) => {
+    const l = layoutMap.get(t.id);
+    return l ? { ...t, colSpan: l.colSpan, rowSpan: l.rowSpan, colStart: l.colStart, rowStart: l.rowStart } : t;
+  });
+}
 
 interface Subscription {
   id: string;
@@ -148,21 +245,54 @@ interface Subscription {
   personalValue: number;
 }
 
+/* ─── Edit Mode Resize Sizes ─── */
+const SNAP_SIZES = [
+  { label: "Small", colSpan: 1, rowSpan: 1 },
+  { label: "Med Hor", colSpan: 2, rowSpan: 1 },
+  { label: "Med Vert", colSpan: 1, rowSpan: 2 },
+  { label: "Large", colSpan: 2, rowSpan: 2 },
+];
+
+function snapToSize(colSpan: number, rowSpan: number) {
+  let best = SNAP_SIZES[0];
+  let bestDist = Infinity;
+  for (const s of SNAP_SIZES) {
+    const dist = Math.abs(s.colSpan - colSpan) + Math.abs(s.rowSpan - rowSpan);
+    if (dist < bestDist) { bestDist = dist; best = s; }
+  }
+  return best;
+}
+
 /* ─── 3D Tilt Card ─── */
-function BentoCard({
-  tile,
-  index,
-  onExpand,
-  subscriptions = [],
-  loading = false,
-}: {
+const BentoCard = forwardRef<HTMLDivElement, {
   tile: AppTile;
   index: number;
   onExpand: () => void;
   subscriptions?: Subscription[];
   loading?: boolean;
-}) {
+  isEditMode?: boolean;
+  isBeingDragged?: boolean;
+  isDropTarget?: boolean;
+  onResizeCommit?: (index: number, colSpan: number, rowSpan: number) => void;
+  onPointerDownDrag?: (index: number, e: React.PointerEvent<HTMLElement>) => void;
+}>(function BentoCard({
+  tile,
+  index,
+  onExpand,
+  subscriptions = [],
+  loading = false,
+  isEditMode = false,
+  isBeingDragged = false,
+  onResizeCommit,
+  onPointerDownDrag,
+}, forwardedRef) {
   const cardRef = useRef<HTMLDivElement>(null);
+  // Merge internal ref with forwarded ref
+  const mergedRef = useCallback((node: HTMLDivElement | null) => {
+    (cardRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    if (typeof forwardedRef === "function") forwardedRef(node);
+    else if (forwardedRef) (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  }, [forwardedRef]);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
   const [glowPos, setGlowPos] = useState({ x: 50, y: 50 });
   const [isHovered, setIsHovered] = useState(false);
@@ -189,6 +319,76 @@ function BentoCard({
   const isTall = tile.rowSpan === 2;
   const isWide = tile.colSpan === 2;
 
+  // ── Resize handle logic ──
+  const [liveSize, setLiveSize] = useState({ colSpan: tile.colSpan, rowSpan: tile.rowSpan });
+  const liveSizeRef = useRef({ colSpan: tile.colSpan, rowSpan: tile.rowSpan });
+
+  const [resizeState, setResizeState] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
+
+  useEffect(() => {
+    setLiveSize({ colSpan: tile.colSpan, rowSpan: tile.rowSpan });
+    liveSizeRef.current = { colSpan: tile.colSpan, rowSpan: tile.rowSpan };
+  }, [tile.colSpan, tile.rowSpan]);
+
+  function handleResizePointerDown(e: React.PointerEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!cardRef.current) return;
+
+    const rect = cardRef.current.getBoundingClientRect();
+    const startW = rect.width;
+    const startH = rect.height;
+    const startX = e.clientX;
+    const startY = e.clientY;
+
+    setResizeState({ width: startW, height: startH });
+
+    function onMove(mv: PointerEvent) {
+      const dx = mv.clientX - startX;
+      const dy = mv.clientY - startY;
+
+      // Calculate container cell size dynamically
+      const gridEl = cardRef.current?.parentElement;
+      const gridW = gridEl ? gridEl.getBoundingClientRect().width : 1200;
+      const dynamicCellW = (gridW - 16 * 3) / 4;
+      const cellWAndGap = dynamicCellW + 16;
+      const cellHAndGap = 190 + 16;
+
+      // Smooth pixel resizing with safe min bounds (at least 1 cell size)
+      const newW = Math.max(dynamicCellW, startW + dx);
+      const newH = Math.max(190, startH + dy);
+
+      setResizeState({ width: newW, height: newH });
+
+      // Snapped spans for preview
+      const rawCol = Math.max(1, Math.min(4, Math.round((newW + 16) / cellWAndGap)));
+      const rawRow = Math.max(1, Math.min(2, Math.round((newH + 16) / cellHAndGap)));
+      const snapped = snapToSize(rawCol, rawRow);
+
+      liveSizeRef.current = snapped;
+      setLiveSize({ colSpan: snapped.colSpan, rowSpan: snapped.rowSpan });
+    }
+
+    function onUp() {
+      const snapped = liveSizeRef.current;
+      onResizeCommit?.(index, snapped.colSpan, snapped.rowSpan);
+      setResizeState(null);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    }
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }
+
+  const displayCol = isEditMode ? liveSize.colSpan : tile.colSpan;
+  const displayRow = isEditMode ? liveSize.rowSpan : tile.rowSpan;
+  const startCol = tile.colStart ?? 1;
+  const startRow = tile.rowStart ?? 1;
+
   // Sorting closest upcoming subscriptions
   const getSortedUpcoming = (): Subscription[] => {
     const now = new Date();
@@ -197,7 +397,7 @@ function BentoCard({
     const sorted = [...subscriptions].sort((a, b) => {
       const dateA = new Date(a.date + "T00:00:00");
       const dateB = new Date(b.date + "T00:00:00");
-      
+
       const diffA = dateA.getTime() - now.getTime();
       const diffB = dateB.getTime() - now.getTime();
 
@@ -217,24 +417,35 @@ function BentoCard({
 
   return (
     <motion.div
-      ref={cardRef}
+      ref={mergedRef}
+      layout
       initial={{ opacity: 0, y: 32 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.7,
-        ease: EASE,
-        delay: 0.12 + index * 0.06,
+        layout: { type: "spring", stiffness: 320, damping: 28 },
+        opacity: { duration: 0.7, ease: EASE, delay: 0.12 + index * 0.06 },
+        y: { duration: 0.7, ease: EASE, delay: 0.12 + index * 0.06 },
       }}
-      onMouseMove={handleMouseMove}
+      onMouseMove={!isEditMode ? handleMouseMove : undefined}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
-      onClick={onExpand}
-      className="relative cursor-pointer overflow-hidden"
+      onClick={isEditMode ? undefined : onExpand}
+      onPointerDown={isEditMode ? (e) => onPointerDownDrag?.(index, e) : undefined}
+      className={`relative overflow-hidden select-none ${isEditMode ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+        }`}
       style={{
-        gridColumn: `span ${tile.colSpan}`,
-        gridRow: `span ${tile.rowSpan}`,
+        gridColumn: `${startCol} / span ${displayCol}`,
+        gridRow: `${startRow} / span ${displayRow}`,
         perspective: "800px",
-        minHeight: isTall ? "380px" : "190px",
+        opacity: isBeingDragged ? 0.35 : 1,
+        pointerEvents: isBeingDragged ? "none" : undefined,
+        width: resizeState ? `${resizeState.width}px` : undefined,
+        height: resizeState ? `${resizeState.height}px` : undefined,
+        minHeight: resizeState ? undefined : (displayRow === 2 ? "396px" : "190px"),
+        outline: isEditMode ? `2px dashed rgba(255,215,0,0.25)` : undefined,
+        outlineOffset: isEditMode ? "4px" : undefined,
+        borderRadius: isEditMode ? "24px" : undefined,
+        transition: "outline 0.15s ease, transform 0.15s ease",
       }}
     >
       <motion.div
@@ -355,7 +566,7 @@ function BentoCard({
 
               {loading ? (
                 <div className="flex flex-1 items-center justify-center">
-                  <div 
+                  <div
                     style={{
                       width: "18px",
                       height: "18px",
@@ -383,7 +594,7 @@ function BentoCard({
                     const renewalDate = new Date(sub.date + "T00:00:00");
                     const diffTime = renewalDate.getTime() - now.getTime();
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
+
                     let daysLabel = "";
                     if (diffDays === 0) daysLabel = "Today";
                     else if (diffDays === 1) daysLabel = "Tomorrow";
@@ -408,7 +619,7 @@ function BentoCard({
                         }}
                       >
                         <div className="flex items-center gap-3">
-                          <div 
+                          <div
                             style={{
                               width: "10px",
                               height: "10px",
@@ -439,7 +650,7 @@ function BentoCard({
                   })}
                 </div>
               )}
-              
+
               {/* Tap to preview hint */}
               <motion.div
                 className="flex items-center gap-1 font-body justify-center mt-3"
@@ -504,18 +715,45 @@ function BentoCard({
             filter: "blur(20px)",
           }}
         />
+
+        {/* Resize handle — only in edit mode */}
+        {isEditMode && (
+          <div
+            onPointerDown={handleResizePointerDown}
+            title="Drag to resize"
+            className="absolute bottom-2 right-2 z-20 cursor-se-resize flex items-center justify-center"
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: 6,
+              background: "rgba(255,215,0,0.18)",
+              border: "1.5px solid rgba(255,215,0,0.55)",
+              backdropFilter: "blur(4px)",
+            }}
+          >
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path d="M2 8 L8 2 M5 8 L8 5" stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
-}
+});
+
+BentoCard.displayName = "BentoCard";
 
 /* ─── Expanded Modal ─── */
 function ExpandedTile({
   tile,
   onClose,
+  subscriptions = [],
+  loading = false,
 }: {
   tile: AppTile;
   onClose: () => void;
+  subscriptions?: Subscription[];
+  loading?: boolean;
 }) {
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -550,9 +788,10 @@ function ExpandedTile({
 
       {/* Card */}
       <motion.div
-        className="relative z-10 w-full overflow-hidden"
+        className="relative z-10 w-full overflow-hidden flex flex-col"
         style={{
           maxWidth: "580px",
+          maxHeight: "85vh",
           borderRadius: "28px",
           background: "rgba(18,18,20,0.95)",
           border: "1px solid rgba(255,255,255,0.08)",
@@ -570,10 +809,11 @@ function ExpandedTile({
           style={{
             height: "3px",
             background: `linear-gradient(90deg, transparent, ${tile.accent}, transparent)`,
+            flexShrink: 0,
           }}
         />
 
-        <div style={{ padding: "32px" }}>
+        <div style={{ padding: "32px" }} className="overflow-y-auto flex-1 scrollbar-thin">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -622,7 +862,7 @@ function ExpandedTile({
 
             <button
               onClick={onClose}
-              className="flex items-center justify-center transition-colors duration-150"
+              className="flex items-center justify-center transition-colors duration-150 cursor-pointer"
               style={{
                 width: "36px",
                 height: "36px",
@@ -658,7 +898,7 @@ function ExpandedTile({
             }}
           />
 
-          {/* Features */}
+          {/* Current Data (replaces Planned Features) */}
           <p
             className="font-body font-semibold uppercase mb-4"
             style={{
@@ -667,42 +907,89 @@ function ExpandedTile({
               letterSpacing: "0.14em",
             }}
           >
-            PLANNED FEATURES
+            Current Data
           </p>
-          <div className="grid grid-cols-2 gap-3 mb-8">
-            {tile.features.map((feature, i) => (
-              <motion.div
-                key={feature}
-                className="flex items-center gap-3"
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 + i * 0.06, ease: EASE }}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: "12px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.05)",
-                }}
-              >
-                <div
-                  style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: tile.accent,
-                    opacity: 0.6,
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  className="font-body"
-                  style={{ color: "#CBD5E1", fontSize: "13px" }}
-                >
-                  {feature}
-                </span>
-              </motion.div>
-            ))}
-          </div>
+
+          {tile.name === "TrackerSync" ? (
+            <div className="space-y-3 mb-8">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(255, 215, 0, 0.1)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : subscriptions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No active subscriptions tracked.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {subscriptions.map((sub, i) => {
+                    const renewalDate = new Date(sub.date + "T00:00:00");
+                    const formattedDate = renewalDate.toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    });
+
+                    return (
+                      <motion.div
+                        key={sub.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05, ease: EASE }}
+                        className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            style={{
+                              width: "12px",
+                              height: "12px",
+                              borderRadius: "4px",
+                              background: sub.color || tile.accent,
+                              boxShadow: `0 0 10px ${sub.color || tile.accent}66`,
+                            }}
+                          />
+                          <div>
+                            <p className="font-body text-sm font-bold text-white">
+                              {sub.name}
+                            </p>
+                            <p className="font-body text-[11px] text-white/40 mt-0.5">
+                              Renewal: {formattedDate}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="font-body text-sm font-extrabold" style={{ color: tile.accent }}>
+                            ${parseFloat(sub.amount).toFixed(2)}
+                          </p>
+                          <p className="font-body text-[10px] text-white/30 uppercase tracking-wider mt-0.5">
+                            {sub.billingCycle} • Value: {sub.personalValue || 5}/10
+                          </p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/[0.01] mb-8">
+              <span className="font-body text-xs text-white/40 font-semibold uppercase tracking-wider">
+                COming soon
+              </span>
+            </div>
+          )}
 
           {/* CTA */}
           <div
@@ -715,14 +1002,14 @@ function ExpandedTile({
             }}
           >
             <span
-              className="font-body font-semibold uppercase"
+              className="font-body font-semibold uppercase text-center"
               style={{
                 color: `${tile.accent}88`,
                 fontSize: "11px",
                 letterSpacing: "0.12em",
               }}
             >
-              Launching Soon — Stay Tuned
+              {tile.name === "TrackerSync" ? "Ecosystem Live — Syncing Data" : "Launching Soon — Stay Tuned"}
             </span>
           </div>
         </div>
@@ -740,6 +1027,221 @@ export default function DashboardPage() {
   const [expandedTile, setExpandedTile] = useState<AppTile | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [settingsPopup, setSettingsPopup] = useState<{ open: boolean; tab: "settings" | "general" | "dashboard" }>({
+    open: false,
+    tab: "settings",
+  });
+  // Layout state
+  const [tiles, setTiles] = useState<AppTile[]>(() => {
+    const saved = loadLayout();
+    return saved ? applyLayoutToTiles(DEFAULT_TILES, saved) : DEFAULT_TILES;
+  });
+  const [isEditingLayout, setIsEditingLayout] = useState(false);
+  const [editTiles, setEditTiles] = useState<AppTile[]>([]);
+  // Pointer-based drag state
+  const [dragState, setDragState] = useState<{
+    fromIndex: number;
+    mouseX: number;
+    mouseY: number;
+    cardW: number;
+    cardH: number;
+    offsetX: number;
+    offsetY: number;
+    tile: AppTile;
+    snappedCol: number;
+    snappedRow: number;
+    isValidTarget: boolean;
+  } | null>(null);
+
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  function enterEditMode() {
+    setEditTiles([...tiles]);
+    setIsEditingLayout(true);
+  }
+
+  function cancelEdit() {
+    setIsEditingLayout(false);
+    setEditTiles([]);
+    setDragState(null);
+  }
+
+  function confirmEdit() {
+    const committed = editTiles;
+    setTiles(committed);
+    const layout: TileLayout[] = committed.map((t) => ({
+      id: t.id,
+      colSpan: t.colSpan,
+      rowSpan: t.rowSpan,
+      colStart: t.colStart ?? 1,
+      rowStart: t.rowStart ?? 1,
+    }));
+    saveLayout(layout);
+    setIsEditingLayout(false);
+    setEditTiles([]);
+    setDragState(null);
+  }
+
+  function resetLayout() {
+    localStorage.removeItem(LAYOUT_KEY);
+    setTiles(DEFAULT_TILES);
+    setIsEditingLayout(false);
+    setEditTiles([]);
+    setDragState(null);
+  }
+
+  function handleCardPointerDown(index: number, e: React.PointerEvent<HTMLElement>) {
+    e.preventDefault();
+    const el = e.currentTarget;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const t = editTiles[index];
+    setDragState({
+      fromIndex: index,
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      cardW: rect.width,
+      cardH: rect.height,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      tile: t,
+      snappedCol: t.colStart ?? 1,
+      snappedRow: t.rowStart ?? 1,
+      isValidTarget: true,
+    });
+  }
+
+  // Global pointer move/up for drag
+  useEffect(() => {
+    if (!dragState) return;
+
+    function onMove(e: PointerEvent) {
+      if (!dragState) return;
+
+      const gridEl = gridRef.current;
+      if (!gridEl) return;
+      const gridRect = gridEl.getBoundingClientRect();
+
+      // Top-left of the dragged card relative to the grid container
+      const cardLeft = e.clientX - dragState.offsetX - gridRect.left;
+      const cardTop = e.clientY - dragState.offsetY - gridRect.top;
+
+      // Calculate dynamic grid column width
+      const cellW = (gridRect.width - 16 * 3) / 4;
+      const cellWAndGap = cellW + 16;
+      const cellHAndGap = 190 + 16;
+
+      const colSpan = dragState.tile.colSpan;
+
+      // Snapped target cell coordinates
+      const snappedCol = Math.max(1, Math.min(4 - colSpan + 1, Math.round(cardLeft / cellWAndGap) + 1));
+      const snappedRow = Math.max(1, Math.round(cardTop / cellHAndGap) + 1);
+
+      // Verify if target position is valid (either empty, or a valid single-card swap)
+      const arr = [...editTiles];
+      const fi = dragState.fromIndex;
+      const draggedCard = arr[fi];
+
+      const targetCard = { colStart: snappedCol, rowStart: snappedRow, colSpan: draggedCard.colSpan, rowSpan: draggedCard.rowSpan };
+
+      const overlappingIndices = arr
+        .map((t, idx) => ({ ...t, idx }))
+        .filter(
+          ({ idx, colStart, rowStart, colSpan: cSpan, rowSpan: rSpan }) =>
+            idx !== fi &&
+            overlaps(
+              targetCard,
+              { colStart: colStart ?? 1, rowStart: rowStart ?? 1, colSpan: cSpan, rowSpan: rSpan }
+            )
+        );
+
+      let isValid = false;
+      if (overlappingIndices.length === 0) {
+        isValid = true;
+      } else if (overlappingIndices.length === 1) {
+        const targetIndex = overlappingIndices[0].idx;
+        const targetCardObj = arr[targetIndex];
+        const sourceCol = draggedCard.colStart ?? 1;
+        const sourceRow = draggedCard.rowStart ?? 1;
+
+        const tempArr = [...arr];
+        tempArr[fi] = { ...draggedCard, colStart: snappedCol, rowStart: snappedRow };
+        tempArr[targetIndex] = { ...targetCardObj, colStart: sourceCol, rowStart: sourceRow };
+
+        if (isLayoutValid(tempArr)) {
+          isValid = true;
+        }
+      }
+
+      setDragState((prev) =>
+        prev
+          ? {
+            ...prev,
+            mouseX: e.clientX,
+            mouseY: e.clientY,
+            snappedCol,
+            snappedRow,
+            isValidTarget: isValid,
+          }
+          : null
+      );
+    }
+
+    function onUp() {
+      if (!dragState) return;
+
+      if (dragState.isValidTarget) {
+        const targetCol = dragState.snappedCol;
+        const targetRow = dragState.snappedRow;
+        const fi = dragState.fromIndex;
+
+        setEditTiles((prev) => {
+          const arr = [...prev];
+          const dragged = { ...arr[fi], colStart: targetCol, rowStart: targetRow };
+
+          // Find if there is any card at the target position to swap with
+          const occupiedIndex = arr.findIndex(
+            (t, idx) =>
+              idx !== fi &&
+              overlaps(
+                { colStart: targetCol, rowStart: targetRow, colSpan: dragged.colSpan, rowSpan: dragged.rowSpan },
+                { colStart: t.colStart ?? 1, rowStart: t.rowStart ?? 1, colSpan: t.colSpan, rowSpan: t.rowSpan }
+              )
+          );
+
+          if (occupiedIndex !== -1) {
+            // Swap: the occupied card gets the dragged card's starting position
+            const sourceCol = arr[fi].colStart ?? 1;
+            const sourceRow = arr[fi].rowStart ?? 1;
+            arr[occupiedIndex] = { ...arr[occupiedIndex], colStart: sourceCol, rowStart: sourceRow };
+          }
+
+          arr[fi] = dragged;
+          return arr;
+        });
+      }
+
+      setDragState(null);
+    }
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [dragState, editTiles]);
+
+  function handleResizeCommit(index: number, colSpan: number, rowSpan: number) {
+    setEditTiles((prev) => {
+      const arr = prev.map((t, i) => (i === index ? { ...t, colSpan, rowSpan } : t));
+      if (isLayoutValid(arr)) {
+        return arr;
+      }
+      return prev;
+    });
+  }
 
   const fetchSubscriptions = useCallback(() => {
     const storedToken = localStorage.getItem("subsync_token");
@@ -813,137 +1315,334 @@ export default function DashboardPage() {
         }
         transition={{ duration: 0.8, ease: EASE }}
       >
-      {/* Nav Bar */}
-      <nav
-        className="sticky top-0 z-50 flex h-16 items-center justify-between"
-        style={{
-          background: "rgba(10,10,10,0.8)",
-          padding: "0 40px",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-        }}
-      >
-        <Link
-          href="/"
-          className="font-heading text-[22px] font-black tracking-tight"
-          style={{ color: "#FFD700" }}
+        {/* Nav Bar */}
+        <nav
+          className="sticky top-0 z-50 flex h-16 items-center justify-between"
+          style={{
+            background: "rgba(10,10,10,0.8)",
+            padding: "0 40px",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+          }}
         >
-          SubSync
-        </Link>
-        <div className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="font-body text-sm transition-colors duration-150 hover:text-white"
-            style={{ color: "#94A3B8" }}
-          >
-            ← Home
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="font-body rounded-xl px-5 py-2 text-sm text-white transition-all duration-200 hover:text-red-400"
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="text-white/60 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+              aria-label="Open navigation sidebar"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-6 h-6"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+            <Link
+              href="/"
+              className="font-heading text-[22px] font-black tracking-tight"
+              style={{ color: "#FFD700" }}
+            >
+              SubSync
+            </Link>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link
+              href="/"
+              className="font-body text-sm transition-colors duration-150 hover:text-white"
+              style={{ color: "#94A3B8" }}
+            >
+              ← Home
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="font-body rounded-xl px-5 py-2 text-sm text-white transition-all duration-200 hover:text-red-400"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        </nav>
+
+        {/* Page Header */}
+        <div className="flex items-end justify-between" style={{ padding: "56px 40px 36px" }}>
+          <div>
+            <motion.p
+              className="font-body font-semibold uppercase mb-3"
+              style={{ color: "#FFD700", fontSize: "10px", letterSpacing: "0.16em" }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.05 }}
+            >
+              YOUR SYNC DASHBOARD
+            </motion.p>
+            <motion.p
+              className="font-body font-semibold uppercase mb-3"
+              style={{ color: "#94A3B8", fontSize: "11px", letterSpacing: "0.14em" }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: EASE, delay: 0.06 }}
+            >
+              Connected, Simplified, Synced.
+            </motion.p>
+            <motion.h1
+              className="font-heading font-bold text-white mb-3"
+              style={{ fontSize: "38px", letterSpacing: "-0.025em" }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
+            >
+              Welcome {username}.
+            </motion.h1>
+            <motion.p
+              className="font-body text-[15px] font-light"
+              style={{ color: "#94A3B8", lineHeight: 1.75 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: EASE, delay: 0.12 }}
+            >
+              Everything synced. All in one place.
+            </motion.p>
+          </div>
+
+          <motion.button
+            onClick={fetchSubscriptions}
+            disabled={loadingSubs}
+            className="font-body font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-50"
             style={{
+              fontSize: "13px",
+              color: loadingSubs ? "#FFD700" : "#94A3B8",
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "10px",
+              padding: "9px 18px",
+            }}
+            whileHover={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.18)" }}
+            whileTap={{ scale: 0.96 }}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE, delay: 0.18 }}
+          >
+            <RefreshCw
+              size={13}
+              style={{ animation: loadingSubs ? "sb-spin 0.8s linear infinite" : "none" }}
+            />
+            Refresh
+          </motion.button>
+        </div>
+
+        {/* Bento Grid */}
+        <div style={{ padding: "0 40px 60px" }}>
+          <AnimatePresence>
+            {isEditingLayout && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mb-5 flex items-center gap-3 px-1"
+              >
+                <div
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full font-body text-xs font-semibold"
+                  style={{
+                    background: "rgba(255,215,0,0.08)",
+                    border: "1px solid rgba(255,215,0,0.25)",
+                    color: "#FFD700",
+                  }}
+                >
+                  <span className="w-2 h-2 rounded-full bg-[#FFD700] animate-pulse" />
+                  Edit Mode — drag to reorder · resize with corner handle
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div
+            ref={gridRef}
+            className="grid gap-4"
+            style={{
+              gridTemplateColumns: "repeat(4, 1fr)",
+              gridAutoRows: "190px",
+              position: "relative",
+              minHeight: isEditingLayout ? "1000px" : "auto",
             }}
           >
-            Logout
-          </button>
+            {(isEditingLayout ? editTiles : tiles).map((tile, i) => {
+              const isDragging = dragState !== null && dragState.tile.id === tile.id;
+              return (
+                <BentoCard
+                  key={tile.id}
+                  tile={tile}
+                  index={i}
+                  onExpand={() => !isEditingLayout && setExpandedTile(tile)}
+                  subscriptions={subscriptions}
+                  loading={loadingSubs}
+                  isEditMode={isEditingLayout}
+                  isBeingDragged={isDragging}
+                  onResizeCommit={handleResizeCommit}
+                  onPointerDownDrag={(idx, e) => handleCardPointerDown(i, e)}
+                />
+              );
+            })}
+
+            {/* Real-time snapped target placeholder */}
+            {dragState && (
+              <motion.div
+                layout
+                className="absolute border-2 border-dashed pointer-events-none"
+                style={{
+                  gridColumn: `${dragState.snappedCol} / span ${dragState.tile.colSpan}`,
+                  gridRow: `${dragState.snappedRow} / span ${dragState.tile.rowSpan}`,
+                  minHeight: dragState.tile.rowSpan === 2 ? "396px" : "190px",
+                  borderRadius: 24,
+                  zIndex: 10,
+                  borderColor: dragState.isValidTarget ? "rgba(255, 215, 0, 0.45)" : "rgba(239, 68, 68, 0.45)",
+                  backgroundColor: dragState.isValidTarget ? "rgba(255, 215, 0, 0.04)" : "rgba(239, 68, 68, 0.04)",
+                  transition: "border-color 0.15s ease, background-color 0.15s ease",
+                }}
+              />
+            )}
+          </div>
+
+          {/* Drag ghost — follows the cursor (Portal-rendered to avoid parent transforms) */}
+          {dragState && typeof document !== "undefined" && createPortal(
+            <div
+              style={{
+                position: "fixed",
+                left: 0,
+                top: 0,
+                width: dragState.cardW,
+                height: dragState.cardH,
+                zIndex: 9999,
+                pointerEvents: "none",
+                borderRadius: 24,
+                overflow: "hidden",
+                opacity: 0.88,
+                transform: `translate3d(${dragState.mouseX - dragState.offsetX}px, ${dragState.mouseY - dragState.offsetY}px, 0) rotate(2deg) scale(1.04)`,
+                boxShadow: "0 28px 60px rgba(0,0,0,0.7), 0 0 0 2px rgba(255,215,0,0.4)",
+                background: `linear-gradient(135deg, rgba(255,215,0,0.06), rgba(255,255,255,0.02))`,
+                border: `2px solid ${dragState.isValidTarget ? "rgba(255,215,0,0.5)" : "rgba(239,68,68,0.5)"}`,
+                backdropFilter: "blur(12px)",
+              }}
+            >
+              {/* Ghost card mini header */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0, left: 0, right: 0,
+                  height: 3,
+                  background: `linear-gradient(90deg, transparent, ${dragState.tile.accent}, transparent)`,
+                }}
+              />
+              <div style={{ padding: "20px 22px" }}>
+                <p className="font-body text-[10px] font-bold uppercase tracking-widest" style={{ color: dragState.tile.accent }}>
+                  {dragState.tile.category}
+                </p>
+                <p className="font-heading text-xl font-black text-white mt-1">{dragState.tile.name}</p>
+              </div>
+              {/* Grab indicator */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div
+                  style={{
+                    background: dragState.isValidTarget ? "rgba(255,215,0,0.1)" : "rgba(239,68,68,0.1)",
+                    border: `1px solid ${dragState.isValidTarget ? "rgba(255,215,0,0.25)" : "rgba(239,68,68,0.25)"}`,
+                    borderRadius: 999,
+                    padding: "6px 16px",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: dragState.isValidTarget ? "rgba(255,215,0,0.8)" : "rgba(239,68,68,0.8)",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {dragState.isValidTarget ? "Moving…" : "Blocked"}
+                </div>
+              </div>
+            </div>,
+            document.body
+          )}
         </div>
-      </nav>
 
-      {/* Page Header */}
-      <div className="flex items-end justify-between" style={{ padding: "56px 40px 36px" }}>
-        <div>
-          <motion.p
-            className="font-body font-semibold uppercase mb-3"
-            style={{ color: "#FFD700", fontSize: "10px", letterSpacing: "0.16em" }}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: EASE, delay: 0.05 }}
-          >
-            YOUR SYNC CORE
-          </motion.p>
-          <motion.h1
-            className="font-heading font-bold text-white mb-3"
-            style={{ fontSize: "38px", letterSpacing: "-0.025em" }}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.08 }}
-          >
-            Welcome {username ? `, ${username}` : " back"}.
-          </motion.h1>
-          <motion.p
-            className="font-body text-[15px] font-light"
-            style={{ color: "#94A3B8", lineHeight: 1.75 }}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE, delay: 0.12 }}
-          >
-            Everything synced. All in one place.
-          </motion.p>
-        </div>
-
-        <motion.button
-          onClick={fetchSubscriptions}
-          disabled={loadingSubs}
-          className="font-body font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-50"
-          style={{
-            fontSize: "13px",
-            color: loadingSubs ? "#FFD700" : "#94A3B8",
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "10px",
-            padding: "9px 18px",
-          }}
-          whileHover={{ color: "#ffffff", borderColor: "rgba(255,255,255,0.18)" }}
-          whileTap={{ scale: 0.96 }}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE, delay: 0.18 }}
-        >
-          <RefreshCw
-            size={13}
-            style={{ animation: loadingSubs ? "sb-spin 0.8s linear infinite" : "none" }}
-          />
-          Refresh
-        </motion.button>
-      </div>
-
-      {/* Bento Grid */}
-      <div style={{ padding: "0 40px 60px" }}>
-        <div
-          className="grid gap-4"
-          style={{
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gridAutoRows: "190px",
-          }}
-        >
-          {TILES.map((tile, i) => (
-            <BentoCard
-              key={tile.name}
-              tile={tile}
-              index={i}
-              onExpand={() => setExpandedTile(tile)}
+        {/* Expanded Modal */}
+        <AnimatePresence>
+          {expandedTile && (
+            <ExpandedTile
+              tile={expandedTile}
+              onClose={() => setExpandedTile(null)}
               subscriptions={subscriptions}
               loading={loadingSubs}
             />
-          ))}
-        </div>
-      </div>
+          )}
+        </AnimatePresence>
 
-      {/* Expanded Modal */}
-      <AnimatePresence>
-        {expandedTile && (
-          <ExpandedTile
-            tile={expandedTile}
-            onClose={() => setExpandedTile(null)}
-          />
-        )}
-      </AnimatePresence>
+        {/* Sidebar Drawer */}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          onOpenSettings={(tab) => {
+            setSettingsPopup({ open: true, tab });
+            setIsSidebarOpen(false);
+          }}
+        />
 
-      {/* Responsive override */}
-      <style>{`
+        {/* Settings Popup Modal */}
+        <AnimatePresence>
+          {settingsPopup.open && (
+            <SettingsPopup
+              initialTab={settingsPopup.tab}
+              onClose={() => setSettingsPopup({ open: false, tab: "settings" })}
+              onEnterEditMode={enterEditMode}
+              onResetLayout={resetLayout}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Edit Mode Floating Control Bar */}
+        <AnimatePresence>
+          {isEditingLayout && (
+            <motion.div
+              initial={{ opacity: 0, y: 80 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 80 }}
+              transition={{ type: "spring", stiffness: 400, damping: 32 }}
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[300] flex items-center gap-3"
+              style={{
+                background: "rgba(12,12,14,0.92)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "20px",
+                padding: "12px 20px",
+                backdropFilter: "blur(24px)",
+                boxShadow: "0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,215,0,0.06)",
+              }}
+            >
+              <button
+                onClick={cancelEdit}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-white/60 hover:text-white hover:bg-white/8 border border-white/10 transition cursor-pointer"
+              >
+                <RotateCcw size={13} /> Cancel
+              </button>
+
+              <div className="h-5 w-px bg-white/10" />
+
+              <button
+                onClick={confirmEdit}
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#FFD700] hover:bg-[#ffe033] text-black font-bold rounded-xl text-xs transition cursor-pointer"
+              >
+                <Check size={13} /> Save Layout
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Responsive override */}
+        <style>{`
         @keyframes sb-spin {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
