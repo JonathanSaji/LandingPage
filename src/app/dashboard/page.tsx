@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw } from "lucide-react";
+import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users } from "lucide-react";
 import Sidebar from "@/components/ui/sidebar-with-submenu";
 import { SettingsPopup } from "@/components/ui/settings-popup";
 import { createPortal } from "react-dom";
@@ -245,6 +245,17 @@ interface Subscription {
   personalValue: number;
 }
 
+interface Trip {
+  id: string;
+  name: string;
+  location: string | null;
+  dates: string | null;
+  group: string | null;
+  peopleCount: number;
+  budget: string | null;
+  updatedAt: string;
+}
+
 /* ─── Edit Mode Resize Sizes ─── */
 const SNAP_SIZES = [
   { label: "Small", colSpan: 1, rowSpan: 1 },
@@ -269,6 +280,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   index: number;
   onExpand: () => void;
   subscriptions?: Subscription[];
+  trips?: Trip[];
   loading?: boolean;
   isEditMode?: boolean;
   isBeingDragged?: boolean;
@@ -280,6 +292,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   index,
   onExpand,
   subscriptions = [],
+  trips = [],
   loading = false,
   isEditMode = false,
   isBeingDragged = false,
@@ -315,9 +328,6 @@ const BentoCard = forwardRef<HTMLDivElement, {
     setTilt({ rotateX: 0, rotateY: 0 });
     setIsHovered(false);
   }, []);
-
-  const isTall = tile.rowSpan === 2;
-  const isWide = tile.colSpan === 2;
 
   // ── Resize handle logic ──
   const [liveSize, setLiveSize] = useState({ colSpan: tile.colSpan, rowSpan: tile.rowSpan });
@@ -386,8 +396,12 @@ const BentoCard = forwardRef<HTMLDivElement, {
 
   const displayCol = isEditMode ? liveSize.colSpan : tile.colSpan;
   const displayRow = isEditMode ? liveSize.rowSpan : tile.rowSpan;
+  const isTall = displayRow === 2;
+  const isWide = displayCol === 2;
   const startCol = tile.colStart ?? 1;
   const startRow = tile.rowStart ?? 1;
+  const compactSubLimit = isTall ? 2 : 1;
+  const compactTripLimit = isTall ? 2 : 1;
 
   // Sorting closest upcoming subscriptions
   const getSortedUpcoming = (): Subscription[] => {
@@ -410,10 +424,11 @@ const BentoCard = forwardRef<HTMLDivElement, {
       return diffB - diffA;
     });
 
-    return sorted.slice(0, 3);
+    return sorted.slice(0, compactSubLimit);
   };
 
   const displaySubs = getSortedUpcoming();
+  const displayTrips = trips.slice(0, compactTripLimit);
 
   return (
     <motion.div
@@ -492,7 +507,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
         {/* Content */}
         <div
           className="relative z-10 flex h-full flex-col justify-between"
-          style={{ padding: isTall || isWide ? "28px" : "22px" }}
+          style={{ padding: isTall ? "28px" : isWide ? "20px 24px" : "22px" }}
         >
           {/* Top: Category + Logo */}
           <div className="flex items-start justify-between">
@@ -550,7 +565,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
 
           {/* Body Section */}
           {tile.name === "TrackerSync" ? (
-            <div className="flex flex-1 flex-col justify-between mt-4" style={{ minHeight: "180px" }}>
+            <div className="mt-4 flex min-h-0 flex-1 flex-col justify-between">
               <p
                 className="font-body font-bold"
                 style={{
@@ -587,8 +602,12 @@ const BentoCard = forwardRef<HTMLDivElement, {
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2 flex-1 justify-center">
+                <div
+                  className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden"
+                  style={{ gap: isTall ? "8px" : "6px" }}
+                >
                   {displaySubs.map((sub) => {
+                    const subAccent = sub.color || tile.accent;
                     const now = new Date();
                     now.setHours(0, 0, 0, 0);
                     const renewalDate = new Date(sub.date + "T00:00:00");
@@ -610,38 +629,43 @@ const BentoCard = forwardRef<HTMLDivElement, {
                     return (
                       <div
                         key={sub.id}
-                        className="flex items-center justify-between rounded-xl transition-all duration-300 hover:bg-white/[0.04] group"
+                        className="group flex min-w-0 items-center justify-between gap-3 rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
                         style={{
-                          padding: "10px 14px",
-                          background: "rgba(255, 255, 255, 0.02)",
-                          border: `1px solid rgba(255, 255, 255, 0.05)`,
-                          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.01)`,
+                          padding: isTall ? "10px 14px" : "8px 10px",
+                          background: `${tile.accent}06`,
+                          border: `1px solid ${tile.accent}30`,
+                          boxShadow: `0 0 18px ${tile.accent}12, inset 0 1px 0 ${tile.accent}12`,
                         }}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
                           <div
                             style={{
                               width: "10px",
                               height: "10px",
                               borderRadius: "3px",
-                              background: sub.color || tile.accent,
-                              boxShadow: `0 0 8px ${sub.color || tile.accent}`,
+                              background: subAccent,
+                              boxShadow: `0 0 8px ${subAccent}80`,
+                              flexShrink: 0,
                             }}
                           />
-                          <div>
-                            <p className="font-body text-[13px] font-bold text-white group-hover:text-[#FFD700] transition-colors">
+                          <div className="min-w-0">
+                            <p
+                              className="truncate font-body font-bold text-white transition-colors group-hover:text-[#CCFF00]"
+                              style={{ fontSize: isTall || isWide ? "13px" : "12px" }}
+                              title={sub.name}
+                            >
                               {sub.name}
                             </p>
-                            <p className="font-body text-[10px] text-white/40">
-                              {formattedDate} • <span style={{ color: diffDays >= 0 ? "#FFD700" : "rgba(255, 100, 100, 0.6)" }}>{daysLabel}</span>
+                            <p className="truncate font-body text-[10px] text-white/45">
+                              {formattedDate} • <span style={{ color: diffDays >= 0 ? tile.accent : "rgba(255, 100, 100, 0.7)" }}>{daysLabel}</span>
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-body text-[13px] font-bold" style={{ color: tile.accent }}>
+                        <div className="shrink-0 text-right">
+                          <p className="font-body text-[13px] font-bold" style={{ color: subAccent }}>
                             ${parseFloat(sub.amount).toFixed(2)}
                           </p>
-                          <p className="font-body text-[9px] text-white/30 uppercase tracking-wide">
+                          <p className="font-body text-[9px] uppercase tracking-wide text-white/35">
                             {sub.billingCycle}
                           </p>
                         </div>
@@ -653,13 +677,112 @@ const BentoCard = forwardRef<HTMLDivElement, {
 
               {/* Tap to preview hint */}
               <motion.div
-                className="flex items-center gap-1 font-body justify-center mt-3"
+                className="pointer-events-none absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1 font-body"
                 style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px" }}
                 animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
                 transition={{ duration: 0.25, ease: EASE }}
               >
                 <span>Tap to preview</span>
                 <ArrowUpRight size={11} />
+              </motion.div>
+            </div>
+          ) : tile.name === "TravelSync" ? (
+            <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
+              <p
+                className="font-body font-bold uppercase"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  marginBottom: "6px",
+                }}
+              >
+                {displayTrips.length > 1 ? "Your Trips" : "Your Trip"}
+              </p>
+
+              {loading ? (
+                <div className="flex flex-1 items-center justify-center py-4">
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(242, 153, 74, 0.15)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : displayTrips.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
+                  <p className="font-body text-center text-[11px] text-white/40">No trips planned yet.</p>
+                </div>
+              ) : (
+                <div
+                  className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden"
+                  style={{ gap: isTall ? "8px" : "6px" }}
+                >
+                  {displayTrips.map((trip) => {
+                    const peopleText = `${trip.peopleCount} ${trip.peopleCount === 1 ? "person" : "people"}${trip.group ? ` · ${trip.group}` : ""}`;
+                    return (
+                      <div
+                        key={trip.id}
+                        className="rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
+                        style={{
+                          padding: isTall ? "10px 12px" : "8px 10px",
+                          background: `${tile.accent}06`,
+                          border: `1px solid ${tile.accent}30`,
+                          boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                        }}
+                      >
+                        <div className="flex min-w-0 items-start justify-between gap-2">
+                          <p
+                            className="min-w-0 truncate font-body font-bold text-white"
+                            style={{ fontSize: isTall || isWide ? "12px" : "11px", lineHeight: 1.2 }}
+                            title={trip.name}
+                          >
+                            {trip.name}
+                          </p>
+                          {trip.budget && (isTall || isWide) ? (
+                            <span className="shrink-0 font-body text-[9px] uppercase tracking-wide text-white/35">
+                              {trip.budget}
+                            </span>
+                          ) : null}
+                        </div>
+                        <div
+                          className={isWide ? "mt-2 grid grid-cols-3 gap-2" : "mt-1.5 flex flex-col gap-1.5"}
+                        >
+                          {trip.location ? (
+                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                              <MapPin size={11} color={tile.accent} className="shrink-0" />
+                              <span className="truncate">{trip.location}</span>
+                            </p>
+                          ) : null}
+                          {trip.dates ? (
+                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                              <Calendar size={11} color={tile.accent} className="shrink-0" />
+                              <span className="truncate">{trip.dates}</span>
+                            </p>
+                          ) : null}
+                          <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                            <Users size={11} color={tile.accent} className="shrink-0" />
+                            <span className="truncate">{peopleText}</span>
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <motion.div
+                className="pointer-events-none absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1 font-body"
+                style={{ color: "rgba(255,255,255,0.25)", fontSize: "10px" }}
+                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                <span>Tap to preview</span>
+                <ArrowUpRight size={10} />
               </motion.div>
             </div>
           ) : (
@@ -748,11 +871,13 @@ function ExpandedTile({
   tile,
   onClose,
   subscriptions = [],
+  trips = [],
   loading = false,
 }: {
   tile: AppTile;
   onClose: () => void;
   subscriptions?: Subscription[];
+  trips?: Trip[];
   loading?: boolean;
 }) {
   useEffect(() => {
@@ -934,6 +1059,7 @@ function ExpandedTile({
               ) : (
                 <div className="space-y-2">
                   {subscriptions.map((sub, i) => {
+                    const subAccent = sub.color || tile.accent;
                     const renewalDate = new Date(sub.date + "T00:00:00");
                     const formattedDate = renewalDate.toLocaleDateString("en-US", {
                       month: "long",
@@ -947,7 +1073,12 @@ function ExpandedTile({
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.05, ease: EASE }}
-                        className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5"
+                        className="flex items-center justify-between rounded-xl p-4"
+                        style={{
+                          background: `${tile.accent}06`,
+                          border: `1px solid ${tile.accent}30`,
+                          boxShadow: `0 0 18px ${tile.accent}12, inset 0 1px 0 ${tile.accent}12`,
+                        }}
                       >
                         <div className="flex items-center gap-3">
                           <div
@@ -955,8 +1086,8 @@ function ExpandedTile({
                               width: "12px",
                               height: "12px",
                               borderRadius: "4px",
-                              background: sub.color || tile.accent,
-                              boxShadow: `0 0 10px ${sub.color || tile.accent}66`,
+                              background: subAccent,
+                              boxShadow: `0 0 10px ${subAccent}66`,
                             }}
                           />
                           <div>
@@ -970,7 +1101,7 @@ function ExpandedTile({
                         </div>
 
                         <div className="text-right">
-                          <p className="font-body text-sm font-extrabold" style={{ color: tile.accent }}>
+                          <p className="font-body text-sm font-extrabold" style={{ color: subAccent }}>
                             ${parseFloat(sub.amount).toFixed(2)}
                           </p>
                           <p className="font-body text-[10px] text-white/30 uppercase tracking-wider mt-0.5">
@@ -978,6 +1109,91 @@ function ExpandedTile({
                           </p>
                         </div>
                       </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : tile.name === "TravelSync" ? (
+            <div className="space-y-3 mb-8">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(242, 153, 74, 0.15)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : trips.length === 0 ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No trips in TravelSync yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {trips.map((trip, i) => {
+                    const peopleText = `${trip.peopleCount} ${trip.peopleCount === 1 ? "traveler" : "travelers"}${trip.group ? ` · ${trip.group}` : ""}`;
+                    return (
+                      <motion.article
+                        key={trip.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05, ease: EASE }}
+                        className="overflow-hidden rounded-2xl"
+                        style={{
+                          background: `${tile.accent}06`,
+                          border: `1px solid ${tile.accent}30`,
+                          boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                        }}
+                      >
+                        <div
+                          className="px-4 py-3"
+                          style={{
+                            background: `linear-gradient(90deg, ${tile.accent}14, transparent)`,
+                            borderBottom: `1px solid ${tile.accent}24`,
+                          }}
+                        >
+                          <p className="font-body text-sm font-bold text-white">{trip.name}</p>
+                          {trip.budget ? (
+                            <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">
+                              {trip.budget} budget
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="grid gap-2 p-3 sm:grid-cols-3">
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <MapPin size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Location</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">
+                              {trip.location || "—"}
+                            </p>
+                          </div>
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <Calendar size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Dates</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">
+                              {trip.dates || "—"}
+                            </p>
+                          </div>
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <Users size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Travelers</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">{peopleText}</p>
+                          </div>
+                        </div>
+                      </motion.article>
                     );
                   })}
                 </div>
@@ -1009,7 +1225,9 @@ function ExpandedTile({
                 letterSpacing: "0.12em",
               }}
             >
-              {tile.name === "TrackerSync" ? "Ecosystem Live — Syncing Data" : "Launching Soon — Stay Tuned"}
+              {tile.name === "TrackerSync" || tile.name === "TravelSync"
+                ? "Ecosystem Live — Syncing Data"
+                : "Launching Soon — Stay Tuned"}
             </span>
           </div>
         </div>
@@ -1026,6 +1244,7 @@ export default function DashboardPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [expandedTile, setExpandedTile] = useState<AppTile | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [settingsPopup, setSettingsPopup] = useState<{ open: boolean; tab: "settings" | "general" | "dashboard" }>({
@@ -1243,22 +1462,30 @@ export default function DashboardPage() {
     });
   }
 
-  const fetchSubscriptions = useCallback(() => {
+  const fetchDashboardData = useCallback(() => {
     const storedToken = localStorage.getItem("subsync_token");
     if (!storedToken) return;
     try {
       const payload = JSON.parse(atob(storedToken));
       const accountId = payload.accountId;
-      if (!accountId) { setLoadingSubs(false); return; }
+      if (!accountId) {
+        setLoadingSubs(false);
+        return;
+      }
       setLoadingSubs(true);
-      fetch(`/api/subscriptions?userId=${accountId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.ok && Array.isArray(data.subscriptions)) {
-            setSubscriptions(data.subscriptions);
+      Promise.all([
+        fetch(`/api/subscriptions?userId=${accountId}`).then((res) => res.json()),
+        fetch(`/api/trips?userId=${accountId}`).then((res) => res.json()),
+      ])
+        .then(([subsData, tripsData]) => {
+          if (subsData.ok && Array.isArray(subsData.subscriptions)) {
+            setSubscriptions(subsData.subscriptions);
+          }
+          if (tripsData.ok && Array.isArray(tripsData.trips)) {
+            setTrips(tripsData.trips);
           }
         })
-        .catch((err) => console.error("Error fetching subscriptions:", err))
+        .catch((err) => console.error("Error fetching dashboard data:", err))
         .finally(() => setLoadingSubs(false));
     } catch (e) {
       console.error("Error decoding token:", e);
@@ -1279,8 +1506,8 @@ export default function DashboardPage() {
       console.error("Error decoding token in dashboard:", e);
     }
     setAuthed(true);
-    fetchSubscriptions();
-  }, [router, fetchSubscriptions]);
+    fetchDashboardData();
+  }, [router, fetchDashboardData]);
 
   // Lock body scroll when expanded
   useEffect(() => {
@@ -1414,7 +1641,7 @@ export default function DashboardPage() {
           </div>
 
           <motion.button
-            onClick={fetchSubscriptions}
+            onClick={fetchDashboardData}
             disabled={loadingSubs}
             className="font-body font-semibold flex items-center gap-2 transition-all duration-200 disabled:opacity-50"
             style={{
@@ -1483,6 +1710,7 @@ export default function DashboardPage() {
                   index={i}
                   onExpand={() => !isEditingLayout && setExpandedTile(tile)}
                   subscriptions={subscriptions}
+                  trips={trips}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}
                   isBeingDragged={isDragging}
@@ -1577,6 +1805,7 @@ export default function DashboardPage() {
               tile={expandedTile}
               onClose={() => setExpandedTile(null)}
               subscriptions={subscriptions}
+              trips={trips}
               loading={loadingSubs}
             />
           )}
