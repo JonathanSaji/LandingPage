@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users } from "lucide-react";
+import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users, Clock } from "lucide-react";
 import Sidebar from "@/components/ui/sidebar-with-submenu";
 import { SettingsPopup } from "@/components/ui/settings-popup";
 import { createPortal } from "react-dom";
@@ -279,6 +279,19 @@ interface BrainInsight {
   } | null;
 }
 
+interface FluencySession {
+  id: string;
+  duration: number | null;
+  wpm: number | null;
+  filler_word_count: number | null;
+  created_at: string;
+}
+
+function formatSessionTime(duration: number | null) {
+  if (duration === null || !Number.isFinite(duration)) return "--";
+  return `${duration} min`;
+}
+
 /* ─── Edit Mode Resize Sizes ─── */
 const SNAP_SIZES = [
   { label: "Small", colSpan: 1, rowSpan: 1 },
@@ -306,6 +319,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   trips?: Trip[];
   presets?: BrainPreset[];
   insights?: BrainInsight[];
+  fluencySessions?: FluencySession[];
   loading?: boolean;
   isEditMode?: boolean;
   isBeingDragged?: boolean;
@@ -320,6 +334,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   trips = [],
   presets = [],
   insights = [],
+  fluencySessions = [],
   loading = false,
   isEditMode = false,
   isBeingDragged = false,
@@ -429,6 +444,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   const startRow = tile.rowStart ?? 1;
   const compactSubLimit = isTall ? 2 : 1;
   const compactTripLimit = isTall ? 2 : 1;
+  const compactFluencyLimit = isTall ? 2 : 1;
 
   // Sorting closest upcoming subscriptions
   const getSortedUpcoming = (): Subscription[] => {
@@ -456,6 +472,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
 
   const displaySubs = getSortedUpcoming();
   const displayTrips = trips.slice(0, compactTripLimit);
+  const displayFluencySessions = fluencySessions.slice(0, compactFluencyLimit);
 
   return (
     <motion.div
@@ -897,6 +914,86 @@ const BentoCard = forwardRef<HTMLDivElement, {
                 <ArrowUpRight size={10} />
               </motion.div>
             </div>
+          ) : tile.name === "FluencySync" ? (
+            <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
+              <p
+                className="font-body font-bold uppercase"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  marginBottom: "6px",
+                }}
+              >
+                Recent speaking sessions
+              </p>
+
+              {loading ? (
+                <div className="flex flex-1 items-center justify-center py-4">
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(255, 60, 56, 0.12)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : displayFluencySessions.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
+                  <p className="font-body text-center text-[11px] text-white/40">No FluencySync sessions found.</p>
+                </div>
+              ) : (
+                <div
+                  className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden"
+                  style={{ gap: isTall ? "8px" : "6px" }}
+                >
+                  {displayFluencySessions.map((session) => (
+                    <div
+                      key={session.id}
+                      className="rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
+                      style={{
+                        padding: isTall ? "10px 12px" : "8px 10px",
+                        background: `${tile.accent}06`,
+                        border: `1px solid ${tile.accent}30`,
+                        boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                      }}
+                    >
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="min-w-0">
+                          <p className="font-body text-[9px] uppercase tracking-wide text-white/35">Session Time</p>
+                          <p className="truncate font-body text-xs font-bold text-white">{formatSessionTime(session.duration)}</p>
+                        </div>
+                        <div className="min-w-0 text-center">
+                          <p className="font-body text-[9px] uppercase tracking-wide text-white/35">WPM</p>
+                          <p className="font-body text-xs font-bold" style={{ color: tile.accent }}>
+                            {session.wpm ?? "--"}
+                          </p>
+                        </div>
+                        <div className="min-w-0 text-right">
+                          <p className="font-body text-[9px] uppercase tracking-wide text-white/35">Total Fillers</p>
+                          <p className="font-body text-xs font-bold text-white">
+                            {session.filler_word_count ?? "--"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <motion.div
+                className="pointer-events-none absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1 font-body"
+                style={{ color: "rgba(255,255,255,0.25)", fontSize: "10px" }}
+                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                <span>Tap to preview</span>
+                <ArrowUpRight size={10} />
+              </motion.div>
+            </div>
           ) : (
             <>
               <div
@@ -986,6 +1083,7 @@ function ExpandedTile({
   trips = [],
   presets = [],
   insights = [],
+  fluencySessions = [],
   loading = false,
 }: {
   tile: AppTile;
@@ -994,6 +1092,7 @@ function ExpandedTile({
   trips?: Trip[];
   presets?: BrainPreset[];
   insights?: BrainInsight[];
+  fluencySessions?: FluencySession[];
   loading?: boolean;
 }) {
   useEffect(() => {
@@ -1442,6 +1541,95 @@ function ExpandedTile({
                 </>
               )}
             </div>
+          ) : tile.name === "FluencySync" ? (
+            <div className="space-y-3 mb-8">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(255, 60, 56, 0.12)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : fluencySessions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No FluencySync sessions found.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {fluencySessions.map((session, i) => {
+                    const dateLabel = new Date(session.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+
+                    return (
+                      <motion.article
+                        key={session.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.05, ease: EASE }}
+                        className="overflow-hidden rounded-2xl"
+                        style={{
+                          background: `${tile.accent}06`,
+                          border: `1px solid ${tile.accent}30`,
+                          boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                        }}
+                      >
+                        <div
+                          className="flex items-center justify-between gap-3 px-4 py-3"
+                          style={{
+                            background: `linear-gradient(90deg, ${tile.accent}14, transparent)`,
+                            borderBottom: `1px solid ${tile.accent}24`,
+                          }}
+                        >
+                          <p className="font-body text-sm font-bold text-white">Speaking Session</p>
+                          <span className="shrink-0 font-body text-[10px] text-white/40">{dateLabel}</span>
+                        </div>
+                        <div className="grid gap-2 p-3 sm:grid-cols-3">
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <Clock size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Session Time</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">
+                              {formatSessionTime(session.duration)}
+                            </p>
+                          </div>
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <TrendingUp size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">WPM</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">
+                              {session.wpm ?? "--"}
+                            </p>
+                          </div>
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <Calendar size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Total Fillers</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">
+                              {session.filler_word_count ?? "--"}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/[0.01] mb-8">
               <span className="font-body text-xs text-white/40 font-semibold uppercase tracking-wider">
@@ -1468,7 +1656,7 @@ function ExpandedTile({
                 letterSpacing: "0.12em",
               }}
             >
-              {tile.name === "TrackerSync" || tile.name === "TravelSync"
+              {tile.name === "TrackerSync" || tile.name === "TravelSync" || tile.name === "FluencySync"
                 ? "Ecosystem Live — Syncing Data"
                 : "Launching Soon — Stay Tuned"}
             </span>
@@ -1490,6 +1678,7 @@ export default function DashboardPage() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [presets, setPresets] = useState<BrainPreset[]>([]);
   const [insights, setInsights] = useState<BrainInsight[]>([]);
+  const [fluencySessions, setFluencySessions] = useState<FluencySession[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [settingsPopup, setSettingsPopup] = useState<{ open: boolean; tab: "settings" | "general" | "dashboard" }>({
@@ -1722,8 +1911,9 @@ export default function DashboardPage() {
         fetch(`/api/subscriptions?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/trips?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/brainsync?userId=${accountId}`).then((res) => res.json()),
+        fetch(`/api/fluencysync?userId=${accountId}`).then((res) => res.json()),
       ])
-        .then(([subsData, tripsData, brainData]) => {
+        .then(([subsData, tripsData, brainData, fluencyData]) => {
           if (subsData.ok && Array.isArray(subsData.subscriptions)) {
             setSubscriptions(subsData.subscriptions);
           }
@@ -1735,6 +1925,9 @@ export default function DashboardPage() {
           }
           if (brainData.ok && Array.isArray(brainData.insights)) {
             setInsights(brainData.insights);
+          }
+          if (fluencyData.ok && Array.isArray(fluencyData.sessions)) {
+            setFluencySessions(fluencyData.sessions);
           }
         })
         .catch((err) => console.error("Error fetching dashboard data:", err))
@@ -1965,6 +2158,7 @@ export default function DashboardPage() {
                   trips={trips}
                   presets={presets}
                   insights={insights}
+                  fluencySessions={fluencySessions}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}
                   isBeingDragged={isDragging}
@@ -2062,6 +2256,7 @@ export default function DashboardPage() {
               trips={trips}
               presets={presets}
               insights={insights}
+              fluencySessions={fluencySessions}
               loading={loadingSubs}
             />
           )}
