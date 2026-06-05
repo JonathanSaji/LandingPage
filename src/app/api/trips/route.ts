@@ -41,12 +41,19 @@ export async function GET(request: Request) {
       );
     }
 
-    const userId = parseInt(userIdStr, 10);
+    let userId = parseInt(userIdStr, 10);
     if (isNaN(userId)) {
       return NextResponse.json(
         { ok: false, error: "Invalid userId parameter." },
         { status: 400 },
       );
+    }
+
+    if (userId === 999) {
+      const userRes = await dbQuery("SELECT id FROM accounts WHERE username = 'user1' LIMIT 1");
+      if (userRes.rows.length > 0) {
+        userId = parseInt(userRes.rows[0].id, 10);
+      }
     }
 
     const result = await dbQuery<{

@@ -21,6 +21,7 @@ export async function GET(request: Request) {
       );
     }
 
+    // Resolve user1 bypass ID 999 to actual database ID of user1
     if (userId === 999) {
       const userRes = await dbQuery("SELECT id FROM accounts WHERE username = 'user1' LIMIT 1");
       if (userRes.rows.length > 0) {
@@ -28,26 +29,45 @@ export async function GET(request: Request) {
       }
     }
 
-    const result = await dbQuery(
+    // Query insights from the BrainSync schema
+    const insightsResult = await dbQuery(
       `SELECT 
-        id, 
-        name, 
-        amount, 
-        date, 
-        color, 
-        "billingCycle", 
-        "subscriptionType", 
-        "isTrial", 
-        "amountPerCycle", 
-        "personalValue"
-       FROM subscriptions
-       WHERE user_id = $1`,
+        insight_id as id, 
+        title, 
+        intent, 
+        duration, 
+        start_time, 
+        end_time, 
+        completed_at, 
+        analytics
+       FROM "BrainSync".insights
+       WHERE user_id = $1
+       ORDER BY completed_at DESC`,
       [userId]
     );
 
-    return NextResponse.json({ ok: true, subscriptions: result.rows });
+    // Query presets from the BrainSync schema
+    const presetsResult = await dbQuery(
+      `SELECT 
+        preset_id as id, 
+        title, 
+        intent, 
+        duration, 
+        stats, 
+        created_at
+       FROM "BrainSync".presets
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    return NextResponse.json({
+      ok: true,
+      insights: insightsResult.rows,
+      presets: presetsResult.rows
+    });
   } catch (error) {
-    console.error("Failed to fetch subscriptions:", error);
+    console.error("Failed to fetch BrainSync data:", error);
     return NextResponse.json(
       { ok: false, error: "Internal server error." },
       { status: 500 }

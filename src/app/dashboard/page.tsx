@@ -256,6 +256,29 @@ interface Trip {
   updatedAt: string;
 }
 
+interface BrainPreset {
+  id: string;
+  title: string;
+  intent: string;
+  duration: number;
+  stats: string;
+  created_at: string;
+}
+
+interface BrainInsight {
+  id: string;
+  title: string;
+  intent: string;
+  duration: number;
+  start_time: string | number;
+  end_time: string | number;
+  completed_at: string;
+  analytics: {
+    focusScore?: number;
+    distractionsBlocked?: number;
+  } | null;
+}
+
 /* ─── Edit Mode Resize Sizes ─── */
 const SNAP_SIZES = [
   { label: "Small", colSpan: 1, rowSpan: 1 },
@@ -281,6 +304,8 @@ const BentoCard = forwardRef<HTMLDivElement, {
   onExpand: () => void;
   subscriptions?: Subscription[];
   trips?: Trip[];
+  presets?: BrainPreset[];
+  insights?: BrainInsight[];
   loading?: boolean;
   isEditMode?: boolean;
   isBeingDragged?: boolean;
@@ -293,6 +318,8 @@ const BentoCard = forwardRef<HTMLDivElement, {
   onExpand,
   subscriptions = [],
   trips = [],
+  presets = [],
+  insights = [],
   loading = false,
   isEditMode = false,
   isBeingDragged = false,
@@ -785,6 +812,91 @@ const BentoCard = forwardRef<HTMLDivElement, {
                 <ArrowUpRight size={10} />
               </motion.div>
             </div>
+          ) : tile.name === "BrainSync" ? (
+            <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
+              <p
+                className="font-body font-bold uppercase"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  marginBottom: "6px",
+                }}
+              >
+                Recent focus sessions
+              </p>
+
+              {loading ? (
+                <div className="flex flex-1 items-center justify-center py-4">
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(255, 215, 0, 0.1)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : insights.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
+                  <p className="font-body text-center text-[11px] text-white/40">No focus sessions found.</p>
+                </div>
+              ) : (
+                <div
+                  className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden"
+                  style={{ gap: isTall ? "8px" : "6px" }}
+                >
+                  {insights.slice(0, compactSubLimit).map((insight) => {
+                    const focusScore = insight.analytics?.focusScore ?? 90;
+                    return (
+                      <div
+                        key={insight.id}
+                        className="group flex min-w-0 items-center justify-between gap-3 rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
+                        style={{
+                          padding: isTall ? "10px 14px" : "8px 10px",
+                          background: `${tile.accent}06`,
+                          border: `1px solid ${tile.accent}30`,
+                          boxShadow: `0 0 18px ${tile.accent}12, inset 0 1px 0 ${tile.accent}12`,
+                        }}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className="truncate font-body font-bold text-white transition-colors group-hover:text-[#FFD700]"
+                            style={{ fontSize: isTall || isWide ? "13px" : "12px" }}
+                            title={insight.title}
+                          >
+                            {insight.title}
+                          </p>
+                          <p className="truncate font-body text-[10px] text-white/45 mt-0.5">
+                            {insight.intent} • {insight.duration}m
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="font-body text-[13px] font-bold" style={{ color: tile.accent }}>
+                            {focusScore}% Focus
+                          </p>
+                          <p className="font-body text-[9px] uppercase tracking-wide text-white/35">
+                            Blocked: {insight.analytics?.distractionsBlocked ?? 0}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <motion.div
+                className="pointer-events-none absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1 font-body"
+                style={{ color: "rgba(255,255,255,0.25)", fontSize: "10px" }}
+                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                <span>Tap to preview</span>
+                <ArrowUpRight size={10} />
+              </motion.div>
+            </div>
           ) : (
             <>
               <div
@@ -872,12 +984,16 @@ function ExpandedTile({
   onClose,
   subscriptions = [],
   trips = [],
+  presets = [],
+  insights = [],
   loading = false,
 }: {
   tile: AppTile;
   onClose: () => void;
   subscriptions?: Subscription[];
   trips?: Trip[];
+  presets?: BrainPreset[];
+  insights?: BrainInsight[];
   loading?: boolean;
 }) {
   useEffect(() => {
@@ -1199,6 +1315,133 @@ function ExpandedTile({
                 </div>
               )}
             </div>
+          ) : tile.name === "BrainSync" ? (
+            <div className="space-y-6 mb-8 text-left">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(255, 215, 0, 0.1)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : (
+                <>
+                  {/* Focus Presets Section */}
+                  <div>
+                    <h3 className="font-body font-semibold text-xs text-white/40 uppercase tracking-wider mb-3">Focus Presets</h3>
+                    {presets.length === 0 ? (
+                      <p className="text-xs text-white/45 font-body">No presets configured.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {presets.map((preset, i) => (
+                          <motion.div
+                            key={preset.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.04, ease: EASE }}
+                            className="flex items-center justify-between rounded-xl p-4 bg-white/[0.02] border border-white/5"
+                            style={{
+                              boxShadow: `0 0 10px ${tile.accent}05`,
+                            }}
+                          >
+                            <div>
+                              <p className="font-body text-sm font-bold text-white">{preset.title}</p>
+                              <p className="font-body text-[11px] text-white/40 mt-0.5">{preset.intent}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-body text-sm font-extrabold text-white">{preset.duration}m</p>
+                              <p className="font-body text-[10px] text-white/40 mt-0.5" style={{ color: tile.accent }}>{preset.stats}</p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Focus Insights Section */}
+                  <div className="mt-4">
+                    <h3 className="font-body font-semibold text-xs text-white/40 uppercase tracking-wider mb-3">Completed Sessions</h3>
+                    {insights.length === 0 ? (
+                      <p className="text-xs text-white/45 font-body">No sessions completed yet.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {insights.map((insight, i) => {
+                          const dateLabel = new Date(insight.completed_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          });
+                          return (
+                            <motion.article
+                              key={insight.id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.05, ease: EASE }}
+                              className="overflow-hidden rounded-2xl border text-left"
+                              style={{
+                                background: `${tile.accent}03`,
+                                borderColor: `${tile.accent}20`,
+                                boxShadow: `inset 0 1px 0 ${tile.accent}08`,
+                              }}
+                            >
+                              <div
+                                className="px-4 py-2.5 flex justify-between items-center"
+                                style={{
+                                  background: `linear-gradient(90deg, ${tile.accent}0a, transparent)`,
+                                  borderBottom: `1px solid ${tile.accent}15`,
+                                }}
+                              >
+                                <p className="font-body text-sm font-bold text-white">{insight.title}</p>
+                                <span className="font-body text-[10px] text-white/40">{dateLabel}</span>
+                              </div>
+                              <div className="grid gap-2 p-3 sm:grid-cols-3">
+                                <div className="rounded-xl p-2.5 bg-white/[0.01] border border-white/5">
+                                  <div className="mb-1 flex items-center gap-1 text-white/40">
+                                    <span className="font-body text-[9px] uppercase tracking-wider">Duration</span>
+                                  </div>
+                                  <p className="font-body text-xs font-semibold text-white/90">
+                                    {insight.duration} mins
+                                  </p>
+                                </div>
+                                <div className="rounded-xl p-2.5 bg-white/[0.01] border border-white/5">
+                                  <div className="mb-1 flex items-center gap-1 text-white/40">
+                                    <span className="font-body text-[9px] uppercase tracking-wider">Focus Score</span>
+                                  </div>
+                                  <p className="font-body text-xs font-semibold text-white/90" style={{ color: tile.accent }}>
+                                    {insight.analytics?.focusScore ?? 90}%
+                                  </p>
+                                </div>
+                                <div className="rounded-xl p-2.5 bg-white/[0.01] border border-white/5">
+                                  <div className="mb-1 flex items-center gap-1 text-white/40">
+                                    <span className="font-body text-[9px] uppercase tracking-wider">Distractions</span>
+                                  </div>
+                                  <p className="font-body text-xs font-semibold text-white/90">
+                                    {insight.analytics?.distractionsBlocked ?? 0} blocked
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="px-3 pb-3 pt-0">
+                                <p className="font-body text-[11px] text-white/50">
+                                  <span className="text-white/30 font-semibold uppercase text-[9px] mr-1">Intent:</span>
+                                  {insight.intent}
+                                </p>
+                              </div>
+                            </motion.article>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/[0.01] mb-8">
               <span className="font-body text-xs text-white/40 font-semibold uppercase tracking-wider">
@@ -1245,6 +1488,8 @@ export default function DashboardPage() {
   const [expandedTile, setExpandedTile] = useState<AppTile | null>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [trips, setTrips] = useState<Trip[]>([]);
+  const [presets, setPresets] = useState<BrainPreset[]>([]);
+  const [insights, setInsights] = useState<BrainInsight[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [settingsPopup, setSettingsPopup] = useState<{ open: boolean; tab: "settings" | "general" | "dashboard" }>({
@@ -1476,13 +1721,20 @@ export default function DashboardPage() {
       Promise.all([
         fetch(`/api/subscriptions?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/trips?userId=${accountId}`).then((res) => res.json()),
+        fetch(`/api/brainsync?userId=${accountId}`).then((res) => res.json()),
       ])
-        .then(([subsData, tripsData]) => {
+        .then(([subsData, tripsData, brainData]) => {
           if (subsData.ok && Array.isArray(subsData.subscriptions)) {
             setSubscriptions(subsData.subscriptions);
           }
           if (tripsData.ok && Array.isArray(tripsData.trips)) {
             setTrips(tripsData.trips);
+          }
+          if (brainData.ok && Array.isArray(brainData.presets)) {
+            setPresets(brainData.presets);
+          }
+          if (brainData.ok && Array.isArray(brainData.insights)) {
+            setInsights(brainData.insights);
           }
         })
         .catch((err) => console.error("Error fetching dashboard data:", err))
@@ -1711,6 +1963,8 @@ export default function DashboardPage() {
                   onExpand={() => !isEditingLayout && setExpandedTile(tile)}
                   subscriptions={subscriptions}
                   trips={trips}
+                  presets={presets}
+                  insights={insights}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}
                   isBeingDragged={isDragging}
@@ -1806,6 +2060,8 @@ export default function DashboardPage() {
               onClose={() => setExpandedTile(null)}
               subscriptions={subscriptions}
               trips={trips}
+              presets={presets}
+              insights={insights}
               loading={loadingSubs}
             />
           )}
