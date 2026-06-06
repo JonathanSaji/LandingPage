@@ -841,7 +841,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
                   marginBottom: "6px",
                 }}
               >
-                Recent focus sessions
+                {loading || insights.length > 0 || presets.length === 0 ? "Recent focus sessions" : "Saved focus presets"}
               </p>
 
               {loading ? (
@@ -857,51 +857,85 @@ const BentoCard = forwardRef<HTMLDivElement, {
                     }}
                   />
                 </div>
-              ) : insights.length === 0 ? (
+              ) : insights.length === 0 && presets.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
-                  <p className="font-body text-center text-[11px] text-white/40">No focus sessions found.</p>
+                  <p className="font-body text-center text-[11px] text-white/40">No BrainSync data found.</p>
                 </div>
               ) : (
                 <div
                   className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden"
                   style={{ gap: isTall ? "8px" : "6px" }}
                 >
-                  {insights.slice(0, compactSubLimit).map((insight) => {
-                    const focusScore = insight.analytics?.focusScore ?? 90;
-                    return (
-                      <div
-                        key={insight.id}
-                        className="group flex min-w-0 items-center justify-between gap-3 rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
-                        style={{
-                          padding: isTall ? "10px 14px" : "8px 10px",
-                          background: `${tile.accent}06`,
-                          border: `1px solid ${tile.accent}30`,
-                          boxShadow: `0 0 18px ${tile.accent}12, inset 0 1px 0 ${tile.accent}12`,
-                        }}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p
-                            className="truncate font-body font-bold text-white transition-colors group-hover:text-[#FFD700]"
-                            style={{ fontSize: isTall || isWide ? "13px" : "12px" }}
-                            title={insight.title}
+                  {insights.length > 0
+                    ? insights.slice(0, compactSubLimit).map((insight) => {
+                        const focusScore = insight.analytics?.focusScore ?? 90;
+                        return (
+                          <div
+                            key={insight.id}
+                            className="group flex min-w-0 items-center justify-between gap-3 rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
+                            style={{
+                              padding: isTall ? "10px 14px" : "8px 10px",
+                              background: `${tile.accent}06`,
+                              border: `1px solid ${tile.accent}30`,
+                              boxShadow: `0 0 18px ${tile.accent}12, inset 0 1px 0 ${tile.accent}12`,
+                            }}
                           >
-                            {insight.title}
-                          </p>
-                          <p className="truncate font-body text-[10px] text-white/45 mt-0.5">
-                            {insight.intent} • {insight.duration}m
-                          </p>
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className="truncate font-body font-bold text-white transition-colors group-hover:text-[#FFD700]"
+                                style={{ fontSize: isTall || isWide ? "13px" : "12px" }}
+                                title={insight.title}
+                              >
+                                {insight.title}
+                              </p>
+                              <p className="truncate font-body text-[10px] text-white/45 mt-0.5">
+                                {insight.intent} • {insight.duration}m
+                              </p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="font-body text-[13px] font-bold" style={{ color: tile.accent }}>
+                                {focusScore}% Focus
+                              </p>
+                              <p className="font-body text-[9px] uppercase tracking-wide text-white/35">
+                                Blocked: {insight.analytics?.distractionsBlocked ?? 0}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })
+                    : presets.slice(0, compactSubLimit).map((preset) => (
+                        <div
+                          key={preset.id}
+                          className="group flex min-w-0 items-center justify-between gap-3 rounded-xl transition-all duration-300 hover:bg-white/[0.04]"
+                          style={{
+                            padding: isTall ? "10px 14px" : "8px 10px",
+                            background: `${tile.accent}06`,
+                            border: `1px solid ${tile.accent}30`,
+                            boxShadow: `0 0 18px ${tile.accent}12, inset 0 1px 0 ${tile.accent}12`,
+                          }}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className="truncate font-body font-bold text-white transition-colors group-hover:text-[#FFD700]"
+                              style={{ fontSize: isTall || isWide ? "13px" : "12px" }}
+                              title={preset.title}
+                            >
+                              {preset.title}
+                            </p>
+                            <p className="truncate font-body text-[10px] text-white/45 mt-0.5">
+                              {preset.intent} • {preset.duration}m
+                            </p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            <p className="font-body text-[13px] font-bold" style={{ color: tile.accent }}>
+                              {preset.duration}m
+                            </p>
+                            <p className="font-body text-[9px] uppercase tracking-wide text-white/35">
+                              {preset.stats || "Preset"}
+                            </p>
+                          </div>
                         </div>
-                        <div className="shrink-0 text-right">
-                          <p className="font-body text-[13px] font-bold" style={{ color: tile.accent }}>
-                            {focusScore}% Focus
-                          </p>
-                          <p className="font-body text-[9px] uppercase tracking-wide text-white/35">
-                            Blocked: {insight.analytics?.distractionsBlocked ?? 0}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      ))}
                 </div>
               )}
 
