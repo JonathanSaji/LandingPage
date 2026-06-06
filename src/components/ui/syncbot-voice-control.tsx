@@ -13,19 +13,70 @@ import { SyncBotGuide } from "./syncbot-guide";
 
 // ─── App registry ──────────────────────────────────────────────────────────────
 const APPS = [
-  { names: ["trackersync","tracker","track"],  url: "https://trackersync.sub-sync.ca",  label: "TrackerSync"  },
-  { names: ["travelsync","travel"],            url: "https://travelsync.sub-sync.ca",   label: "TravelSync"   },
-  { names: ["brainsync","brain"],              url: "https://brainsync.sub-sync.ca",    label: "BrainSync"    },
-  { names: ["seatsync","seat"],                url: "https://seatsync.sub-sync.ca",     label: "SeatSync"     },
-  { names: ["photosync","photo"],              url: "https://photosync.sub-sync.ca",    label: "PhotoSync"    },
-  { names: ["fluencysync","fluency"],          url: "https://fluencysync.sub-sync.ca",  label: "FluencySync"  },
-  { names: ["steadysync","steady"],            url: "https://steadysync.sub-sync.ca",   label: "SteadySync"   },
+  { names: ["trackersync","tracker","track","tracker sink","track a sync","trackers ink","tracker think","trackers inc"], url: "https://trackersync.sub-sync.ca", label: "TrackerSync" },
+  { names: ["travelsync","travel","travel sink","travel sync","travels inc","travels ink","travels think"], url: "https://travelsync.sub-sync.ca", label: "TravelSync" },
+  { names: ["brainsync","brain","brain sink","brainsync","brains sync","brain think","brain zinc"], url: "https://brainsync.sub-sync.ca", label: "BrainSync" },
+  { names: ["seatsync","seat","seat sink","seat sync","seats inc","see sync","seed sync"], url: "https://seatsync.sub-sync.ca", label: "SeatSync" },
+  { names: ["photosync","photo","photo sink","photo sync","photos inc","photos ink","foto sync"], url: "https://photosync.sub-sync.ca", label: "PhotoSync" },
+  { names: ["fluencysync","fluency","fluency sink","fluency sync","fluent sync","fluencies inc","fluency think"], url: "https://fluencysync.sub-sync.ca", label: "FluencySync" },
+  { names: ["steadysync","steady","steady sink","steady sync","steadies inc","study sync","study sink"], url: "https://steadysync.sub-sync.ca", label: "SteadySync" },
 ];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-function has(cmd: string, ...terms: string[]): boolean {
-  const c = cmd.toLowerCase();
-  return terms.some((t) => c.includes(t.toLowerCase()));
+function tokenize(s: string): string[] {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
+}
+
+function editDistance(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function stringSimilarity(a: string, b: string): number {
+  if (a === b) return 1;
+  if (!a || !b) return 0;
+  const longer = a.length > b.length ? a : b;
+  const shorter = a.length > b.length ? b : a;
+  const dist = editDistance(longer, shorter);
+  return (longer.length - dist) / longer.length;
+}
+
+function fuzzyMatch(input: string, patterns: string[], threshold = 0.55): boolean {
+  const inputTokens = tokenize(input);
+  if (inputTokens.length === 0) return false;
+
+  for (const pattern of patterns) {
+    const patternTokens = tokenize(pattern);
+    if (patternTokens.length === 0) continue;
+
+    let matched = 0;
+    for (const pt of patternTokens) {
+      const best = Math.max(...inputTokens.map((it) => stringSimilarity(it, pt)));
+      if (best >= 0.75) matched++;
+    }
+    const overlapScore = matched / patternTokens.length;
+    if (overlapScore >= threshold) return true;
+
+    const phraseScore = stringSimilarity(input.toLowerCase(), pattern.toLowerCase());
+    if (phraseScore >= threshold) return true;
+  }
+  return false;
+}
+
+function looksLowConfidence(text: string): boolean {
+  const words = text.trim().split(/\s+/);
+  if (text.length < 4) return true;
+  if (words.length === 1 && text.length < 6) return true;
+  return /^\d+$/.test(text.trim());
 }
 
 function getUserInfo(): { name: string; accountId: string | null } {
@@ -99,6 +150,7 @@ export function SyncBotVoiceControl() {
 
   const msgId    = useRef(0);
   const thinkRef = useRef(false); // prevent double AI calls
+  const lastCmdRef = useRef<{ text: string; time: number }>({ text: "", time: 0 });
 
   const {
     botState, isSupported, isMuted,
@@ -271,13 +323,19 @@ export function SyncBotVoiceControl() {
 
     // ── NAVIGATION / SCROLL ──────────────────────────────────────────────────
     if (settings.allowNavigation) {
-      if (has(c, "open dashboard", "go to dashboard", "take me to dashboard", "dashboard")) {
+      if (fuzzyMatch(c, [
+        "open dashboard", "go to dashboard", "take me to dashboard", "dashboard", "go dashboard", "my dashboard",
+        "dash word", "dash board", "my dash", "go to my dash word", "open dash", "take me to dash",
+      ])) {
         const reply = "Navigating to your dashboard.";
         speak(reply); addMsg("bot", reply);
         router.push("/dashboard");
         return true;
       }
-      if (has(c, "go home", "go to homepage", "open home", "landing page", "home page")) {
+      if (fuzzyMatch(c, [
+        "go home", "go to homepage", "open home", "landing page", "home page", "main page",
+        "go on", "go tone", "homepage", "go to main", "open main page",
+      ])) {
         const reply = "Going back to the landing page.";
         speak(reply); addMsg("bot", reply);
         router.push("/");
@@ -285,25 +343,37 @@ export function SyncBotVoiceControl() {
       }
     }
     if (settings.allowScrollControl) {
-      if (has(c, "scroll to bottom", "take me to the bottom", "scroll all the way down", "go to bottom", "go to the bottom")) {
+      if (fuzzyMatch(c, [
+        "scroll to bottom", "take me to the bottom", "scroll all the way down", "go to bottom", "go to the bottom",
+        "school to bottom", "scroll bought them", "go bottom", "take me bottom", "all the way down",
+      ])) {
         const reply = "Scrolling to the bottom.";
         speak(reply); addMsg("bot", reply);
         window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
         return true;
       }
-      if (has(c, "scroll to top", "take me to the top", "scroll all the way up", "go to top", "go to the top")) {
+      if (fuzzyMatch(c, [
+        "scroll to top", "take me to the top", "scroll all the way up", "go to top", "go to the top",
+        "school to top", "stroll to top", "go top", "take me top", "all the way up",
+      ])) {
         const reply = "Scrolling to the top.";
         speak(reply); addMsg("bot", reply);
         window.scrollTo({ top: 0, behavior: "smooth" });
         return true;
       }
-      if (has(c, "scroll down", "scroll page down")) {
+      if (fuzzyMatch(c, [
+        "scroll down", "scroll page down", "school down", "scroll town", "stroll down", "scroll dale",
+        "go down", "move down", "page down", "roll down",
+      ])) {
         const reply = "Scrolling down.";
         speak(reply); addMsg("bot", reply);
         window.scrollBy({ top: 400, behavior: "smooth" });
         return true;
       }
-      if (has(c, "scroll up", "scroll page up")) {
+      if (fuzzyMatch(c, [
+        "scroll up", "scroll page up", "school up", "stroll up", "scroll cup",
+        "go up", "move up", "page up", "roll up",
+      ])) {
         const reply = "Scrolling up.";
         speak(reply); addMsg("bot", reply);
         window.scrollBy({ top: -400, behavior: "smooth" });
@@ -311,7 +381,10 @@ export function SyncBotVoiceControl() {
       }
     }
     if (settings.allowAuthActions) {
-      if (has(c, "logout", "log me out", "log out", "sign out")) {
+      if (fuzzyMatch(c, [
+        "logout", "log me out", "log out", "sign out", "log off",
+        "lock out", "law got", "logged out", "lock me out", "sign me out",
+      ])) {
         const reply = "Logging you out. Goodbye!";
         addMsg("bot", reply);
         speak(reply, () => {
@@ -325,11 +398,17 @@ export function SyncBotVoiceControl() {
     }
 
     // ── MUTE ────────────────────────────────────────────────────────────────
-    if (has(c, "mute", "be quiet", "stop talking", "silence", "shut up")) {
+    if (fuzzyMatch(c, [
+      "mute", "be quiet", "stop talking", "silence", "shut up",
+      "moot", "be quite", "stop talk", "silent", "quiet now",
+    ])) {
       cancelSpeech(); setMuted(true); setIsMutedLocal(true);
       return true;
     }
-    if (isMutedLocal && has(c, "unmute", "start talking", "enable voice", "speak again")) {
+    if (isMutedLocal && fuzzyMatch(c, [
+      "unmute", "start talking", "enable voice", "speak again",
+      "on mute", "un moot", "start talk", "enable voices", "speak again please",
+    ])) {
       setMuted(false); setIsMutedLocal(false);
       playChime("on");
       speak("I'm back. How can I help?");
@@ -338,7 +417,10 @@ export function SyncBotVoiceControl() {
     }
 
     // ── SLEEP ────────────────────────────────────────────────────────────────
-    if (has(c, "go to sleep", "sleep", "deactivate", "shut down", "stop listening")) {
+    if (fuzzyMatch(c, [
+      "go to sleep", "sleep", "deactivate", "shut down", "stop listening",
+      "go sleep", "go to slip", "sleep now", "stop listen", "stand down",
+    ])) {
       const reply = "Going to sleep. Say SyncBot to wake me.";
       speak(reply); addMsg("bot", reply);
       setTimeout(() => setActiveListening(false), 800);
@@ -346,7 +428,10 @@ export function SyncBotVoiceControl() {
     }
 
     // ── HELP ─────────────────────────────────────────────────────────────────
-    if (has(c, "help", "what can you do", "show commands", "commands", "show guide")) {
+    if (fuzzyMatch(c, [
+      "help", "what can you do", "show commands", "commands", "show guide",
+      "health", "what can do", "show command", "voice commands", "guide",
+    ])) {
       const reply = "Here's everything I can do.";
       speak(reply); addMsg("bot", reply);
       setShowGuide(true);
@@ -354,7 +439,10 @@ export function SyncBotVoiceControl() {
     }
 
     // ── SETTINGS ─────────────────────────────────────────────────────────────
-    if (has(c, "settings", "open settings", "show settings", "configure")) {
+    if (fuzzyMatch(c, [
+      "settings", "open settings", "show settings", "configure",
+      "setting", "open setting", "show setting", "config your", "preferences",
+    ])) {
       const reply = "Opening my settings.";
       speak(reply); addMsg("bot", reply);
       setShowSettings(true);
@@ -363,21 +451,33 @@ export function SyncBotVoiceControl() {
 
     // ── APPS (Strict Local Matcher) ───────────────────────────────────────────
     if (settings.allowOpenApps) {
-      if (has(c, "open", "opne", "launch", "start", "run", "go to", "show", "load")) {
-        for (const app of APPS) {
-          if (app.names.some((n) => c.includes(n))) {
-            const reply = `Opening ${app.label} now.`;
-            addMsg("bot", reply);
-            speak(reply);
-            window.open(app.url, "_blank");
-            return true;
-          }
+      for (const app of APPS) {
+        const appPatterns = app.names.flatMap((name) => [
+          name,
+          `open ${name}`,
+          `launch ${name}`,
+          `start ${name}`,
+          `run ${name}`,
+          `go to ${name}`,
+          `show ${name}`,
+          `load ${name}`,
+        ]);
+
+        if (fuzzyMatch(c, appPatterns)) {
+          const reply = `Opening ${app.label} now.`;
+          addMsg("bot", reply);
+          speak(reply);
+          window.open(app.url, "_blank");
+          return true;
         }
       }
     }
 
     // ── CLOSE MODAL ──────────────────────────────────────────────────────────
-    if (has(c, "close", "dismiss", "exit modal", "close modal")) {
+    if (fuzzyMatch(c, [
+      "close", "dismiss", "exit modal", "close modal",
+      "clothes", "closed", "dismissed", "exit model", "close model",
+    ])) {
       window.dispatchEvent(new Event("syncbot:close-modal"));
       document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
       const reply = "Closed."; speak(reply); addMsg("bot", reply); return true;
@@ -434,11 +534,21 @@ export function SyncBotVoiceControl() {
   // ── Register command handler ─────────────────────────────────────────────────
   useEffect(() => {
     setOnCommand(async (cmd: string) => {
-      if (thinkRef.current) return;
-      addMsg("user", cmd);
+      const now = Date.now();
+      if (cmd === lastCmdRef.current.text && now - lastCmdRef.current.time < 2500) {
+        return;
+      }
+      lastCmdRef.current = { text: cmd, time: now };
 
-      const handled = await handleLocalCommand(cmd);
-      if (handled) return;
+      if (thinkRef.current) return;
+      const lowConfidence = looksLowConfidence(cmd);
+      const aiMessage = lowConfidence ? `[possibly misheard] ${cmd}` : cmd;
+      addMsg("user", lowConfidence ? `${cmd} (?)` : cmd);
+
+      if (!lowConfidence) {
+        const handled = await handleLocalCommand(cmd);
+        if (handled) return;
+      }
 
       // Fallback to AI
       if (!settings.allowAI) {
@@ -452,7 +562,7 @@ export function SyncBotVoiceControl() {
       const botMsgId = addMsg("bot", "");
 
       try {
-        const { reply, action } = await askAI(cmd, (accumulated) => {
+        const { reply, action } = await askAI(aiMessage, (accumulated) => {
           const display = cleanStreamingText(accumulated);
           updateMsg(botMsgId, display);
         });
@@ -465,13 +575,13 @@ export function SyncBotVoiceControl() {
 
         speak(cleanReply);
         if (action) executeAction(action);
-      } catch (error) {
-        console.error("[SyncBot] Error fetching AI response:", error);
+      } catch (err) {
+        console.error("[SyncBot] askAI error:", err);
         setIsThinking(false);
         thinkRef.current = false;
-        const reply = "Something went wrong. Please try again.";
-        speak(reply);
-        updateMsg(botMsgId, reply);
+        const retryMsg = "I didn't quite catch that. Could you say it again?";
+        speak(retryMsg);
+        updateMsg(botMsgId, retryMsg);
       }
     });
   }, [setOnCommand, handleLocalCommand, askAI, executeAction, speak, addMsg, updateMsg, settings.allowAI, cleanStreamingText]);

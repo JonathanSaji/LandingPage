@@ -24,7 +24,7 @@ interface SR {
 }
 interface SRResultEvent {
   resultIndex: number;
-  results: { length: number; [i: number]: { isFinal: boolean; length: number; [j: number]: { transcript: string } } };
+  results: { length: number; [i: number]: { isFinal: boolean; length: number; [j: number]: { transcript: string; confidence?: number } } };
 }
 interface SRErrorEvent extends Event { error: string }
 
@@ -36,6 +36,7 @@ export interface VoiceCommandHook {
   isSupported:       boolean;
   isMuted:           boolean;
   transcript:        string;
+  candidates:        Array<{ text: string; confidence: number }>;
   interimTranscript: string;
   activeListening:   boolean;
   startListening:    () => void;
@@ -49,22 +50,62 @@ export interface VoiceCommandHook {
   setOnCommand:      (fn: (cmd: string) => void) => void;
 }
 
-// ─── Wake word patterns ────────────────────────────────────────────────────────
-const WAKE_PATTERNS = [
-  "syncbot","sync bot","sync-bot",
-  "sinkbot","sink bot","sink-bot",
-  "syncbolt","sinkbolt",
-  "sync both","sink both",
-  "sync pot","sync bought","sync body",
-  "thinkbot","think bot","think both",
-  "thankbot","thank bot","thingbot","thing bot",
-  "singbot","sing bot","seenbot","seen bot",
-  "simbot","sim bot",
-  "hey sync","hey sink",
-];
-function isWakeWord(t: string): boolean {
-  const s = t.toLowerCase();
-  return WAKE_PATTERNS.some((p) => s.includes(p));
+// ─── Wake word engine ─────────────────────────────────────────────────────────
+function levenshtein(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) =>
+    Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
+  );
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1]
+        ? dp[i - 1][j - 1]
+        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function soundex(word: string): string {
+  const s = word.toUpperCase().replace(/[^A-Z]/g, "");
+  if (!s) return "";
+  const map: Record<string, string> = {
+    B: "1", F: "1", P: "1", V: "1",
+    C: "2", G: "2", J: "2", K: "2", Q: "2", S: "2", X: "2", Z: "2",
+    D: "3", T: "3", L: "4", M: "5", N: "5", R: "6",
+  };
+  let code = s[0];
+  let prev = map[s[0]] ?? "0";
+  for (let i = 1; i < s.length && code.length < 4; i++) {
+    const curr = map[s[i]] ?? "0";
+    if (curr !== "0" && curr !== prev) code += curr;
+    prev = curr;
+  }
+  return code.padEnd(4, "0");
+}
+
+const SYNC_CODES = ["S520", "S200", "S500"];
+const BOT_CODES = ["B300", "B000"];
+
+function isWakeWord(transcript: string): boolean {
+  const words = transcript.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(Boolean);
+
+  for (const word of words) {
+    if (word.length > 5) {
+      const code = soundex(word);
+      if (SYNC_CODES.some((c) => code.startsWith(c[0]) && levenshtein(code, c) <= 1)) return true;
+    }
+  }
+
+  for (let i = 0; i < words.length - 1; i++) {
+    const a = soundex(words[i]);
+    const b = soundex(words[i + 1]);
+    const syncMatch = SYNC_CODES.some((c) => levenshtein(a, c) <= 1);
+    const botMatch = BOT_CODES.some((c) => levenshtein(b, c) <= 1);
+    if (syncMatch && botMatch) return true;
+  }
+
+  const t = transcript.toLowerCase();
+  return ["syncbot", "sync bot", "hey sync", "sinkbot", "sink bot"].some((p) => t.includes(p));
 }
 
 // ─── Audio chime ───────────────────────────────────────────────────────────────
@@ -106,6 +147,7 @@ export function useVoiceCommand(): VoiceCommandHook {
   const [isSupported,       setIsSupported]        = useState(false);
   const [isMuted,           setIsMutedState]       = useState(false);
   const [transcript,        setTranscript]         = useState("");
+  const [candidates,        setCandidates]         = useState<Array<{ text: string; confidence: number }>>([]);
   const [interimTranscript, setInterimTranscript]  = useState("");
   const [activeListening,   setActiveListeningState] = useState(false);
 
@@ -115,6 +157,7 @@ export function useVoiceCommand(): VoiceCommandHook {
   const isMutedRef      = useRef(false);
   const activeRef       = useRef(false);
   const unlockedRef     = useRef(false);
+  const speakingRef     = useRef(false);
   const activeUtterRef  = useRef<SpeechSynthesisUtterance | null>(null); // prevent garbage collection bug
   const onWakeRef       = useRef<(() => void) | null>(null);
   const onCmdRef        = useRef<((cmd: string) => void) | null>(null);
@@ -132,6 +175,8 @@ export function useVoiceCommand(): VoiceCommandHook {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     if (isMutedRef.current) { onDone?.(); return; }
 
+    speakingRef.current = true;
+
     try {
       window.speechSynthesis.cancel();
       if (window.speechSynthesis.paused) {
@@ -143,7 +188,11 @@ export function useVoiceCommand(): VoiceCommandHook {
 
     // Wrap in a 50ms delay to prevent Chrome's async cancel() from swallowing the new speak request
     setTimeout(() => {
-      if (isMutedRef.current) { onDone?.(); return; }
+      if (isMutedRef.current) {
+        speakingRef.current = false;
+        onDone?.();
+        return;
+      }
 
       const utter = new SpeechSynthesisUtterance(text);
       activeUtterRef.current = utter; // Keep reference to prevent GC
@@ -156,25 +205,34 @@ export function useVoiceCommand(): VoiceCommandHook {
       const apply = () => {
         const v = getBestVoice();
         if (v) utter.voice = v;
+        speakingRef.current = true;
         setBotState("speaking");
         try {
           window.speechSynthesis.speak(utter);
         } catch (err) {
           console.error("[SyncBot] speak execution failed:", err);
+          speakingRef.current = false;
+          if (activeUtterRef.current === utter) activeUtterRef.current = null;
           onDone?.();
         }
       };
 
       utter.onend   = () => {
-        if (activeUtterRef.current === utter) activeUtterRef.current = null;
-        setBotState(activeRef.current ? "listening" : "sleeping");
-        onDone?.();
+        if (activeUtterRef.current === utter) {
+          activeUtterRef.current = null;
+          speakingRef.current = false;
+          setBotState(activeRef.current ? "listening" : "sleeping");
+          onDone?.();
+        }
       };
       utter.onerror = (e) => {
         console.warn("[SyncBot] Speech synthesis error:", e);
-        if (activeUtterRef.current === utter) activeUtterRef.current = null;
-        setBotState(activeRef.current ? "listening" : "sleeping");
-        onDone?.();
+        if (activeUtterRef.current === utter) {
+          activeUtterRef.current = null;
+          speakingRef.current = false;
+          setBotState(activeRef.current ? "listening" : "sleeping");
+          onDone?.();
+        }
       };
 
       if (voicesLoaded.current) {
@@ -223,13 +281,17 @@ export function useVoiceCommand(): VoiceCommandHook {
 
   const cancelSpeech = useCallback(() => {
     if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+    speakingRef.current = false;
     setBotState(activeRef.current ? "listening" : "sleeping");
   }, []);
 
   const setMuted = useCallback((v: boolean) => {
     isMutedRef.current = v;
     setIsMutedState(v);
-    if (v && typeof window !== "undefined") window.speechSynthesis?.cancel();
+    if (v && typeof window !== "undefined") {
+      window.speechSynthesis?.cancel();
+      speakingRef.current = false;
+    }
   }, []);
 
   // ── Wake-word handler ─────────────────────────────────────────────────────
@@ -255,11 +317,16 @@ export function useVoiceCommand(): VoiceCommandHook {
     rec.continuous      = true;
     rec.interimResults  = true;
     rec.lang            = "en-US";
-    rec.maxAlternatives = 1;
+    rec.maxAlternatives = 3;
 
     rec.onstart = () => setBotState(activeRef.current ? "listening" : "sleeping");
 
     rec.onresult = (e: SRResultEvent) => {
+      if (speakingRef.current) {
+        setInterimTranscript("");
+        return;
+      }
+
       let interim = "";
       let final_  = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -270,8 +337,13 @@ export function useVoiceCommand(): VoiceCommandHook {
 
       // ── SLEEPING: only care about wake word ──────────────────────────────
       if (!activeRef.current) {
-        if ((interim && isWakeWord(interim)) || (final_ && isWakeWord(final_))) {
-          triggerWakeWord();
+        const lastResult = e.results[e.results.length - 1];
+        for (let k = 0; k < lastResult.length; k++) {
+          const alt = lastResult[k].transcript;
+          if (isWakeWord(alt)) {
+            triggerWakeWord();
+            break;
+          }
         }
         return;
       }
@@ -280,9 +352,25 @@ export function useVoiceCommand(): VoiceCommandHook {
       if (interim) setInterimTranscript(interim.trim());
 
       if (final_) {
-        const cmd = final_.trim().toLowerCase();
+        const lastResult = e.results[e.results.length - 1];
+        const nextCandidates: Array<{ text: string; confidence: number }> = [];
+
+        for (let k = 0; k < lastResult.length; k++) {
+          const alt = lastResult[k];
+          const text = alt.transcript.trim().toLowerCase();
+          if (text) {
+            nextCandidates.push({
+              text,
+              confidence: alt.confidence ?? (1 - k * 0.1),
+            });
+          }
+        }
+
+        const best = [...nextCandidates].sort((a, b) => b.confidence - a.confidence)[0]?.text ?? final_.trim().toLowerCase();
+        const cmd = best.trim().toLowerCase();
         if (!cmd) return;
 
+        setCandidates(nextCandidates);
         setTranscript(cmd);
         setInterimTranscript("");
         if (transcriptTimer.current) clearTimeout(transcriptTimer.current);
@@ -339,6 +427,7 @@ export function useVoiceCommand(): VoiceCommandHook {
     setActiveListeningState(false);
     setBotState("idle");
     setTranscript("");
+    setCandidates([]);
     setInterimTranscript("");
     recRef.current?.stop();
   }, []);
@@ -381,7 +470,7 @@ export function useVoiceCommand(): VoiceCommandHook {
   }, []);
 
   return {
-    botState, isSupported, isMuted, transcript, interimTranscript, activeListening,
+    botState, isSupported, isMuted, transcript, candidates, interimTranscript, activeListening,
     startListening, stopListening, setActiveListening, setMuted,
     speak, cancelSpeech, unlockSpeech, setOnWakeWord, setOnCommand,
   };
