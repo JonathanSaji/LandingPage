@@ -115,6 +115,20 @@ function isSleepPhrase(transcript: string): boolean {
   return false;
 }
 
+function isStopPhrase(transcript: string): boolean {
+  const t = transcript.toLowerCase().replace(/[^a-z\s]/g, "").trim();
+
+  if (t === "stop" || t === "quit" || t.includes("stop") || t.includes("quit")) return true;
+
+  const words = t.split(/\s+/).filter(Boolean);
+
+  for (const word of words) {
+    if (soundsLike(word, "stop", 1) || soundsLike(word, "quit", 1)) return true;
+  }
+
+  return false;
+}
+
 // ─── Audio chime ───────────────────────────────────────────────────────────────
 export function playChime(type: "on" | "off" = "on"): void {
   try {
@@ -331,17 +345,28 @@ export function useVoiceCommand(): VoiceCommandHook {
     rec.onstart = () => setBotState(activeRef.current ? "listening" : "sleeping");
 
     rec.onresult = (e: SRResultEvent) => {
-      if (speakingRef.current) {
-        setInterimTranscript("");
-        return;
-      }
-
       let interim = "";
       let final_  = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
         if (e.results[i].isFinal) final_ += t;
         else interim += t;
+      }
+
+      // ── SPEAKING: check for stop/quit commands ───────────────────────────
+      if (speakingRef.current) {
+        const lastResult = e.results[e.results.length - 1];
+        for (let k = 0; k < lastResult.length; k++) {
+          if (isStopPhrase(lastResult[k].transcript)) {
+            window.speechSynthesis?.cancel();
+            speakingRef.current = false;
+            setBotState("listening");
+            setInterimTranscript("");
+            return;
+          }
+        }
+        setInterimTranscript("");
+        return;
       }
 
       // ── SLEEPING: only listen for "wake up" ──────────────────────────────
@@ -366,6 +391,11 @@ export function useVoiceCommand(): VoiceCommandHook {
           return;
         }
 
+        // Ignore stop/quit commands - they only work while speaking
+        if (isStopPhrase(final_)) {
+          return;
+        }
+
         const lastResult = e.results[e.results.length - 1];
         const nextCandidates: Array<{ text: string; confidence: number }> = [];
 
@@ -383,6 +413,11 @@ export function useVoiceCommand(): VoiceCommandHook {
         const best = [...nextCandidates].sort((a, b) => b.confidence - a.confidence)[0]?.text ?? final_.trim().toLowerCase();
         const cmd = best.trim().toLowerCase();
         if (!cmd) return;
+
+        // Double-check: don't send stop/quit to AI
+        if (isStopPhrase(cmd)) {
+          return;
+        }
 
         setCandidates(nextCandidates);
         setTranscript(cmd);
