@@ -48,6 +48,7 @@ export interface VoiceCommandHook {
   unlockSpeech:      () => void;
   setOnWakeWord:     (fn: () => void) => void;
   setOnCommand:      (fn: (cmd: string) => void) => void;
+  setOnSleep:        (fn: () => void) => void;
 }
 
 // ─── Wake word engine ─────────────────────────────────────────────────────────
@@ -65,47 +66,53 @@ function levenshtein(a: string, b: string): number {
   return dp[a.length][b.length];
 }
 
-function soundex(word: string): string {
-  const s = word.toUpperCase().replace(/[^A-Z]/g, "");
-  if (!s) return "";
-  const map: Record<string, string> = {
-    B: "1", F: "1", P: "1", V: "1",
-    C: "2", G: "2", J: "2", K: "2", Q: "2", S: "2", X: "2", Z: "2",
-    D: "3", T: "3", L: "4", M: "5", N: "5", R: "6",
-  };
-  let code = s[0];
-  let prev = map[s[0]] ?? "0";
-  for (let i = 1; i < s.length && code.length < 4; i++) {
-    const curr = map[s[i]] ?? "0";
-    if (curr !== "0" && curr !== prev) code += curr;
-    prev = curr;
-  }
-  return code.padEnd(4, "0");
+function soundsLike(spoken: string, target: string, maxDist = 2): boolean {
+  spoken = spoken.toLowerCase().replace(/[^a-z]/g, "");
+  target = target.toLowerCase().replace(/[^a-z]/g, "");
+  if (spoken === target) return true;
+  if (Math.abs(spoken.length - target.length) > 3) return false;
+  return levenshtein(spoken, target) <= maxDist;
 }
 
-const SYNC_CODES = ["S520", "S200", "S500"];
-const BOT_CODES = ["B300", "B000"];
+function isWakePhrase(transcript: string): boolean {
+  const t = transcript.toLowerCase().replace(/[^a-z\s]/g, "").trim();
 
-function isWakeWord(transcript: string): boolean {
-  const words = transcript.toLowerCase().replace(/[^a-z\s]/g, "").split(/\s+/).filter(Boolean);
+  if (t.includes("wake up") || t.includes("wakeup") || t.includes("hey wake")) return true;
+
+  const words = t.split(/\s+/).filter(Boolean);
+  for (let i = 0; i < words.length - 1; i++) {
+    if (soundsLike(words[i], "wake", 2) && soundsLike(words[i + 1], "up", 1)) return true;
+  }
 
   for (const word of words) {
-    if (word.length > 5) {
-      const code = soundex(word);
-      if (SYNC_CODES.some((c) => code.startsWith(c[0]) && levenshtein(code, c) <= 1)) return true;
-    }
+    if (word.length >= 5 && soundsLike(word, "wakeup", 2)) return true;
   }
+
+  return false;
+}
+
+function isSleepPhrase(transcript: string): boolean {
+  const t = transcript.toLowerCase().replace(/[^a-z\s]/g, "").trim();
+
+  if (t.includes("go to sleep") || t.includes("go sleep") || t === "sleep") return true;
+
+  const words = t.split(/\s+/).filter(Boolean);
+
+  if (words.length === 1 && soundsLike(words[0], "sleep", 2)) return true;
 
   for (let i = 0; i < words.length - 1; i++) {
-    const a = soundex(words[i]);
-    const b = soundex(words[i + 1]);
-    const syncMatch = SYNC_CODES.some((c) => levenshtein(a, c) <= 1);
-    const botMatch = BOT_CODES.some((c) => levenshtein(b, c) <= 1);
-    if (syncMatch && botMatch) return true;
+    if (soundsLike(words[i], "go", 1) && soundsLike(words[i + 1], "sleep", 2)) return true;
   }
 
-  const t = transcript.toLowerCase();
-  return ["syncbot", "sync bot", "hey sync", "sinkbot", "sink bot"].some((p) => t.includes(p));
+  for (let i = 0; i < words.length - 2; i++) {
+    if (
+      soundsLike(words[i], "go", 1) &&
+      soundsLike(words[i + 1], "to", 1) &&
+      soundsLike(words[i + 2], "sleep", 2)
+    ) return true;
+  }
+
+  return false;
 }
 
 // ─── Audio chime ───────────────────────────────────────────────────────────────
@@ -161,6 +168,7 @@ export function useVoiceCommand(): VoiceCommandHook {
   const activeUtterRef  = useRef<SpeechSynthesisUtterance | null>(null); // prevent garbage collection bug
   const onWakeRef       = useRef<(() => void) | null>(null);
   const onCmdRef        = useRef<((cmd: string) => void) | null>(null);
+  const onSleepRef      = useRef<(() => void) | null>(null);
   const wakeDebounce    = useRef(false);
   const transcriptTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const restartTimer    = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -169,6 +177,7 @@ export function useVoiceCommand(): VoiceCommandHook {
   // ── Setters for external callbacks ────────────────────────────────────────
   const setOnWakeWord = useCallback((fn: () => void) => { onWakeRef.current = fn; }, []);
   const setOnCommand  = useCallback((fn: (cmd: string) => void) => { onCmdRef.current = fn; }, []);
+  const setOnSleep    = useCallback((fn: () => void) => { onSleepRef.current = fn; }, []);
 
   // ── Raw speak (bypasses unlock gate — call only after unlock) ─────────────
   const _rawSpeak = useCallback((text: string, onDone?: () => void) => {
@@ -335,12 +344,11 @@ export function useVoiceCommand(): VoiceCommandHook {
         else interim += t;
       }
 
-      // ── SLEEPING: only care about wake word ──────────────────────────────
+      // ── SLEEPING: only listen for "wake up" ──────────────────────────────
       if (!activeRef.current) {
         const lastResult = e.results[e.results.length - 1];
         for (let k = 0; k < lastResult.length; k++) {
-          const alt = lastResult[k].transcript;
-          if (isWakeWord(alt)) {
+          if (isWakePhrase(lastResult[k].transcript)) {
             triggerWakeWord();
             break;
           }
@@ -348,10 +356,16 @@ export function useVoiceCommand(): VoiceCommandHook {
         return;
       }
 
-      // ── ACTIVE: show interim, process final ──────────────────────────────
+      // ── ACTIVE: process speech ───────────────────────────────────────────
       if (interim) setInterimTranscript(interim.trim());
 
       if (final_) {
+        // Check sleep command first — this is the ONLY hardcoded active command
+        if (isSleepPhrase(final_)) {
+          onSleepRef.current?.();
+          return;
+        }
+
         const lastResult = e.results[e.results.length - 1];
         const nextCandidates: Array<{ text: string; confidence: number }> = [];
 
@@ -472,6 +486,6 @@ export function useVoiceCommand(): VoiceCommandHook {
   return {
     botState, isSupported, isMuted, transcript, candidates, interimTranscript, activeListening,
     startListening, stopListening, setActiveListening, setMuted,
-    speak, cancelSpeech, unlockSpeech, setOnWakeWord, setOnCommand,
+    speak, cancelSpeech, unlockSpeech, setOnWakeWord, setOnCommand, setOnSleep,
   };
 }

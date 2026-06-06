@@ -1,5 +1,20 @@
 "use client";
 
+declare global {
+  interface Window {
+    __syncbot_context?: {
+      page: string;
+      subscriptions: Subscription[];
+      trips: Trip[];
+      presets: BrainPreset[];
+      insights: BrainInsight[];
+      fluencySessions: FluencySession[];
+      tiles: Array<{ id: string; name: string; category: string }>;
+      lastUpdated: number;
+    };
+  }
+}
+
 import { useEffect, useState, useRef, useCallback, forwardRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1742,6 +1757,23 @@ export default function DashboardPage() {
   } | null>(null);
 
   const gridRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    window.__syncbot_context = {
+      page: "/dashboard",
+      subscriptions,
+      trips,
+      presets,
+      insights,
+      fluencySessions,
+      tiles: tiles.map((t) => ({ id: t.id, name: t.name, category: t.category })),
+      lastUpdated: Date.now(),
+    };
+  }, [subscriptions, trips, presets, insights, fluencySessions, tiles]);
+
+  useEffect(() => {
+    return () => { window.__syncbot_context = undefined; };
+  }, []);
 
   function enterEditMode() {
     setEditTiles([...tiles]);

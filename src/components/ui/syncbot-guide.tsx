@@ -117,63 +117,24 @@ export function SyncBotGuide({ onClose }: SyncBotGuideProps) {
           {/* Body */}
           <div style={{ overflowY: "auto", padding: "4px 26px 26px", flex: 1, scrollbarWidth: "thin", scrollbarColor: "rgba(255,215,0,0.2) transparent" }}>
 
-            <Section title="Wake &amp; Control">
-              <CmdRow trigger="SyncBot" description="Wake from sleep mode" />
-              <CmdRow trigger="[click the button]" description="Activate or deactivate" />
-              <CmdRow trigger="go to sleep" description="Return to passive mode" />
-              <CmdRow trigger="mute" description="Silence responses" />
-              <CmdRow trigger="unmute" description="Resume speaking" />
-              <CmdRow trigger="help / show commands" description="Open this guide" />
-              <CmdRow trigger="settings" description="Open SyncBot settings" />
+            <Section title="Wake &amp; Sleep">
+              <CmdRow trigger="wake up" description="Activates SyncBot" />
+              <CmdRow trigger="go to sleep" description="Deactivates SyncBot" />
             </Section>
 
-            <Section title="Navigation">
-              <CmdRow trigger="go home" description="Go to landing page" />
-              <CmdRow trigger="dashboard" description="Go to your dashboard" />
+            <Section title="Just Speak Naturally">
+              <CmdRow trigger="take me to my dashboard" description="Navigates to dashboard" ai />
+              <CmdRow trigger="what are my subscriptions?" description="Reads your subscription data" ai />
+              <CmdRow trigger="open TrackerSync" description="Opens the app" ai />
+              <CmdRow trigger="what's my most expensive sub?" description="Finds the highest cost" ai />
+              <CmdRow trigger="how many trips do I have?" description="Counts your TravelSync trips" ai />
+              <CmdRow trigger="scroll down" description="Scrolls the page" ai />
+              <CmdRow trigger="how's my fluency practice?" description="Summarizes your sessions" ai />
+              <CmdRow trigger="log me out" description="Signs you out" ai />
+              <CmdRow trigger="what time is it?" description="Tells you the current time" ai />
+              <CmdRow trigger="go back to the homepage" description="Returns to landing page" ai />
             </Section>
 
-            <Section title="SubSync Apps">
-              <CmdRow trigger="open TrackerSync" description="Finance tracker" />
-              <CmdRow trigger="open TravelSync" description="Trip planner" />
-              <CmdRow trigger="open BrainSync" description="Focus sessions" />
-              <CmdRow trigger="open SeatSync" description="Seat booking" />
-              <CmdRow trigger="open PhotoSync" description="Photo organiser" />
-              <CmdRow trigger="open FluencySync" description="Language learning" />
-              <CmdRow trigger="open SteadySync" description="Health &amp; wellness" />
-            </Section>
-
-            <Section title="Your Data">
-              <CmdRow trigger="summarize my subscriptions" description="Read upcoming renewals" />
-              <CmdRow trigger="what do I pay" description="Subscription overview" ai />
-              <CmdRow trigger="what are my apps" description="List your subscriptions" ai />
-            </Section>
-
-            <Section title="AI Questions">
-              <CmdRow trigger="Tell me about TrackerSync" description="Product info" ai />
-              <CmdRow trigger="How do I cancel a subscription?" description="Help & support" ai />
-              <CmdRow trigger="What does SubSync do?" description="Platform overview" ai />
-              <CmdRow trigger="Any question you like…" description="Powered by Groq AI" ai />
-            </Section>
-
-            <Section title="Page Control">
-              <CmdRow trigger="scroll down / scroll up" description="Scroll page" />
-              <CmdRow trigger="scroll to top / bottom" description="Jump to edge" />
-              <CmdRow trigger="close / dismiss" description="Close open modal" />
-              <CmdRow trigger="click [button name]" description="Tap a visible button" />
-            </Section>
-
-            <Section title="Account">
-              <CmdRow trigger="log out" description="Sign out" />
-              <CmdRow trigger="log in / sign in" description="Open login modal" />
-            </Section>
-
-            <Section title="Info">
-              <CmdRow trigger="where am I" description="Current page" />
-              <CmdRow trigger="what time is it" description="Current time" />
-              <CmdRow trigger="what day is it" description="Today's date" />
-            </Section>
-
-            {/* Notes */}
             <div style={{
               marginTop: 4, padding: "12px 16px", borderRadius: 12,
               background: "rgba(255,215,0,0.03)", border: "1px solid rgba(255,215,0,0.08)",
@@ -182,13 +143,13 @@ export function SyncBotGuide({ onClose }: SyncBotGuideProps) {
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <Lock size={11} color="rgba(255,215,0,0.5)" style={{ flexShrink: 0, marginTop: 1 }} />
                 <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
-                  In sleep mode SyncBot only listens for its name — no audio is ever sent to a server.
+                  In sleep mode SyncBot only listens for &ldquo;wake up&rdquo; — no audio is ever sent to a server.
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <Sparkles size={11} color="rgba(255,215,0,0.5)" style={{ flexShrink: 0, marginTop: 1 }} />
                 <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.35)", lineHeight: 1.5 }}>
-                  Commands marked <span style={{ color: "rgba(255,215,0,0.6)", fontWeight: 700 }}>AI</span> use Groq (llama-3.1-8b-instant). Add your own key in Settings for unlimited use.
+                  SyncBot understands natural language — these are examples, not commands. Ask anything about your data or the app.
                 </p>
               </div>
             </div>

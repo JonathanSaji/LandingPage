@@ -1,5 +1,20 @@
 "use client";
 
+declare global {
+  interface Window {
+    __syncbot_context?: {
+      page: string;
+      subscriptions: Array<{ id: string; name: string; amount: string; date: string; color: string; billingCycle: string; subscriptionType: string; isTrial: boolean; amountPerCycle: string; personalValue: number }>;
+      trips: Array<{ id: string; name: string; location: string | null; dates: string | null; group: string | null; peopleCount: number; budget: string | null; updatedAt: string }>;
+      presets: Array<{ id: string; title: string; intent: string; duration: number; stats: string; created_at: string }>;
+      insights: Array<{ id: string; title: string; intent: string; duration: number; start_time: string | number; end_time: string | number; completed_at: string; analytics: { focusScore?: number; distractionsBlocked?: number } | null }>;
+      fluencySessions: Array<{ id: string; duration: number | null; wpm: number | null; filler_word_count: number | null; created_at: string }>;
+      tiles: Array<{ id: string; name: string; category: string }>;
+      lastUpdated: number;
+    };
+  }
+}
+
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,74 +26,34 @@ import { SyncBotSettings, DEFAULT_SETTINGS, loadSettings } from "./syncbot-setti
 import { SyncBotSettings as SettingsPanel } from "./syncbot-settings";
 import { SyncBotGuide } from "./syncbot-guide";
 
-// ─── App registry ──────────────────────────────────────────────────────────────
-const APPS = [
-  { names: ["trackersync","tracker","track","tracker sink","track a sync","trackers ink","tracker think","trackers inc"], url: "https://trackersync.sub-sync.ca", label: "TrackerSync" },
-  { names: ["travelsync","travel","travel sink","travel sync","travels inc","travels ink","travels think"], url: "https://travelsync.sub-sync.ca", label: "TravelSync" },
-  { names: ["brainsync","brain","brain sink","brainsync","brains sync","brain think","brain zinc"], url: "https://brainsync.sub-sync.ca", label: "BrainSync" },
-  { names: ["seatsync","seat","seat sink","seat sync","seats inc","see sync","seed sync"], url: "https://seatsync.sub-sync.ca", label: "SeatSync" },
-  { names: ["photosync","photo","photo sink","photo sync","photos inc","photos ink","foto sync"], url: "https://photosync.sub-sync.ca", label: "PhotoSync" },
-  { names: ["fluencysync","fluency","fluency sink","fluency sync","fluent sync","fluencies inc","fluency think"], url: "https://fluencysync.sub-sync.ca", label: "FluencySync" },
-  { names: ["steadysync","steady","steady sink","steady sync","steadies inc","study sync","study sink"], url: "https://steadysync.sub-sync.ca", label: "SteadySync" },
-];
+// ─── Page context harvested from window + DOM ────────────────────────────────
+interface PageContext {
+  page: string;
+  username: string;
+  time: string;
+  date: string;
+  subscriptions?: Array<{
+    name: string; amount: string; date: string;
+    billingCycle: string; isTrial: boolean; personalValue: number;
+  }>;
+  trips?: Array<{
+    name: string; location: string | null; dates: string | null;
+    group: string | null; peopleCount: number; budget: string | null;
+  }>;
+  brainInsights?: Array<{
+    title: string; duration: number; focusScore?: number;
+    distractionsBlocked?: number; completed_at: string;
+  }>;
+  brainPresets?: Array<{ title: string; intent: string; duration: number }>;
+  fluencySessions?: Array<{
+    duration: number | null; wpm: number | null;
+    filler_word_count: number | null; created_at: string;
+  }>;
+  visibleApps?: string[];
+  pageText?: string;
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-function tokenize(s: string): string[] {
-  return s.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/).filter(Boolean);
-}
-
-function editDistance(a: string, b: string): number {
-  const dp = Array.from({ length: a.length + 1 }, (_, i) =>
-    Array.from({ length: b.length + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
-  );
-  for (let i = 1; i <= a.length; i++) {
-    for (let j = 1; j <= b.length; j++) {
-      dp[i][j] = a[i - 1] === b[j - 1]
-        ? dp[i - 1][j - 1]
-        : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
-  }
-  return dp[a.length][b.length];
-}
-
-function stringSimilarity(a: string, b: string): number {
-  if (a === b) return 1;
-  if (!a || !b) return 0;
-  const longer = a.length > b.length ? a : b;
-  const shorter = a.length > b.length ? b : a;
-  const dist = editDistance(longer, shorter);
-  return (longer.length - dist) / longer.length;
-}
-
-function fuzzyMatch(input: string, patterns: string[], threshold = 0.55): boolean {
-  const inputTokens = tokenize(input);
-  if (inputTokens.length === 0) return false;
-
-  for (const pattern of patterns) {
-    const patternTokens = tokenize(pattern);
-    if (patternTokens.length === 0) continue;
-
-    let matched = 0;
-    for (const pt of patternTokens) {
-      const best = Math.max(...inputTokens.map((it) => stringSimilarity(it, pt)));
-      if (best >= 0.75) matched++;
-    }
-    const overlapScore = matched / patternTokens.length;
-    if (overlapScore >= threshold) return true;
-
-    const phraseScore = stringSimilarity(input.toLowerCase(), pattern.toLowerCase());
-    if (phraseScore >= threshold) return true;
-  }
-  return false;
-}
-
-function looksLowConfidence(text: string): boolean {
-  const words = text.trim().split(/\s+/);
-  if (text.length < 4) return true;
-  if (words.length === 1 && text.length < 6) return true;
-  return /^\d+$/.test(text.trim());
-}
-
 function getUserInfo(): { name: string; accountId: string | null } {
   try {
     const token = localStorage.getItem("subsync_token");
@@ -90,7 +65,6 @@ function getUserInfo(): { name: string; accountId: string | null } {
     return { name: "there", accountId: null };
   }
 }
-
 
 // ─── Chat bubble Thinking dots ─────────────────────────────────────────────────
 function ThinkingDots() {
@@ -146,7 +120,6 @@ export function SyncBotVoiceControl() {
   const [showGuide,    setShowGuide]    = useState(false);
   const [chat,         setChat]         = useState<ChatMsg[]>([]);
   const [isThinking,   setIsThinking]   = useState(false);
-  const [isMutedLocal, setIsMutedLocal] = useState(false);
 
   const msgId    = useRef(0);
   const thinkRef = useRef(false); // prevent double AI calls
@@ -156,15 +129,14 @@ export function SyncBotVoiceControl() {
     botState, isSupported, isMuted,
     transcript, interimTranscript, activeListening,
     startListening, stopListening, setActiveListening,
-    setMuted, speak, cancelSpeech, unlockSpeech,
-    setOnWakeWord, setOnCommand,
+    setMuted, speak, unlockSpeech,
+    setOnWakeWord, setOnCommand, setOnSleep,
   } = useVoiceCommand();
 
   // ── Reload settings ──────────────────────────────────────────────────────────
   const refreshSettings = useCallback(() => {
     const s = loadSettings();
     setSettings(s);
-    setIsMutedLocal(false);
   }, []);
 
   // ── Auth check ───────────────────────────────────────────────────────────────
@@ -196,21 +168,90 @@ export function SyncBotVoiceControl() {
     setChat((prev) => prev.map((m) => m.id === id ? { ...m, text } : m));
   }, []);
 
+  const buildPageContext = useCallback((): PageContext => {
+    const { name } = getUserInfo();
+    const base: PageContext = {
+      page: pathname,
+      username: name,
+      time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+      date: new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }),
+    };
+
+    if (!settings.allowDataSummary) {
+      return base;
+    }
+
+    const ctx = typeof window !== "undefined" ? window.__syncbot_context : undefined;
+    if (ctx && pathname === "/dashboard") {
+      if (ctx.subscriptions.length > 0) {
+        base.subscriptions = ctx.subscriptions.slice(0, 10).map((s) => ({
+          name: s.name,
+          amount: s.amount,
+          date: s.date,
+          billingCycle: s.billingCycle,
+          isTrial: s.isTrial,
+          personalValue: s.personalValue,
+        }));
+      }
+
+      if (ctx.trips.length > 0) {
+        base.trips = ctx.trips.slice(0, 8).map((t) => ({
+          name: t.name,
+          location: t.location,
+          dates: t.dates,
+          group: t.group,
+          peopleCount: t.peopleCount,
+          budget: t.budget,
+        }));
+      }
+
+      if (ctx.insights.length > 0) {
+        base.brainInsights = ctx.insights.slice(0, 5).map((i) => ({
+          title: i.title,
+          duration: i.duration,
+          focusScore: i.analytics?.focusScore,
+          distractionsBlocked: i.analytics?.distractionsBlocked,
+          completed_at: i.completed_at,
+        }));
+      }
+
+      if (ctx.presets.length > 0) {
+        base.brainPresets = ctx.presets.slice(0, 5).map((p) => ({
+          title: p.title,
+          intent: p.intent,
+          duration: p.duration,
+        }));
+      }
+
+      if (ctx.fluencySessions.length > 0) {
+        base.fluencySessions = ctx.fluencySessions.slice(0, 5).map((f) => ({
+          duration: f.duration,
+          wpm: f.wpm,
+          filler_word_count: f.filler_word_count,
+          created_at: f.created_at,
+        }));
+      }
+
+      if (ctx.tiles.length > 0) {
+        base.visibleApps = ctx.tiles.map((t) => t.name);
+      }
+    }
+
+    if (pathname === "/" && typeof document !== "undefined") {
+      const mainEl = document.querySelector<HTMLElement>("main") ?? document.body;
+      const rawText = mainEl.innerText ?? "";
+      base.pageText = rawText.replace(/\s+/g, " ").trim().slice(0, 600);
+    }
+
+    return base;
+  }, [pathname, settings.allowDataSummary]);
 
   // ── Call AI ──────────────────────────────────────────────────────────────────
   const askAI = useCallback(async (
     message: string,
     onChunk: (text: string) => void
   ): Promise<{ reply: string; action?: Record<string, unknown> }> => {
-    const { name, accountId } = getUserInfo();
-    let subscriptions: unknown[] = [];
-    if (accountId && settings.allowDataSummary) {
-      try {
-        const r = await fetch(`/api/subscriptions?userId=${accountId}`);
-        const d = await r.json();
-        if (d.ok) subscriptions = d.subscriptions?.slice(0, 5) ?? [];
-      } catch { /* ignore */ }
-    }
+    const context = buildPageContext();
 
     const headers: HeadersInit = { "Content-Type": "application/json" };
     if (settings.groqApiKey) (headers as Record<string,string>)["x-groq-key"] = settings.groqApiKey;
@@ -218,16 +259,7 @@ export function SyncBotVoiceControl() {
     const res = await fetch("/api/syncbot/chat", {
       method: "POST",
       headers,
-      body: JSON.stringify({
-        message,
-        context: {
-          username: name,
-          page: pathname,
-          subscriptions,
-          time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-          date: new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" }),
-        },
-      }),
+      body: JSON.stringify({ message, context }),
     });
 
     const contentType = res.headers.get("content-type") ?? "";
@@ -287,10 +319,20 @@ export function SyncBotVoiceControl() {
     }
 
     return { reply: cleanReply, action };
-  }, [settings, pathname]);
+  }, [settings.groqApiKey, buildPageContext]);
 
   // ── Execute AI action ────────────────────────────────────────────────────────
   const executeAction = useCallback((action: Record<string, unknown>) => {
+    const APPS = [
+      { names: ["trackersync","tracker","track","tracker sink","track a sync","trackers ink","tracker think","trackers inc"], url: "https://trackersync.sub-sync.ca", label: "TrackerSync" },
+      { names: ["travelsync","travel","travel sink","travel sync","travels inc","travels ink","travels think"], url: "https://travelsync.sub-sync.ca", label: "TravelSync" },
+      { names: ["brainsync","brain","brain sink","brainsync","brains sync","brain think","brain zinc"], url: "https://brainsync.sub-sync.ca", label: "BrainSync" },
+      { names: ["seatsync","seat","seat sink","seat sync","seats inc","see sync","seed sync"], url: "https://seatsync.sub-sync.ca", label: "SeatSync" },
+      { names: ["photosync","photo","photo sink","photo sync","photos inc","photos ink","foto sync"], url: "https://photosync.sub-sync.ca", label: "PhotoSync" },
+      { names: ["fluencysync","fluency","fluency sink","fluency sync","fluent sync","fluencies inc","fluency think"], url: "https://fluencysync.sub-sync.ca", label: "FluencySync" },
+      { names: ["steadysync","steady","steady sink","steady sync","steadies inc","study sync","study sink"], url: "https://steadysync.sub-sync.ca", label: "SteadySync" },
+    ];
+
     const type = action.type as string;
     if (type === "navigate" && settings.allowNavigation) {
       router.push(action.path as string);
@@ -317,205 +359,22 @@ export function SyncBotVoiceControl() {
     }
   }, [settings, router, stopListening]);
 
-  // ── Local command handler — handles the most common commands without AI ──────
-  const handleLocalCommand = useCallback(async (cmd: string): Promise<boolean> => {
-    const c = cmd.toLowerCase().trim();
-
-    // ── NAVIGATION / SCROLL ──────────────────────────────────────────────────
-    if (settings.allowNavigation) {
-      if (fuzzyMatch(c, [
-        "open dashboard", "go to dashboard", "take me to dashboard", "dashboard", "go dashboard", "my dashboard",
-        "dash word", "dash board", "my dash", "go to my dash word", "open dash", "take me to dash",
-      ])) {
-        const reply = "Navigating to your dashboard.";
-        speak(reply); addMsg("bot", reply);
-        router.push("/dashboard");
-        return true;
-      }
-      if (fuzzyMatch(c, [
-        "go home", "go to homepage", "open home", "landing page", "home page", "main page",
-        "go on", "go tone", "homepage", "go to main", "open main page",
-      ])) {
-        const reply = "Going back to the landing page.";
-        speak(reply); addMsg("bot", reply);
-        router.push("/");
-        return true;
-      }
-    }
-    if (settings.allowScrollControl) {
-      if (fuzzyMatch(c, [
-        "scroll to bottom", "take me to the bottom", "scroll all the way down", "go to bottom", "go to the bottom",
-        "school to bottom", "scroll bought them", "go bottom", "take me bottom", "all the way down",
-      ])) {
-        const reply = "Scrolling to the bottom.";
-        speak(reply); addMsg("bot", reply);
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
-        return true;
-      }
-      if (fuzzyMatch(c, [
-        "scroll to top", "take me to the top", "scroll all the way up", "go to top", "go to the top",
-        "school to top", "stroll to top", "go top", "take me top", "all the way up",
-      ])) {
-        const reply = "Scrolling to the top.";
-        speak(reply); addMsg("bot", reply);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return true;
-      }
-      if (fuzzyMatch(c, [
-        "scroll down", "scroll page down", "school down", "scroll town", "stroll down", "scroll dale",
-        "go down", "move down", "page down", "roll down",
-      ])) {
-        const reply = "Scrolling down.";
-        speak(reply); addMsg("bot", reply);
-        window.scrollBy({ top: 400, behavior: "smooth" });
-        return true;
-      }
-      if (fuzzyMatch(c, [
-        "scroll up", "scroll page up", "school up", "stroll up", "scroll cup",
-        "go up", "move up", "page up", "roll up",
-      ])) {
-        const reply = "Scrolling up.";
-        speak(reply); addMsg("bot", reply);
-        window.scrollBy({ top: -400, behavior: "smooth" });
-        return true;
-      }
-    }
-    if (settings.allowAuthActions) {
-      if (fuzzyMatch(c, [
-        "logout", "log me out", "log out", "sign out", "log off",
-        "lock out", "law got", "logged out", "lock me out", "sign me out",
-      ])) {
-        const reply = "Logging you out. Goodbye!";
-        addMsg("bot", reply);
-        speak(reply, () => {
-          localStorage.removeItem("subsync_token");
-          window.dispatchEvent(new Event("storage"));
-          stopListening();
-          router.push("/");
-        });
-        return true;
-      }
-    }
-
-    // ── MUTE ────────────────────────────────────────────────────────────────
-    if (fuzzyMatch(c, [
-      "mute", "be quiet", "stop talking", "silence", "shut up",
-      "moot", "be quite", "stop talk", "silent", "quiet now",
-    ])) {
-      cancelSpeech(); setMuted(true); setIsMutedLocal(true);
-      return true;
-    }
-    if (isMutedLocal && fuzzyMatch(c, [
-      "unmute", "start talking", "enable voice", "speak again",
-      "on mute", "un moot", "start talk", "enable voices", "speak again please",
-    ])) {
-      setMuted(false); setIsMutedLocal(false);
-      playChime("on");
-      speak("I'm back. How can I help?");
-      addMsg("bot", "I'm back. How can I help?");
-      return true;
-    }
-
-    // ── SLEEP ────────────────────────────────────────────────────────────────
-    if (fuzzyMatch(c, [
-      "go to sleep", "sleep", "deactivate", "shut down", "stop listening",
-      "go sleep", "go to slip", "sleep now", "stop listen", "stand down",
-    ])) {
-      const reply = "Going to sleep. Say SyncBot to wake me.";
-      speak(reply); addMsg("bot", reply);
+  // ── Register sleep handler ────────────────────────────────────────────────────
+  useEffect(() => {
+    setOnSleep(() => {
+      playChime("off");
+      const reply = "Going to sleep. Say wake up when you need me.";
+      speak(reply);
+      addMsg("bot", reply);
       setTimeout(() => setActiveListening(false), 800);
-      return true;
-    }
-
-    // ── HELP ─────────────────────────────────────────────────────────────────
-    if (fuzzyMatch(c, [
-      "help", "what can you do", "show commands", "commands", "show guide",
-      "health", "what can do", "show command", "voice commands", "guide",
-    ])) {
-      const reply = "Here's everything I can do.";
-      speak(reply); addMsg("bot", reply);
-      setShowGuide(true);
-      return true;
-    }
-
-    // ── SETTINGS ─────────────────────────────────────────────────────────────
-    if (fuzzyMatch(c, [
-      "settings", "open settings", "show settings", "configure",
-      "setting", "open setting", "show setting", "config your", "preferences",
-    ])) {
-      const reply = "Opening my settings.";
-      speak(reply); addMsg("bot", reply);
-      setShowSettings(true);
-      return true;
-    }
-
-    // ── APPS (Strict Local Matcher) ───────────────────────────────────────────
-    if (settings.allowOpenApps) {
-      for (const app of APPS) {
-        const appPatterns = app.names.flatMap((name) => [
-          name,
-          `open ${name}`,
-          `launch ${name}`,
-          `start ${name}`,
-          `run ${name}`,
-          `go to ${name}`,
-          `show ${name}`,
-          `load ${name}`,
-        ]);
-
-        if (fuzzyMatch(c, appPatterns)) {
-          const reply = `Opening ${app.label} now.`;
-          addMsg("bot", reply);
-          speak(reply);
-          window.open(app.url, "_blank");
-          return true;
-        }
-      }
-    }
-
-    // ── CLOSE MODAL ──────────────────────────────────────────────────────────
-    if (fuzzyMatch(c, [
-      "close", "dismiss", "exit modal", "close modal",
-      "clothes", "closed", "dismissed", "exit model", "close model",
-    ])) {
-      window.dispatchEvent(new Event("syncbot:close-modal"));
-      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-      const reply = "Closed."; speak(reply); addMsg("bot", reply); return true;
-    }
-
-    // ── CLICK BY VOICE ────────────────────────────────────────────────────────
-    if (settings.allowClickButtons) {
-      const clickMatch = c.match(/(?:click|press|tap|select)\s+(.+)/);
-      if (clickMatch) {
-        const target = clickMatch[1].trim().toLowerCase();
-        const els = Array.from(document.querySelectorAll<HTMLElement>(
-          "button, a, [role='button']"
-        ));
-        const match = els.find((el) => {
-          const text  = (el.textContent ?? "").toLowerCase().trim();
-          const aria  = (el.getAttribute("aria-label") ?? "").toLowerCase();
-          return text.includes(target) || aria.includes(target);
-        });
-        if (match) {
-          match.click();
-          const reply = `Clicked ${match.textContent?.trim() || target}.`;
-          speak(reply); addMsg("bot", reply);
-        } else {
-          const reply = `I couldn't find "${target}" to click.`;
-          speak(reply); addMsg("bot", reply);
-        }
-        return true;
-      }
-    }
-
-    return false; // Not handled locally
-  }, [settings, speak, cancelSpeech, setMuted, setActiveListening, addMsg, isMutedLocal, router, stopListening]);
+    });
+  }, [setOnSleep, speak, addMsg, setActiveListening]);
 
   // ── Register wake-word handler ───────────────────────────────────────────────
   useEffect(() => {
     setOnWakeWord(() => {
       const { name } = getUserInfo();
-      const greeting = `Welcome ${name}, I am SyncBot, how can I help today?`;
+      const greeting = `Online, ${name}. What can I do for you?`;
       addMsg("bot", greeting);
       setTimeout(() => speak(greeting), 500);
     });
@@ -531,38 +390,32 @@ export function SyncBotVoiceControl() {
     return cleaned.trim();
   }, []);
 
-  // ── Register command handler ─────────────────────────────────────────────────
+  // ── Register command handler — everything goes to AI ─────────────────────────
   useEffect(() => {
     setOnCommand(async (cmd: string) => {
+      // Deduplication guard
       const now = Date.now();
-      if (cmd === lastCmdRef.current.text && now - lastCmdRef.current.time < 2500) {
-        return;
-      }
+      if (cmd === lastCmdRef.current.text && now - lastCmdRef.current.time < 2500) return;
       lastCmdRef.current = { text: cmd, time: now };
 
+      // Prevent overlapping AI calls
       if (thinkRef.current) return;
-      const lowConfidence = looksLowConfidence(cmd);
-      const aiMessage = lowConfidence ? `[possibly misheard] ${cmd}` : cmd;
-      addMsg("user", lowConfidence ? `${cmd} (?)` : cmd);
 
-      if (!lowConfidence) {
-        const handled = await handleLocalCommand(cmd);
-        if (handled) return;
-      }
+      addMsg("user", cmd);
 
-      // Fallback to AI
       if (!settings.allowAI) {
-        const reply = "I didn't catch that. Say help to see what I can do.";
-        speak(reply); addMsg("bot", reply); return;
+        const reply = "AI is disabled. Enable it in settings to use SyncBot.";
+        speak(reply);
+        addMsg("bot", reply);
+        return;
       }
 
       thinkRef.current = true;
       setIsThinking(true);
-
       const botMsgId = addMsg("bot", "");
 
       try {
-        const { reply, action } = await askAI(aiMessage, (accumulated) => {
+        const { reply, action } = await askAI(cmd, (accumulated) => {
           const display = cleanStreamingText(accumulated);
           updateMsg(botMsgId, display);
         });
@@ -572,30 +425,30 @@ export function SyncBotVoiceControl() {
 
         const cleanReply = cleanStreamingText(reply);
         updateMsg(botMsgId, cleanReply);
-
         speak(cleanReply);
+
         if (action) executeAction(action);
       } catch (err) {
         console.error("[SyncBot] askAI error:", err);
         setIsThinking(false);
         thinkRef.current = false;
-        const retryMsg = "I didn't quite catch that. Could you say it again?";
+        const retryMsg = "I didn't catch that. Could you say it again?";
         speak(retryMsg);
         updateMsg(botMsgId, retryMsg);
       }
     });
-  }, [setOnCommand, handleLocalCommand, askAI, executeAction, speak, addMsg, updateMsg, settings.allowAI, cleanStreamingText]);
+  }, [setOnCommand, askAI, executeAction, speak, addMsg, updateMsg, settings.allowAI, cleanStreamingText]);
 
   // ── Click pill handler ───────────────────────────────────────────────────────
   const handleClick = useCallback(() => {
     unlockSpeech(); // CRITICAL: unlock on user gesture
     if (activeListening) {
       playChime("off");
-      setTimeout(() => speak("Going to sleep. Say SyncBot to wake me."), 150);
+      setTimeout(() => speak("Going to sleep. Say wake up when you need me."), 150);
       setActiveListening(false);
     } else {
       playChime("on");
-      setTimeout(() => speak("SyncBot online. How can I help?"), 150);
+      setTimeout(() => speak("Online. How can I help?"), 150);
       setActiveListening(true);
     }
   }, [activeListening, setActiveListening, speak, unlockSpeech]);
@@ -758,7 +611,7 @@ export function SyncBotVoiceControl() {
             <motion.button
               key="sb-mute"
               initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-              onClick={() => { setMuted(!isMuted); setIsMutedLocal(!isMuted); }}
+              onClick={() => { setMuted(!isMuted); }}
               title={isMuted ? "Unmute" : "Mute"}
               style={{
                 width: 36, height: 36, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)",
@@ -806,7 +659,7 @@ export function SyncBotVoiceControl() {
               animation: "sb-hint 5s ease-in-out 2s forwards",
             }}>
               <span style={{ fontSize: 11, color: "rgba(255,215,0,0.7)", fontWeight: 600 }}>
-                Click to activate · Say &ldquo;SyncBot&rdquo; to wake
+                Click to activate · Say &ldquo;wake up&rdquo; to activate
               </span>
             </div>
           )}
