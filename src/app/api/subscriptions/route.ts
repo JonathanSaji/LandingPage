@@ -29,18 +29,18 @@ export async function GET(request: Request) {
     }
 
     const result = await dbQuery(
-      `SELECT 
-        id, 
-        name, 
-        amount, 
-        date, 
-        color, 
-        "billingCycle", 
-        "subscriptionType", 
-        "isTrial", 
-        "amountPerCycle", 
+      `SELECT
+        id,
+        name,
+        amount,
+        date,
+        color,
+        "billingCycle",
+        "subscriptionType",
+        "isTrial",
+        "amountPerCycle",
         "personalValue"
-       FROM subscriptions
+       FROM "TrackerSync".subscriptions
        WHERE user_id = $1`,
       [userId]
     );

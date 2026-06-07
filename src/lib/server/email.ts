@@ -71,7 +71,7 @@ function buildWelcomeEmailHtml(username: string, landingUrl: string) {
 
               <tr>
                 <td style="padding:0 28px 24px;">
-                  <p style="margin:0;font-size:12px;line-height:1.7;color:#8f8f96;">Apps in your ecosystem: TravelSync, PhotoSync, BrainSync, FluencySync, SteadySync, Subtracker, and SeatSync.</p>
+                  <p style="margin:0;font-size:12px;line-height:1.7;color:#8f8f96;">Apps in your ecosystem: TravelSync, PhotoSync, BrainSync, FluencySync, SteadySync, TrackerSync, and SeatSync.</p>
                 </td>
               </tr>
 
@@ -97,7 +97,7 @@ function buildWelcomeEmailText(username: string, landingUrl: string) {
     "Explore all SubSync services from one connected home:",
     landingUrl,
     "",
-    "Apps: TravelSync, PhotoSync, BrainSync, FluencySync, SteadySync, Subtracker, SeatSync.",
+    "Apps: TravelSync, PhotoSync, BrainSync, FluencySync, SteadySync, TrackerSync, SeatSync.",
   ].join("\n");
 }
 
