@@ -9,6 +9,7 @@ import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calen
 import Sidebar from "@/components/ui/sidebar-with-submenu";
 import { SettingsPopup } from "@/components/ui/settings-popup";
 import { createPortal } from "react-dom";
+import { SteadySyncSettingsTile } from "@/components/steadysync/SteadySyncSettingsTile";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
