@@ -1,44 +1,6 @@
 import { NextResponse } from "next/server";
 import { dbQuery } from "@/lib/server/db";
 
-type BrainAnalytics = Record<string, unknown> & {
-  focusScore?: unknown;
-  focusEfficiency?: unknown;
-};
-
-function numberFromAnalyticsValue(value: unknown) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-
-  return null;
-}
-
-function normalizeAnalytics(analytics: unknown) {
-  if (!analytics || typeof analytics !== "object" || Array.isArray(analytics)) {
-    return analytics;
-  }
-
-  const data = analytics as BrainAnalytics;
-  const focusScore =
-    numberFromAnalyticsValue(data.focusScore) ??
-    numberFromAnalyticsValue(data.focusEfficiency);
-
-  if (focusScore === null) {
-    return data;
-  }
-
-  return {
-    ...data,
-    focusScore,
-  };
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -99,14 +61,9 @@ export async function GET(request: Request) {
       [userId]
     );
 
-    const insights = insightsResult.rows.map((insight) => ({
-      ...insight,
-      analytics: normalizeAnalytics(insight.analytics),
-    }));
-
     return NextResponse.json({
       ok: true,
-      insights,
+      insights: insightsResult.rows,
       presets: presetsResult.rows
     });
   } catch (error) {
