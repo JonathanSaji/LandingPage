@@ -20,11 +20,6 @@ export function TopNav() {
     setLoggedIn(isLoggedIn());
   }, []);
 
-  // Redirect logged-in users straight to dashboard
-  useEffect(() => {
-    if (loggedIn) router.replace("/dashboard");
-  }, [loggedIn, router]);
-
   function handleDashboardClick() {
     if (isLoggedIn()) {
       router.push("/dashboard");
@@ -55,7 +50,7 @@ export function TopNav() {
           }}
         >
           <NavLink href="/" label="Landing Page" />
-          <NavLink href="#about" label="About Us" />
+          <NavLink href="/about" label="About Us" />
           <DashboardButton onClick={handleDashboardClick} />
         </nav>
       </header>

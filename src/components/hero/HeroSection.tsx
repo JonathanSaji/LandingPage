@@ -126,11 +126,6 @@ export function HeroSection() {
     const token = localStorage.getItem("subsync_token");
     if (token) {
       setIsLoggedIn(true);
-      // Only redirect on first visit this session — not when user navigates back intentionally
-      if (!sessionStorage.getItem("subsync_landed")) {
-        sessionStorage.setItem("subsync_landed", "1");
-        router.replace("/dashboard");
-      }
     }
   }, [router]);
 
@@ -212,12 +207,13 @@ export function HeroSection() {
               >
                 Landing Page
               </Link>
-              <a
-                href="#about"
-                className="rounded font-body text-sm text-[#94A3B8] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              <Link
+                href="/about"
+                className="rounded font-body text-sm hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                style={{ color: pathname === "/about" ? "#FFD700" : "#94A3B8" }}
               >
                 About Us
-              </a>
+              </Link>
               {isLoggedIn ? (
                 <Link
                   href="/dashboard"
