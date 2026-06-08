@@ -287,6 +287,22 @@ interface FluencySession {
   created_at: string;
 }
 
+interface SteadySyncSettings {
+  id: string;
+  steady_mouse: boolean;
+  hitbox_enabled: boolean;
+  snap_enabled: boolean;
+  voice_enabled: boolean;
+  updated_at: string;
+}
+
+const STEADY_SETTING_LABELS: { key: keyof Omit<SteadySyncSettings, "id" | "updated_at">; label: string }[] = [
+  { key: "steady_mouse", label: "Steady Mouse" },
+  { key: "hitbox_enabled", label: "Hitbox" },
+  { key: "snap_enabled", label: "Snap" },
+  { key: "voice_enabled", label: "Voice" },
+];
+
 function formatSessionTime(duration: number | null) {
   if (duration === null || !Number.isFinite(duration)) return "--";
   return `${duration} min`;
@@ -320,6 +336,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   presets?: BrainPreset[];
   insights?: BrainInsight[];
   fluencySessions?: FluencySession[];
+  steadySettings?: SteadySyncSettings | null;
   loading?: boolean;
   isEditMode?: boolean;
   isBeingDragged?: boolean;
@@ -335,6 +352,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   presets = [],
   insights = [],
   fluencySessions = [],
+  steadySettings = null,
   loading = false,
   isEditMode = false,
   isBeingDragged = false,
@@ -1028,6 +1046,75 @@ const BentoCard = forwardRef<HTMLDivElement, {
                 <ArrowUpRight size={10} />
               </motion.div>
             </div>
+          ) : tile.name === "SteadySync" ? (
+            <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
+              <p
+                className="font-body font-bold uppercase"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  marginBottom: "6px",
+                }}
+              >
+                Accessibility settings
+              </p>
+
+              {loading ? (
+                <div className="flex flex-1 items-center justify-center py-4">
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(58, 123, 123, 0.15)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : !steadySettings ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
+                  <p className="font-body text-center text-[11px] text-white/40">No SteadySync settings found.</p>
+                </div>
+              ) : (
+                <div className={`grid min-h-0 flex-1 ${isWide ? "grid-cols-4 gap-2" : "grid-cols-2 gap-2"}`}>
+                  {STEADY_SETTING_LABELS.map(({ key, label }) => {
+                    const enabled = steadySettings[key];
+                    return (
+                      <div
+                        key={key}
+                        className="flex flex-col items-center justify-center rounded-xl text-center"
+                        style={{
+                          padding: isTall ? "10px 8px" : "8px 6px",
+                          background: `${tile.accent}06`,
+                          border: `1px solid ${enabled ? tile.accent : "rgba(255,255,255,0.08)"}30`,
+                          boxShadow: enabled ? `inset 0 1px 0 ${tile.accent}12` : undefined,
+                        }}
+                      >
+                        <p className="font-body text-[9px] uppercase tracking-wide text-white/35">{label}</p>
+                        <p
+                          className="mt-1 font-body text-xs font-bold"
+                          style={{ color: enabled ? tile.accent : "rgba(255,255,255,0.35)" }}
+                        >
+                          {enabled ? "On" : "Off"}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <motion.div
+                className="pointer-events-none absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1 font-body"
+                style={{ color: "rgba(255,255,255,0.25)", fontSize: "10px" }}
+                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                <span>Tap to preview</span>
+                <ArrowUpRight size={10} />
+              </motion.div>
+            </div>
           ) : (
             <>
               <div
@@ -1118,6 +1205,7 @@ function ExpandedTile({
   presets = [],
   insights = [],
   fluencySessions = [],
+  steadySettings = null,
   loading = false,
 }: {
   tile: AppTile;
@@ -1127,6 +1215,7 @@ function ExpandedTile({
   presets?: BrainPreset[];
   insights?: BrainInsight[];
   fluencySessions?: FluencySession[];
+  steadySettings?: SteadySyncSettings | null;
   loading?: boolean;
 }) {
   useEffect(() => {
@@ -1664,6 +1753,83 @@ function ExpandedTile({
                 </div>
               )}
             </div>
+          ) : tile.name === "SteadySync" ? (
+            <div className="space-y-3 mb-8">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(58, 123, 123, 0.15)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : !steadySettings ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No SteadySync settings found.
+                  </p>
+                </div>
+              ) : (
+                <motion.article
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ease: EASE }}
+                  className="overflow-hidden rounded-2xl"
+                  style={{
+                    background: `${tile.accent}06`,
+                    border: `1px solid ${tile.accent}30`,
+                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                  }}
+                >
+                  <div
+                    className="flex items-center justify-between gap-3 px-4 py-3"
+                    style={{
+                      background: `linear-gradient(90deg, ${tile.accent}14, transparent)`,
+                      borderBottom: `1px solid ${tile.accent}24`,
+                    }}
+                  >
+                    <p className="font-body text-sm font-bold text-white">Your accessibility profile</p>
+                    <span className="shrink-0 font-body text-[10px] text-white/40">
+                      {new Date(steadySettings.updated_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <div className="grid gap-2 p-3 sm:grid-cols-2">
+                    {STEADY_SETTING_LABELS.map(({ key, label }) => {
+                      const enabled = steadySettings[key];
+                      return (
+                        <div
+                          key={key}
+                          className="flex items-center justify-between rounded-xl p-3"
+                          style={{
+                            background: `${tile.accent}05`,
+                            border: `1px solid ${enabled ? tile.accent : "rgba(255,255,255,0.08)"}24`,
+                          }}
+                        >
+                          <span className="font-body text-xs font-semibold text-white/80">{label}</span>
+                          <span
+                            className="font-body text-xs font-bold uppercase tracking-wide"
+                            style={{ color: enabled ? tile.accent : "rgba(255,255,255,0.35)" }}
+                          >
+                            {enabled ? "Enabled" : "Disabled"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.article>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/[0.01] mb-8">
               <span className="font-body text-xs text-white/40 font-semibold uppercase tracking-wider">
@@ -1690,7 +1856,7 @@ function ExpandedTile({
                 letterSpacing: "0.12em",
               }}
             >
-              {tile.name === "TrackerSync" || tile.name === "TravelSync" || tile.name === "FluencySync"
+              {tile.name === "TrackerSync" || tile.name === "TravelSync" || tile.name === "FluencySync" || tile.name === "SteadySync"
                 ? "Ecosystem Live — Syncing Data"
                 : "Launching Soon — Stay Tuned"}
             </span>
@@ -1713,6 +1879,7 @@ export default function DashboardPage() {
   const [presets, setPresets] = useState<BrainPreset[]>([]);
   const [insights, setInsights] = useState<BrainInsight[]>([]);
   const [fluencySessions, setFluencySessions] = useState<FluencySession[]>([]);
+  const [steadySettings, setSteadySettings] = useState<SteadySyncSettings | null>(null);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [settingsPopup, setSettingsPopup] = useState<{ open: boolean; tab: "settings" | "general" | "dashboard" }>({
@@ -1946,8 +2113,9 @@ export default function DashboardPage() {
         fetch(`/api/trips?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/brainsync?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/fluencysync?userId=${accountId}`).then((res) => res.json()),
+        fetch(`/api/steadysync?userId=${accountId}`).then((res) => res.json()),
       ])
-        .then(([subsData, tripsData, brainData, fluencyData]) => {
+        .then(([subsData, tripsData, brainData, fluencyData, steadyData]) => {
           if (subsData.ok && Array.isArray(subsData.subscriptions)) {
             setSubscriptions(subsData.subscriptions);
           }
@@ -1962,6 +2130,11 @@ export default function DashboardPage() {
           }
           if (fluencyData.ok && Array.isArray(fluencyData.sessions)) {
             setFluencySessions(fluencyData.sessions);
+          }
+          if (steadyData.ok && steadyData.settings) {
+            setSteadySettings(steadyData.settings);
+          } else {
+            setSteadySettings(null);
           }
         })
         .catch((err) => console.error("Error fetching dashboard data:", err))
@@ -2193,6 +2366,7 @@ export default function DashboardPage() {
                   presets={presets}
                   insights={insights}
                   fluencySessions={fluencySessions}
+                  steadySettings={steadySettings}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}
                   isBeingDragged={isDragging}
@@ -2291,6 +2465,7 @@ export default function DashboardPage() {
               presets={presets}
               insights={insights}
               fluencySessions={fluencySessions}
+              steadySettings={steadySettings}
               loading={loadingSubs}
             />
           )}
