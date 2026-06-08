@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     }
 
     // Delete subscriptions first to prevent foreign key constraint violations
-    await dbQuery(`DELETE FROM subscriptions WHERE user_id = $1`, [id]);
+    await dbQuery(`DELETE FROM "TrackerSync".subscriptions WHERE user_id = $1`, [id]);
 
     // Delete account
     const result = await dbQuery(`DELETE FROM accounts WHERE id = $1`, [id]);

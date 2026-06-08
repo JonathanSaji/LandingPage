@@ -30,24 +30,20 @@ export async function GET(request: Request) {
 
     const result = await dbQuery(
       `SELECT
-        id,
-        name,
-        amount,
-        date,
-        color,
-        "billingCycle",
-        "subscriptionType",
-        "isTrial",
-        "amountPerCycle",
-        "personalValue"
-       FROM "TrackerSync".subscriptions
-       WHERE user_id = $1`,
+        id::text,
+        duration,
+        wpm,
+        filler_word_count,
+        created_at
+       FROM "FluencySync".sessions
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
       [userId]
     );
 
-    return NextResponse.json({ ok: true, subscriptions: result.rows });
+    return NextResponse.json({ ok: true, sessions: result.rows });
   } catch (error) {
-    console.error("Failed to fetch subscriptions:", error);
+    console.error("Failed to fetch FluencySync data:", error);
     return NextResponse.json(
       { ok: false, error: "Internal server error." },
       { status: 500 }
