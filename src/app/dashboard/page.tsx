@@ -303,6 +303,16 @@ const STEADY_SETTING_LABELS: { key: keyof Omit<SteadySyncSettings, "id" | "updat
   { key: "voice_enabled", label: "Voice" },
 ];
 
+interface SeatSyncMembership {
+  email: string;
+  name: string;
+  display_name: string;
+  max_allowed_days: number;
+  company_id: string | null;
+  organization_name: string | null;
+  role: string;
+}
+
 function formatSessionTime(duration: number | null) {
   if (duration === null || !Number.isFinite(duration)) return "--";
   return `${duration} min`;
@@ -337,6 +347,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   insights?: BrainInsight[];
   fluencySessions?: FluencySession[];
   steadySettings?: SteadySyncSettings | null;
+  seatMembership?: SeatSyncMembership | null;
   loading?: boolean;
   isEditMode?: boolean;
   isBeingDragged?: boolean;
@@ -353,6 +364,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   insights = [],
   fluencySessions = [],
   steadySettings = null,
+  seatMembership = null,
   loading = false,
   isEditMode = false,
   isBeingDragged = false,
@@ -966,6 +978,77 @@ const BentoCard = forwardRef<HTMLDivElement, {
                 <ArrowUpRight size={10} />
               </motion.div>
             </div>
+          ) : tile.name === "SeatSync" ? (
+            <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
+              <p
+                className="font-body font-bold uppercase"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  marginBottom: "6px",
+                }}
+              >
+                Your membership
+              </p>
+
+              {loading ? (
+                <div className="flex flex-1 items-center justify-center py-4">
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(57, 255, 20, 0.12)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : !seatMembership ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
+                  <p className="font-body text-center text-[11px] text-white/40">No SeatSync membership found.</p>
+                </div>
+              ) : (
+                <div
+                  className="flex min-h-0 flex-1 flex-col justify-center rounded-xl"
+                  style={{
+                    padding: isTall ? "10px 12px" : "8px 10px",
+                    background: `${tile.accent}06`,
+                    border: `1px solid ${tile.accent}30`,
+                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                  }}
+                >
+                  <p
+                    className="truncate font-body font-bold text-white"
+                    style={{ fontSize: isTall || isWide ? "12px" : "11px", lineHeight: 1.2 }}
+                    title={seatMembership.name}
+                  >
+                    {seatMembership.name}
+                  </p>
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                      <Users size={11} color={tile.accent} className="shrink-0" />
+                      <span className="truncate">{seatMembership.role}</span>
+                    </p>
+                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                      <Calendar size={11} color={tile.accent} className="shrink-0" />
+                      <span className="truncate">{seatMembership.max_allowed_days} max booking days</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <motion.div
+                className="pointer-events-none absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1 font-body"
+                style={{ color: "rgba(255,255,255,0.25)", fontSize: "10px" }}
+                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                <span>Tap to preview</span>
+                <ArrowUpRight size={10} />
+              </motion.div>
+            </div>
           ) : tile.name === "FluencySync" ? (
             <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
               <p
@@ -1206,6 +1289,7 @@ function ExpandedTile({
   insights = [],
   fluencySessions = [],
   steadySettings = null,
+  seatMembership = null,
   loading = false,
 }: {
   tile: AppTile;
@@ -1216,6 +1300,7 @@ function ExpandedTile({
   insights?: BrainInsight[];
   fluencySessions?: FluencySession[];
   steadySettings?: SteadySyncSettings | null;
+  seatMembership?: SeatSyncMembership | null;
   loading?: boolean;
 }) {
   useEffect(() => {
@@ -1753,6 +1838,90 @@ function ExpandedTile({
                 </div>
               )}
             </div>
+          ) : tile.name === "SeatSync" ? (
+            <div className="space-y-3 mb-8">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      border: "2px solid rgba(57, 255, 20, 0.12)",
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : !seatMembership ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No SeatSync membership found.
+                  </p>
+                </div>
+              ) : (
+                <motion.article
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ease: EASE }}
+                  className="overflow-hidden rounded-2xl"
+                  style={{
+                    background: `${tile.accent}06`,
+                    border: `1px solid ${tile.accent}30`,
+                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                  }}
+                >
+                  <div
+                    className="px-4 py-3"
+                    style={{
+                      background: `linear-gradient(90deg, ${tile.accent}14, transparent)`,
+                      borderBottom: `1px solid ${tile.accent}24`,
+                    }}
+                  >
+                    <p className="font-body text-sm font-bold text-white">{seatMembership.name}</p>
+                    <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">
+                      {seatMembership.display_name}
+                    </p>
+                  </div>
+                  <div className="grid gap-2 p-3 sm:grid-cols-2">
+                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                        <Users size={12} color={tile.accent} />
+                        <span className="font-body text-[9px] uppercase tracking-wider">Role</span>
+                      </div>
+                      <p className="font-body text-xs font-semibold text-white/90">{seatMembership.role}</p>
+                    </div>
+                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                        <Calendar size={12} color={tile.accent} />
+                        <span className="font-body text-[9px] uppercase tracking-wider">Max Days</span>
+                      </div>
+                      <p className="font-body text-xs font-semibold text-white/90">
+                        {seatMembership.max_allowed_days} booking days
+                      </p>
+                    </div>
+                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                        <MapPin size={12} color={tile.accent} />
+                        <span className="font-body text-[9px] uppercase tracking-wider">Organization</span>
+                      </div>
+                      <p className="font-body text-xs font-semibold text-white/90">
+                        {seatMembership.organization_name || "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                        <Clock size={12} color={tile.accent} />
+                        <span className="font-body text-[9px] uppercase tracking-wider">Company ID</span>
+                      </div>
+                      <p className="font-body text-xs font-semibold text-white/90">
+                        {seatMembership.company_id || "—"}
+                      </p>
+                    </div>
+                  </div>
+                </motion.article>
+              )}
+            </div>
           ) : tile.name === "SteadySync" ? (
             <div className="space-y-3 mb-8">
               {loading ? (
@@ -1856,7 +2025,7 @@ function ExpandedTile({
                 letterSpacing: "0.12em",
               }}
             >
-              {tile.name === "TrackerSync" || tile.name === "TravelSync" || tile.name === "FluencySync" || tile.name === "SteadySync"
+              {tile.name === "TrackerSync" || tile.name === "TravelSync" || tile.name === "FluencySync" || tile.name === "SteadySync" || tile.name === "SeatSync"
                 ? "Ecosystem Live — Syncing Data"
                 : "Launching Soon — Stay Tuned"}
             </span>
@@ -1880,6 +2049,7 @@ export default function DashboardPage() {
   const [insights, setInsights] = useState<BrainInsight[]>([]);
   const [fluencySessions, setFluencySessions] = useState<FluencySession[]>([]);
   const [steadySettings, setSteadySettings] = useState<SteadySyncSettings | null>(null);
+  const [seatMembership, setSeatMembership] = useState<SeatSyncMembership | null>(null);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [settingsPopup, setSettingsPopup] = useState<{ open: boolean; tab: "settings" | "general" | "dashboard" }>({
@@ -2114,8 +2284,9 @@ export default function DashboardPage() {
         fetch(`/api/brainsync?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/fluencysync?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/steadysync?userId=${accountId}`).then((res) => res.json()),
+        fetch(`/api/seatsync?userId=${accountId}`).then((res) => res.json()),
       ])
-        .then(([subsData, tripsData, brainData, fluencyData, steadyData]) => {
+        .then(([subsData, tripsData, brainData, fluencyData, steadyData, seatData]) => {
           if (subsData.ok && Array.isArray(subsData.subscriptions)) {
             setSubscriptions(subsData.subscriptions);
           }
@@ -2135,6 +2306,11 @@ export default function DashboardPage() {
             setSteadySettings(steadyData.settings);
           } else {
             setSteadySettings(null);
+          }
+          if (seatData.ok && seatData.membership) {
+            setSeatMembership(seatData.membership);
+          } else {
+            setSeatMembership(null);
           }
         })
         .catch((err) => console.error("Error fetching dashboard data:", err))
@@ -2367,6 +2543,7 @@ export default function DashboardPage() {
                   insights={insights}
                   fluencySessions={fluencySessions}
                   steadySettings={steadySettings}
+                  seatMembership={seatMembership}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}
                   isBeingDragged={isDragging}
@@ -2466,6 +2643,7 @@ export default function DashboardPage() {
               insights={insights}
               fluencySessions={fluencySessions}
               steadySettings={steadySettings}
+              seatMembership={seatMembership}
               loading={loadingSubs}
             />
           )}
