@@ -324,13 +324,13 @@ export function SyncBotVoiceControl() {
   // ── Execute AI action ────────────────────────────────────────────────────────
   const executeAction = useCallback((action: Record<string, unknown>) => {
     const APPS = [
-      { names: ["trackersync","tracker","track","tracker sink","track a sync","trackers ink","tracker think","trackers inc"], url: "https://trackersync.sub-sync.ca", label: "TrackerSync" },
-      { names: ["travelsync","travel","travel sink","travel sync","travels inc","travels ink","travels think"], url: "https://travelsync.sub-sync.ca", label: "TravelSync" },
-      { names: ["brainsync","brain","brain sink","brainsync","brains sync","brain think","brain zinc"], url: "https://brainsync.sub-sync.ca", label: "BrainSync" },
-      { names: ["seatsync","seat","seat sink","seat sync","seats inc","see sync","seed sync"], url: "https://seatsync.sub-sync.ca", label: "SeatSync" },
-      { names: ["photosync","photo","photo sink","photo sync","photos inc","photos ink","foto sync"], url: "https://photosync.sub-sync.ca", label: "PhotoSync" },
-      { names: ["fluencysync","fluency","fluency sink","fluency sync","fluent sync","fluencies inc","fluency think"], url: "https://fluencysync.sub-sync.ca", label: "FluencySync" },
-      { names: ["steadysync","steady","steady sink","steady sync","steadies inc","study sync","study sink"], url: "https://steadysync.sub-sync.ca", label: "SteadySync" },
+      { names: ["trackersync","tracker","track","tracker sink","track a sync","trackers ink","tracker think","trackers inc","finance","subscription","subs"], url: "https://trackersync.sub-sync.ca", label: "TrackerSync" },
+      { names: ["travelsync","travel","travel sink","travel sync","travels inc","travels ink","travels think","trip","trips"], url: "https://travelsync.sub-sync.ca", label: "TravelSync" },
+      { names: ["brainsync","brain","brain sink","brainsync","brains sync","brain think","brain zinc","focus","deep work"], url: "https://brainsync.sub-sync.ca", label: "BrainSync" },
+      { names: ["seatsync","seat","seat sink","seat sync","seats inc","see sync","seed sync","desk","booking"], url: "https://seatsync.sub-sync.ca", label: "SeatSync" },
+      { names: ["photosync","photo","photo sink","photo sync","photos inc","photos ink","foto sync","picture","pictures","album"], url: "https://photosync.sub-sync.ca", label: "PhotoSync" },
+      { names: ["fluencysync","fluency","fluency sink","fluency sync","fluent sync","fluencies inc","fluency think","speech","speaking"], url: "https://fluencysync.sub-sync.ca", label: "FluencySync" },
+      { names: ["steadysync","steady","steady sink","steady sync","steadies inc","study sync","study sink","accessibility","tremor"], url: "https://steadysync.sub-sync.ca", label: "SteadySync" },
     ];
 
     const type = action.type as string;
