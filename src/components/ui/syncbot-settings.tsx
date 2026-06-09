@@ -42,9 +42,51 @@ export function loadSettings(): SyncBotSettings {
   return { ...DEFAULT_SETTINGS };
 }
 
-export function saveSettings(s: SyncBotSettings): void {
+export async function fetchAndSyncApiKey(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const token = localStorage.getItem("subsync_token");
+    if (!token) return null;
+
+    const res = await fetch("/api/syncbot/key", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.key || null;
+  } catch (err) {
+    console.warn("[SyncBot] Failed to fetch API key from backend:", err);
+    return null;
+  }
+}
+
+export async function saveSettings(s: SyncBotSettings): Promise<void> {
   localStorage.setItem("syncbot_settings", JSON.stringify(s));
   localStorage.setItem("syncbot_speed", String(s.voiceSpeed));
+
+  // Sync API key to backend for cross-window persistence
+  if (s.groqApiKey) {
+    try {
+      const token = localStorage.getItem("subsync_token");
+      if (token) {
+        await fetch("/api/syncbot/key", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({ key: s.groqApiKey }),
+        });
+      }
+    } catch (err) {
+      console.warn("[SyncBot] Failed to sync API key to backend:", err);
+    }
+  }
 }
 
 // ─── Toggle Row ───────────────────────────────────────────────────────────────
@@ -108,14 +150,17 @@ export function SyncBotSettings({ onClose }: { onClose: () => void }) {
   const [s, setS]         = useState<SyncBotSettings>(() => loadSettings());
   const [showKey, setShowKey] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const update = useCallback(<K extends keyof SyncBotSettings>(key: K, val: SyncBotSettings[K]) => {
     setS((prev) => ({ ...prev, [key]: val }));
     setSaved(false);
   }, []);
 
-  const handleSave = () => {
-    saveSettings(s);
+  const handleSave = async () => {
+    setSaving(true);
+    await saveSettings(s);
+    setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -324,13 +369,15 @@ export function SyncBotSettings({ onClose }: { onClose: () => void }) {
           </button>
           <button
             onClick={handleSave}
+            disabled={saving}
             style={{
               padding: "8px 20px", borderRadius: 10, border: "none",
-              background: "#FFD700", color: "#000", cursor: "pointer",
+              background: saving ? "rgba(255,215,0,0.6)" : "#FFD700", color: "#000", cursor: saving ? "not-allowed" : "pointer",
               fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6,
+              opacity: saving ? 0.6 : 1,
             }}
           >
-            Save <ChevronRight size={14} />
+            {saving ? "Saving…" : "Save"} <ChevronRight size={14} />
           </button>
         </div>
       </motion.div>
