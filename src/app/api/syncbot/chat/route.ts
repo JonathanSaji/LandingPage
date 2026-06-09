@@ -121,7 +121,7 @@ For apps whose dashboard tiles say "COMING SOON" (SeatSync, PhotoSync, SteadySyn
 
 ── RESPONSE STYLE ──
 - Speak naturally as if in conversation. No markdown. No bullet points. No symbols.
-- Simple answers: max 25 words.
+- Simple answers: max 45 words.
 - Data summaries with multiple items: up to 60 words. Read them all naturally.
 - Numbers as words where natural: "nine ninety-nine a month" not "9.99".
 - Dates naturally: "June twelfth" not "2026-06-12".
@@ -258,7 +258,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model:        MODEL,
         stream:       true,          // ← streaming for fast first-token latency
-        max_tokens:   180,           // longer for multi-item data reads
+        max_tokens:   300,           // longer for multi-item data reads
         temperature:  0.3,           // lower = more decisive, less rambling
         messages: [
           { role: "system", content: systemMsg },
