@@ -122,9 +122,8 @@ export default function Sidebar({
       ),
     },
     {
-      href: "javascript:void(0)",
+      href: "/settings",
       name: "Integration",
-      action: () => onOpenSettings("settings"),
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -143,9 +142,8 @@ export default function Sidebar({
       ),
     },
     {
-      href: "javascript:void(0)",
+      href: "/settings?tab=general",
       name: "Plans",
-      action: () => onOpenSettings("general"),
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -164,9 +162,8 @@ export default function Sidebar({
       ),
     },
     {
-      href: "javascript:void(0)",
+      href: "/settings?tab=general",
       name: "Transactions",
-      action: () => onOpenSettings("general"),
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -193,18 +190,17 @@ export default function Sidebar({
       icon: <HelpCircle size={18} />,
     },
     {
-      href: "javascript:void(0)",
+      href: "/settings",
       name: "Settings",
-      action: () => onOpenSettings("settings"),
       icon: <Settings size={18} />,
     },
   ];
 
   const nestedNav: MenuItem[] = [
-    { name: "Cards", href: "javascript:void(0)", action: () => onOpenSettings("general") },
-    { name: "Checkouts", href: "javascript:void(0)", action: () => onOpenSettings("general") },
-    { name: "Payments", href: "javascript:void(0)", action: () => onOpenSettings("general") },
-    { name: "Get paid", href: "javascript:void(0)", action: () => onOpenSettings("general") },
+    { name: "Cards", href: "/settings?tab=general" },
+    { name: "Checkouts", href: "/settings?tab=general" },
+    { name: "Payments", href: "/settings?tab=general" },
+    { name: "Get paid", href: "/settings?tab=general" },
   ];
 
   const profileRef = useRef<HTMLButtonElement | null>(null);
@@ -317,7 +313,7 @@ export default function Sidebar({
                             <button
                               onClick={() => {
                                 setIsProfileActive(false);
-                                onOpenSettings("general");
+                                router.push("/settings?tab=general");
                               }}
                               className="w-full text-left block p-2 rounded-lg hover:bg-white/5 active:bg-white/10 duration-150 font-medium text-white/80 hover:text-white cursor-pointer"
                               role="menuitem"
@@ -328,7 +324,7 @@ export default function Sidebar({
                             <button
                               onClick={() => {
                                 setIsProfileActive(false);
-                                onOpenSettings("settings");
+                                router.push("/settings");
                               }}
                               className="w-full text-left block p-2 rounded-lg hover:bg-white/5 active:bg-white/10 duration-150 font-medium text-white/80 hover:text-white cursor-pointer"
                               role="menuitem"

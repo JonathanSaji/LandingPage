@@ -16,14 +16,13 @@ declare global {
 }
 
 import { useEffect, useState, useRef, useCallback, forwardRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users, Clock } from "lucide-react";
 import Sidebar from "@/components/ui/sidebar-with-submenu";
-import { SettingsPopup } from "@/components/ui/settings-popup";
-import { createPortal } from "react-dom";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -2067,10 +2066,6 @@ export default function DashboardPage() {
   const [seatMembership, setSeatMembership] = useState<SeatSyncMembership | null>(null);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [settingsPopup, setSettingsPopup] = useState<{ open: boolean; tab: "settings" | "general" | "dashboard" }>({
-    open: false,
-    tab: "settings",
-  });
   // Layout state
   const [tiles, setTiles] = useState<AppTile[]>(() => {
     const saved = loadLayout();
@@ -2078,6 +2073,16 @@ export default function DashboardPage() {
   });
   const [isEditingLayout, setIsEditingLayout] = useState(false);
   const [editTiles, setEditTiles] = useState<AppTile[]>([]);
+
+  // Check for edit mode flag from settings page
+  useEffect(() => {
+    const editModeFlag = localStorage.getItem("dashboard_edit_mode");
+    if (editModeFlag === "true") {
+      setIsEditingLayout(true);
+      setEditTiles(tiles);
+      localStorage.removeItem("dashboard_edit_mode");
+    }
+  }, [tiles]);
   // Pointer-based drag state
   const [dragState, setDragState] = useState<{
     fromIndex: number;
@@ -2685,23 +2690,8 @@ export default function DashboardPage() {
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
-          onOpenSettings={(tab) => {
-            setSettingsPopup({ open: true, tab });
-            setIsSidebarOpen(false);
-          }}
+          onOpenSettings={() => {}}
         />
-
-        {/* Settings Popup Modal */}
-        <AnimatePresence>
-          {settingsPopup.open && (
-            <SettingsPopup
-              initialTab={settingsPopup.tab}
-              onClose={() => setSettingsPopup({ open: false, tab: "settings" })}
-              onEnterEditMode={enterEditMode}
-              onResetLayout={resetLayout}
-            />
-          )}
-        </AnimatePresence>
 
         {/* Edit Mode Floating Control Bar */}
         <AnimatePresence>
