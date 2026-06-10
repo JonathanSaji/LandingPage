@@ -373,6 +373,7 @@ export function SyncBotVoiceControl() {
   // ── Register wake-word handler ───────────────────────────────────────────────
   useEffect(() => {
     setOnWakeWord(() => {
+      setChat([]);
       const { name } = getUserInfo();
       const greeting = `Online, ${name}. What can I do for you?`;
       addMsg("bot", greeting);
