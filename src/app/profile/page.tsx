@@ -387,8 +387,16 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: EASE, delay: 0.1 * 2 }}
-                    className="rounded-3xl border border-white/[0.06] bg-white/[0.02] p-6"
+                    className="rounded-3xl border border-white/[0.06] bg-white/[0.02] p-6 relative"
                   >
+                    {/* Under Development Overlay */}
+                    <div className="absolute inset-0 rounded-3xl flex items-center justify-center z-10" style={{ background: "rgba(255, 215, 0, 0.15)", backdropFilter: "blur(2px)" }}>
+                      <div className="text-center">
+                        <p className="font-heading font-bold text-lg" style={{ color: "#FFD700" }}>Under Development</p>
+                        <p className="font-body text-sm text-white/60 mt-1">Coming soon</p>
+                      </div>
+                    </div>
+
                     <div className="flex items-center gap-2 mb-2">
                       <Users size={20} style={{ color: "#FFD700" }} />
                       <h3 className="font-heading font-bold text-lg text-white">Sync with People</h3>
