@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Key, Navigation, AppWindow, Database, ScrollText, LogOut, Clock, MousePointer, Bot, Eye, EyeOff, Sun, Moon, Trash2, Layout, RefreshCw, AlertTriangle, ArrowLeft, Settings as SettingsIcon } from "lucide-react";
@@ -56,15 +56,18 @@ function Toggle({
   );
 }
 
-export default function SettingsPage() {
+// Inner Content Component to safely use useSearchParams()
+function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"settings" | "general" | "dashboard">("settings");
+  const [activeTab, setActiveTab] = useState<"settings" | "general" | "dashboard" | "">("");
 
   useEffect(() => {
     const tab = searchParams.get("tab") as "settings" | "general" | "dashboard" | null;
     if (tab && ["settings", "general", "dashboard"].includes(tab)) {
       setActiveTab(tab);
+    } else {
+      setActiveTab("settings"); // Fallback default
     }
   }, [searchParams]);
   
@@ -489,7 +492,6 @@ export default function SettingsPage() {
                 <div className="p-6">
                   <button
                     onClick={() => {
-                      // Reset layout logic would go here
                       alert("Layout reset functionality would be implemented here");
                     }}
                     className="w-full flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/8 border border-white/10 hover:border-white/15 rounded-xl text-sm font-semibold text-white/80 transition cursor-pointer"
@@ -503,5 +505,23 @@ export default function SettingsPage() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+// Default export wrapper that shields the page using <Suspense>
+export default function SettingsPage() {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-screen bg-[#0C0C0E] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#FFD700]/20 border-t-[#FFD700] animate-spin" />
+            <p className="text-xs text-white/40 font-semibold tracking-wide">Loading settings...</p>
+          </div>
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
   );
 }
