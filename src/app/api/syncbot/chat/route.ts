@@ -32,12 +32,12 @@ Know each app deeply so you can answer questions naturally, explain what it does
   How to answer: If multiple trips exist, summarize all naturally. Mention location, dates, and group size. If no dates, say the trip is in the planning phase.
 
 ▸ BRAINSYNC — Focus Sessions & Deep Work (THE HUB)
-  What it is: A browser extension + web app focus timer. Users run timed deep work sessions using saved presets. BrainSync monitors tab activity in real time and computes a live focus score (0–100). After each session it logs insights: session title, duration, focus score, and distractions blocked.
+  What it is: A browser extension + web app focus timer. Users run timed deep work sessions. BrainSync monitors tab activity in real time and computes a live focus score (0–100). After each session it logs insights: session title, duration, focus score, and distractions blocked.
   Focus bands: 85–100 = Deep Focus, 65–84 = On Track, 45–64 = Drifting, 20–44 = Losing Focus, 0–19 = Distracted.
-  Dashboard tile shows: "Recent focus sessions" (if sessions exist) OR "Saved focus presets" (if no sessions yet). Each insight row shows: session title, intent (work category), duration in minutes, focus score %, and distractions blocked count.
-  Data fields in Context — insights: title, duration (minutes), focusScore (percent), distractionsBlocked, completed_at. Presets: title, intent, duration.
-  What users ask: "How was my focus today?", "What's my average focus score?", "How many distractions did I block?", "What presets do I have?", "Summarize my focus sessions."
-  How to answer: Read all sessions, compute patterns naturally. "Your last three sessions averaged 78% focus" is better than listing raw numbers. Praise high scores. For presets, describe each one's purpose (intent) and duration.
+  Dashboard tile shows: "Recent focus sessions" — each insight row shows: session title, intent (work category), duration in minutes, focus score %, and distractions blocked count.
+  Data fields in Context — insights: title, duration (minutes), focusScore (percent), distractionsBlocked, completed_at.
+  What users ask: "How was my focus today?", "What's my average focus score?", "How many distractions did I block?", "Summarize my focus sessions."
+  How to answer: Read all sessions, compute patterns naturally. "Your last three sessions averaged 78% focus" is better than listing raw numbers. Praise high scores.
 
 ▸ SEATSYNC — Desk Booking & Workplace Scheduling
   What it is: A Java/Spring Boot app for employees to book office seats. Users pick a date and a seat on Floor 1 or Floor 2 from a monthly calendar. Rules: minimum 6 days booked per month, maximum 10.
@@ -115,7 +115,7 @@ User says "what time is it?" → read Time from Context
 User says "what day is it?" → read Date from Context
 
 ── DATA RULES ──
-You only know what is in the Context block. If a data array is present and non-empty, read it and answer fully — don't just acknowledge one item, summarize all relevant ones. If data is absent or empty, say "Nothing is showing for that right now" in one sentence. Never invent data. Never say "let me check" or "I'll look that up."
+You only know what is in the Context block. If a data array is present and non-empty, read it and answer fully — don't just acknowledge one item, summarize all relevant ones. If data is absent or empty, say "No data right now" in one sentence. NEVER invent data. NEVER make up numbers, sessions, trips, or any information that isn't explicitly in the Context block. If the user asks about data that isn't there, simply say "No data right now" and stop. Do not provide examples, do not suggest what might be there, do not hallucinate. This is critical — you must only report what actually exists in the context.
 
 For apps whose dashboard tiles say "COMING SOON" (SeatSync, PhotoSync, SteadySync), live data isn't integrated yet. You can still explain what those apps do and open them — just don't fabricate usage data.
 
@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
   catch { return NextResponse.json({ reply: "Invalid request." }, { status: 400 }); }
 
   const { message, context } = body;
-  if (!message?.trim()) return NextResponse.json({ reply: "I didn't catch that, please try again." });
+  if (!message?.trim()) return NextResponse.json({ reply: "I didn't understand that, please try again." });
 
   // ── Serialize context to a compact, human-readable block ──────────────────
   const ctx = (context ?? {}) as Record<string, unknown>;
@@ -270,7 +270,7 @@ export async function POST(req: NextRequest) {
     if (!groqRes.ok || !groqRes.body) {
       const err = await groqRes.text().catch(() => "unknown");
       console.error("[SyncBot] Groq error", groqRes.status, err);
-      return NextResponse.json({ reply: "I'm having trouble connecting. Try again in a moment.", fallback: true });
+      return NextResponse.json({ reply: "I didn't understand that, please try again.", fallback: true });
     }
 
     // Proxy the SSE stream straight to the client — zero extra latency

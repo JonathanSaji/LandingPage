@@ -391,7 +391,7 @@ export function SyncBotVoiceControl() {
     return cleaned.trim();
   }, []);
 
-  // ── Register command handler — everything goes to AI ─────────────────────────
+  // ── Register command handler — local commands first, then AI ─────────────────
   useEffect(() => {
     setOnCommand(async (cmd: string) => {
       // Deduplication guard
@@ -404,6 +404,60 @@ export function SyncBotVoiceControl() {
 
       addMsg("user", cmd);
 
+      const lowerCmd = cmd.toLowerCase().trim();
+
+      // Local command detection - execute these without AI
+      const APPS = [
+        { names: ["trackersync","tracker","track","tracker sink","track a sync","trackers ink","tracker think","trackers inc","finance","subscription","subs"], url: "https://trackersync.sub-sync.ca", label: "TrackerSync" },
+        { names: ["travelsync","travel","travel sink","travel sync","travels inc","travels ink","travels think","trip","trips"], url: "https://travelsync.sub-sync.ca", label: "TravelSync" },
+        { names: ["brainsync","brain","brain sink","brainsync","brains sync","brain think","brain zinc","focus","deep work"], url: "https://brainsync.sub-sync.ca", label: "BrainSync" },
+        { names: ["seatsync","seat","seat sink","seat sync","seats inc","see sync","seed sync","desk","booking"], url: "https://seatsync.sub-sync.ca", label: "SeatSync" },
+        { names: ["photosync","photo","photo sink","photo sync","photos inc","photos ink","foto sync","picture","pictures","album"], url: "https://photosync.sub-sync.ca", label: "PhotoSync" },
+        { names: ["fluencysync","fluency","fluency sink","fluency sync","fluent sync","fluencies inc","fluency think","speech","speaking"], url: "https://fluencysync.sub-sync.ca", label: "FluencySync" },
+        { names: ["steadysync","steady","steady sink","steady sync","steadies inc","study sync","study sink","accessibility","tremor"], url: "https://steadysync.sub-sync.ca", label: "SteadySync" },
+      ];
+
+      // Check for "Open [App Name]" command
+      if (lowerCmd.startsWith("open ") && settings.allowOpenApps) {
+        const appName = lowerCmd.replace("open ", "").trim();
+        const app = APPS.find((a) => a.names.some((n) => appName.includes(n) || n.includes(appName)));
+        if (app) {
+          window.open(app.url, "_blank");
+          const reply = `Opening ${app.label}.`;
+          speak(reply);
+          addMsg("bot", reply);
+          return;
+        }
+      }
+
+      // Check for "Open Settings" command
+      if ((lowerCmd.includes("open settings") || lowerCmd.includes("settings")) && settings.allowNavigation) {
+        router.push("/settings");
+        const reply = "Opening settings.";
+        speak(reply);
+        addMsg("bot", reply);
+        return;
+      }
+
+      // Check for "Take Home" or similar navigation commands
+      if ((lowerCmd.includes("home") || lowerCmd.includes("take me home") || lowerCmd === "home") && settings.allowNavigation) {
+        router.push("/");
+        const reply = "Taking you home.";
+        speak(reply);
+        addMsg("bot", reply);
+        return;
+      }
+
+      // Check for "Take me to my dashboard" or similar
+      if ((lowerCmd.includes("dashboard") || lowerCmd.includes("take me to dashboard") || lowerCmd.includes("go to dashboard")) && settings.allowNavigation) {
+        router.push("/dashboard");
+        const reply = "Taking you to your dashboard.";
+        speak(reply);
+        addMsg("bot", reply);
+        return;
+      }
+
+      // If not a local command, send to AI
       if (!settings.allowAI) {
         const reply = "AI is disabled. Enable it in settings to use SyncBot.";
         speak(reply);
@@ -433,12 +487,12 @@ export function SyncBotVoiceControl() {
         console.error("[SyncBot] askAI error:", err);
         setIsThinking(false);
         thinkRef.current = false;
-        const retryMsg = "I didn't catch that. Could you say it again?";
+        const retryMsg = "I didn't understand that, please try again.";
         speak(retryMsg);
         updateMsg(botMsgId, retryMsg);
       }
     });
-  }, [setOnCommand, askAI, executeAction, speak, addMsg, updateMsg, settings.allowAI, cleanStreamingText]);
+  }, [setOnCommand, askAI, executeAction, speak, addMsg, updateMsg, settings.allowAI, settings.allowOpenApps, settings.allowNavigation, cleanStreamingText]);
 
   // ── Click pill handler ───────────────────────────────────────────────────────
   const handleClick = useCallback(() => {
