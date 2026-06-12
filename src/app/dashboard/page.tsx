@@ -310,6 +310,14 @@ interface SteadySyncSettings {
   updated_at: string;
 }
 
+interface PhotoSyncPhoto {
+  id: string;
+  storage_url: string;
+  taken_at: string | null;
+  uploaded_at: string;
+  album_name: string;
+}
+
 const STEADY_SETTING_LABELS: { key: keyof Omit<SteadySyncSettings, "id" | "updated_at">; label: string }[] = [
   { key: "steady_mouse", label: "Steady Mouse" },
   { key: "hitbox_enabled", label: "Hitbox" },
@@ -361,6 +369,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   insights?: BrainInsight[];
   fluencySessions?: FluencySession[];
   steadySettings?: SteadySyncSettings | null;
+  photoSyncPhotos?: PhotoSyncPhoto[];
   seatMembership?: SeatSyncMembership | null;
   loading?: boolean;
   isEditMode?: boolean;
@@ -379,6 +388,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   fluencySessions = [],
   steadySettings = null,
   seatMembership = null,
+  photoSyncPhotos = [],
   loading = false,
   isEditMode = false,
   isBeingDragged = false,
@@ -1178,6 +1188,76 @@ const BentoCard = forwardRef<HTMLDivElement, {
                 <ArrowUpRight size={10} />
               </motion.div>
             </div>
+          ) : tile.name === "PhotoSync" ? (
+            <div className="mt-3 flex min-h-0 flex-1 flex-col justify-between">
+              <p
+                className="font-body font-bold uppercase"
+                style={{
+                  fontSize: "10px",
+                  letterSpacing: "0.12em",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  marginBottom: "6px",
+                }}
+              >
+                Recent memories
+              </p>
+
+              {loading ? (
+                <div className="flex flex-1 items-center justify-center py-4">
+                  <div
+                    style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "50%",
+                      border: `2px solid ${tile.accent}26`,
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : photoSyncPhotos.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
+                  <p className="font-body text-center text-[11px] text-white/40">No photos yet.</p>
+                  <p className="font-body text-center text-[10px] text-white/20 mt-1">Ready to capture your first memory.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-1.5 min-h-0 flex-1">
+                    {photoSyncPhotos.slice(0, 3).map((photo) => (
+                      <div
+                        key={photo.id}
+                        className="relative overflow-hidden rounded-lg"
+                        style={{
+                          aspectRatio: "1",
+                          border: `1px solid ${tile.accent}20`,
+                          background: `${tile.accent}0D`,
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={photo.storage_url}
+                          alt={photo.album_name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="font-body text-[10px] text-white/40 mt-2 text-center truncate">
+                    {photoSyncPhotos.length} recent photos · {photoSyncPhotos[0].album_name}
+                  </p>
+                </>
+              )}
+
+              <motion.div
+                className="pointer-events-none absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1 font-body"
+                style={{ color: "rgba(255,255,255,0.25)", fontSize: "10px" }}
+                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 4 }}
+                transition={{ duration: 0.25, ease: EASE }}
+              >
+                <span>Tap to preview</span>
+                <ArrowUpRight size={10} />
+              </motion.div>
+            </div>
           ) : (
             <>
               <div
@@ -1270,6 +1350,7 @@ function ExpandedTile({
   fluencySessions = [],
   steadySettings = null,
   seatMembership = null,
+  photoSyncPhotos = [],
   loading = false,
 }: {
   tile: AppTile;
@@ -1280,6 +1361,7 @@ function ExpandedTile({
   insights?: BrainInsight[];
   fluencySessions?: FluencySession[];
   steadySettings?: SteadySyncSettings | null;
+  photoSyncPhotos?: PhotoSyncPhoto[];
   seatMembership?: SeatSyncMembership | null;
   loading?: boolean;
 }) {
@@ -1979,6 +2061,67 @@ function ExpandedTile({
                 </motion.article>
               )}
             </div>
+          ) : tile.name === "PhotoSync" ? (
+            <div className="space-y-3 mb-8">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div
+                    style={{
+                      width: "24px",
+                      height: "24px",
+                      borderRadius: "50%",
+                      border: `2px solid ${tile.accent}1F`,
+                      borderTopColor: tile.accent,
+                      animation: "sb-spin 0.8s linear infinite",
+                    }}
+                  />
+                </div>
+              ) : photoSyncPhotos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No photos in PhotoSync yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-2">
+                  {photoSyncPhotos.map((photo, i) => (
+                    <motion.div
+                      key={photo.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.03, ease: EASE }}
+                      className="relative overflow-hidden rounded-xl"
+                      style={{
+                        aspectRatio: "1",
+                        border: `1px solid ${tile.accent}20`,
+                        background: `${tile.accent}0D`,
+                      }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo.storage_url}
+                        alt={photo.album_name}
+                        className="h-full w-full object-cover"
+                      />
+                      <div
+                        className="absolute bottom-0 left-0 right-0 px-1.5 py-1"
+                        style={{
+                          background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)",
+                        }}
+                      >
+                        <p className="font-body text-[9px] text-white/60 truncate">{photo.album_name}</p>
+                        <p className="font-body text-[8px] text-white/40 truncate">
+                          {new Date(photo.taken_at ?? photo.uploaded_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed border-white/10 rounded-2xl bg-white/[0.01] mb-8">
               <span className="font-body text-xs text-white/40 font-semibold uppercase tracking-wider">
@@ -2005,7 +2148,7 @@ function ExpandedTile({
                 letterSpacing: "0.12em",
               }}
             >
-              {tile.name === "TrackerSync" || tile.name === "TravelSync" || tile.name === "FluencySync" || tile.name === "SteadySync" || tile.name === "SeatSync"
+              {tile.name === "TrackerSync" || tile.name === "TravelSync" || tile.name === "FluencySync" || tile.name === "SteadySync" || tile.name === "SeatSync" || tile.name === "PhotoSync"
                 ? "Ecosystem Live — Syncing Data"
                 : "Launching Soon — Stay Tuned"}
             </span>
@@ -2029,6 +2172,7 @@ export default function DashboardPage() {
   const [insights, setInsights] = useState<BrainInsight[]>([]);
   const [fluencySessions, setFluencySessions] = useState<FluencySession[]>([]);
   const [steadySettings, setSteadySettings] = useState<SteadySyncSettings | null>(null);
+  const [photoSyncPhotos, setPhotoSyncPhotos] = useState<PhotoSyncPhoto[]>([]);
   const [seatMembership, setSeatMembership] = useState<SeatSyncMembership | null>(null);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -2288,8 +2432,9 @@ export default function DashboardPage() {
         fetch(`/api/fluencysync?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/steadysync?userId=${accountId}`).then((res) => res.json()),
         fetch(`/api/seatsync?userId=${accountId}`).then((res) => res.json()),
+        fetch(`/api/photosync?userId=${accountId}`).then((res) => res.json()),
       ])
-        .then(([subsData, tripsData, brainData, fluencyData, steadyData, seatData]) => {
+        .then(([subsData, tripsData, brainData, fluencyData, steadyData, seatData, photoData]) => {
           if (subsData.ok && Array.isArray(subsData.subscriptions)) {
             setSubscriptions(subsData.subscriptions);
           }
@@ -2314,6 +2459,9 @@ export default function DashboardPage() {
             setSeatMembership(seatData.membership);
           } else {
             setSeatMembership(null);
+          }
+          if (photoData.ok && Array.isArray(photoData.photos)) {
+            setPhotoSyncPhotos(photoData.photos);
           }
         })
         .catch((err) => console.error("Error fetching dashboard data:", err))
@@ -2547,6 +2695,7 @@ export default function DashboardPage() {
                   fluencySessions={fluencySessions}
                   steadySettings={steadySettings}
                   seatMembership={seatMembership}
+                  photoSyncPhotos={photoSyncPhotos}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}
                   isBeingDragged={isDragging}
@@ -2647,6 +2796,7 @@ export default function DashboardPage() {
               fluencySessions={fluencySessions}
               steadySettings={steadySettings}
               seatMembership={seatMembership}
+              photoSyncPhotos={photoSyncPhotos}
               loading={loadingSubs}
             />
           )}
