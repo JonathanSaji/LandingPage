@@ -11,7 +11,7 @@ const PRODUCTS = [
     title: "TrackerSync",
     category: "Finance",
     description: "Your financial engine. Track every dollar, spot every pattern.",
-    color: "#FFD700",
+    color: "#CCFF00",
     logoSrc: "/logos/TrackerSync.png",
   },
   {

@@ -12,7 +12,7 @@ const CONNECTIONS = [
   {
     id: 1,
     topApp: { name: "TravelSync", color: "#F2994A", logoSrc: "/logos/TravelSync.png" as string | null },
-    bottomApp: { name: "TrackerSync", color: "#FFD700", logoSrc: "/logos/TrackerSync.png" as string | null },
+    bottomApp: { name: "TrackerSync", color: "#CCFF00", logoSrc: "/logos/TrackerSync.png" as string | null },
     title: "Trip coming up? Your finances already know.",
     description:
       "TravelSync shares your upcoming trip with TrackerSync, which surfaces active subscriptions and payments during your travel window — nothing slips through while you're away.",
@@ -21,13 +21,13 @@ const CONNECTIONS = [
   },
   {
     id: 2,
-    topApp: { name: "SeatSync", color: "#39FF14", logoSrc: "/logos/SeatSync.png" as string | null },
-    bottomApp: { name: "TrackerSync", color: "#FFD700", logoSrc: "/logos/TrackerSync.png" as string | null },
-    title: "One company account. Every subscription, tracked.",
+    topApp: { name: "TravelSync", color: "#F2994A", logoSrc: "/logos/TravelSync.png" as string | null },
+    bottomApp: { name: "PhotoSync", color: "#A855F7", logoSrc: "/logos/PhotoSync.png" as string | null },
+    title: "Complete Your Trip, Enjoy The Memories",
     description:
-      "Companies set up their workspace in SeatSync and link it to TrackerSync — giving a live view of app subscriptions, per-employee costs, and renewal dates all in one place.",
-    borderColor: "#39FF1422",
-    glowColor: "rgba(57, 255, 20, 0.04)",
+      "Once you have completed your trip, upload your photos to an album in PhotoSync and cherish your memories on the TravelSync website!",
+    borderColor: "#A855F722",
+    glowColor: "rgba(168, 85, 247, 0.04)",
   },
 ] as const;
 

@@ -25,7 +25,7 @@ const APPS = [
   {
     id: 1,
     title: "TrackerSync",
-    color: "#FFD700",
+    color: "#CCFF00",
     logoSrc: "/logos/TrackerSync.png",
     date: "Finance",
     content: "Your financial engine. Track every dollar, spot every pattern.",
