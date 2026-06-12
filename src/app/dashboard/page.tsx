@@ -1151,14 +1151,14 @@ const BentoCard = forwardRef<HTMLDivElement, {
                         style={{
                           padding: isTall ? "10px 8px" : "8px 6px",
                           background: `${tile.accent}06`,
-                          border: `1px solid ${enabled ? tile.accent : "rgba(255,255,255,0.08)"}30`,
-                          boxShadow: enabled ? `inset 0 1px 0 ${tile.accent}12` : undefined,
+                          border: `1px solid ${enabled ? "#3B82F6" : "rgba(255,255,255,0.08)"}30`,
+                          boxShadow: enabled ? `inset 0 1px 0 #3B82F612` : undefined,
                         }}
                       >
                         <p className="font-body text-[9px] uppercase tracking-wide text-white/35">{label}</p>
                         <p
                           className="mt-1 font-body text-xs font-bold"
-                          style={{ color: enabled ? tile.accent : "rgba(255,255,255,0.35)" }}
+                          style={{ color: enabled ? "#3B82F6" : "rgba(255,255,255,0.35)" }}
                         >
                           {enabled ? "On" : "Off"}
                         </p>
@@ -1962,13 +1962,13 @@ function ExpandedTile({
                           className="flex items-center justify-between rounded-xl p-3"
                           style={{
                             background: `${tile.accent}05`,
-                            border: `1px solid ${enabled ? tile.accent : "rgba(255,255,255,0.08)"}24`,
+                            border: `1px solid ${enabled ? "#3B82F6" : "rgba(255,255,255,0.08)"}24`,
                           }}
                         >
                           <span className="font-body text-xs font-semibold text-white/80">{label}</span>
                           <span
                             className="font-body text-xs font-bold uppercase tracking-wide"
-                            style={{ color: enabled ? tile.accent : "rgba(255,255,255,0.35)" }}
+                            style={{ color: enabled ? "#3B82F6" : "rgba(255,255,255,0.35)" }}
                           >
                             {enabled ? "Enabled" : "Disabled"}
                           </span>
