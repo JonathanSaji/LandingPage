@@ -102,7 +102,7 @@ export default function Sidebar({
 
   const navigation: MenuItem[] = [
     {
-      href: "/dashboard",
+      href: "javascript:void(0)",
       name: "Overview",
       icon: (
         <svg
@@ -122,7 +122,7 @@ export default function Sidebar({
       ),
     },
     {
-      href: "/settings",
+      href: "javascript:void(0)",
       name: "Integration",
       icon: (
         <svg
@@ -142,7 +142,7 @@ export default function Sidebar({
       ),
     },
     {
-      href: "/settings?tab=general",
+      href: "javascript:void(0)",
       name: "Plans",
       icon: (
         <svg
@@ -162,7 +162,7 @@ export default function Sidebar({
       ),
     },
     {
-      href: "/settings?tab=general",
+      href: "javascript:void(0)",
       name: "Transactions",
       icon: (
         <svg
@@ -197,10 +197,10 @@ export default function Sidebar({
   ];
 
   const nestedNav: MenuItem[] = [
-    { name: "Cards", href: "/settings?tab=general" },
-    { name: "Checkouts", href: "/settings?tab=general" },
-    { name: "Payments", href: "/settings?tab=general" },
-    { name: "Get paid", href: "/settings?tab=general" },
+    { name: "Cards", href: "javascript:void(0)" },
+    { name: "Checkouts", href: "javascript:void(0)" },
+    { name: "Payments", href: "javascript:void(0)" },
+    { name: "Get paid", href: "javascript:void(0)" },
   ];
 
   const profileRef = useRef<HTMLButtonElement | null>(null);
