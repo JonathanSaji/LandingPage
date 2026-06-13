@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users, Clock, Building2, Key, AlertCircle } from "lucide-react";
+import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users, Clock } from "lucide-react";
 import Sidebar from "@/components/ui/sidebar-with-submenu";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -333,21 +333,21 @@ interface SeatSyncMembership {
   company_id: string | null;
   organization_name: string | null;
   role: string;
-  upcomingBookings?: Array<{ booking_date: string; floor: number; seat_id: string }>;
-  companyStats?: {
-    company_name: string;
-    total_employees: number;
-    total_admins: number;
-    pending_extension_requests: number;
-    employee_join_code: string;
-    admin_join_code: string;
-    industry?: string;
-    company_size?: string;
-    total_bookings?: number;
-    total_floors?: number;
-    total_active_desks?: number;
-    current_month_bookings?: number;
-  };
+  ownerData?: {
+    organization_name: string;
+    total_employees: string;
+    total_admins: string;
+  } | null;
+  adminData?: Array<{
+    employee_name: string;
+    current_month_bookings: string;
+    meets_minimum_criteria: boolean;
+  }> | null;
+  employeeData?: Array<{
+    booking_date: string;
+    floor_number: number;
+    seat_identifier: string;
+  }> | null;
 }
 
 function formatSessionTime(duration: number | null) {
@@ -385,7 +385,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   fluencySessions?: FluencySession[];
   steadySettings?: SteadySyncSettings | null;
   photoSyncPhotos?: PhotoSyncPhoto[];
-  seatMemberships?: SeatSyncMembership[];
+  seatMembership?: SeatSyncMembership | null;
   loading?: boolean;
   isEditMode?: boolean;
   isBeingDragged?: boolean;
@@ -402,7 +402,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   insights = [],
   fluencySessions = [],
   steadySettings = null,
-  seatMemberships = [],
+  seatMembership = null,
   photoSyncPhotos = [],
   loading = false,
   isEditMode = false,
@@ -1010,80 +1010,38 @@ const BentoCard = forwardRef<HTMLDivElement, {
                     }}
                   />
                 </div>
-              ) : seatMemberships.length === 0 ? (
+              ) : !seatMembership ? (
                 <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
                   <p className="font-body text-center text-[11px] text-white/40">No SeatSync membership found.</p>
                 </div>
               ) : (
-                seatMemberships.map((membership) => {
-                  const role = membership.role?.toUpperCase();
-                  const stats = membership.companyStats;
-                  const upcoming = membership.upcomingBookings || [];
-                  
-                  return (
-                    <div
-                      key={membership.name}
-                      className="flex min-h-0 flex-1 flex-col justify-center rounded-xl"
-                      style={{
-                        padding: isTall ? "10px 12px" : "8px 10px",
-                        background: `${tile.accent}06`,
-                        border: `1px solid ${tile.accent}30`,
-                        boxShadow: `inset 0 1px 0 ${tile.accent}12`,
-                      }}
-                    >
-                      <p
-                        className="truncate font-body font-bold text-white"
-                        style={{ fontSize: isTall || isWide ? "12px" : "11px", lineHeight: 1.2 }}
-                        title={membership.name}
-                      >
-                        {membership.name}
-                      </p>
-                      <div className="mt-2 flex flex-col gap-1.5">
-                        <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                          <Users size={11} color={tile.accent} className="shrink-0" />
-                          <span className="truncate">
-                            {role === "ADMIN" ? "Workspace Admin" :
-                             role === "OWNER" ? "Workspace Owner" :
-                             role === "EMPLOYEE" ? "Employee" :
-                             membership.role}
-                          </span>
-                        </p>
-                        {role === "EMPLOYEE" && (
-                          <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                            <Calendar size={11} color={tile.accent} className="shrink-0" />
-                            <span className="truncate">{upcoming.length} upcoming days</span>
-                          </p>
-                        )}
-                        {role === "ADMIN" && stats && (
-                          <>
-                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                              <Users size={11} color={tile.accent} className="shrink-0" />
-                              <span className="truncate">{stats.total_employees} employees</span>
-                            </p>
-                            {stats.pending_extension_requests > 0 && (
-                              <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px]" style={{ color: tile.accent }}>
-                                <AlertCircle size={11} className="shrink-0" />
-                                <span className="truncate">{stats.pending_extension_requests} pending</span>
-                              </p>
-                            )}
-                          </>
-                        )}
-                        {role === "OWNER" && stats && (
-                          <>
-                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                              <Building2 size={11} color={tile.accent} className="shrink-0" />
-                              <span className="truncate">{stats.company_name}</span>
-                            </p>
-                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                              <Users size={11} color={tile.accent} className="shrink-0" />
-                              <span className="truncate">{stats.total_employees} employees</span>
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
+                <div
+                  className="flex min-h-0 flex-1 flex-col justify-center rounded-xl"
+                  style={{
+                    padding: isTall ? "10px 12px" : "8px 10px",
+                    background: `${tile.accent}06`,
+                    border: `1px solid ${tile.accent}30`,
+                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                  }}
+                >
+                  <p
+                    className="truncate font-body font-bold text-white"
+                    style={{ fontSize: isTall || isWide ? "12px" : "11px", lineHeight: 1.2 }}
+                    title={seatMembership.name}
+                  >
+                    {seatMembership.name}
+                  </p>
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                      <Users size={11} color={tile.accent} className="shrink-0" />
+                      <span className="truncate">{seatMembership.role}</span>
+                    </p>
+                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                      <Calendar size={11} color={tile.accent} className="shrink-0" />
+                      <span className="truncate">{seatMembership.max_allowed_days} max booking days</span>
+                    </p>
+                  </div>
+                </div>
               )}
 
               <motion.div
@@ -1966,213 +1924,128 @@ function ExpandedTile({
                       width: "24px",
                       height: "24px",
                       borderRadius: "50%",
-                      border: `2px solid ${tile.accent}1F`,
+                      border: "2px solid rgba(57, 255, 20, 0.12)",
                       borderTopColor: tile.accent,
                       animation: "sb-spin 0.8s linear infinite",
                     }}
                   />
                 </div>
-              ) : seatMemberships.length === 0 ? (
+              ) : !seatMembership ? (
                 <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
-                  <p className="font-body text-xs text-white/40 text-center">No SeatSync data found.</p>
+                  <p className="font-body text-xs text-white/40 text-center">
+                    No SeatSync membership found.
+                  </p>
                 </div>
               ) : (
-                seatMemberships.map((membership) => {
-                  const role = membership.role?.toUpperCase();
-                  const stats = membership.companyStats;
-                  const upcoming = membership.upcomingBookings || [];
-
-                  if (role === "EMPLOYEE") {
-                    return (
-                      <div key={membership.name} className="space-y-3">
-                        {upcoming.length === 0 ? (
-                          <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
-                            <p className="font-body text-xs text-white/40 text-center">No upcoming bookings.</p>
-                          </div>
-                        ) : (
-                          upcoming.map((booking, i) => (
-                            <motion.article
-                              key={i}
-                              initial={{ opacity: 0, y: 10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: i * 0.05, ease: EASE }}
-                              className="overflow-hidden rounded-2xl"
-                              style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
-                            >
-                              <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
-                                <p className="font-body text-sm font-bold text-white">Upcoming Bookings</p>
-                                <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">{upcoming.length} days booked</p>
-                              </div>
-                              <div className="grid gap-2 p-3 sm:grid-cols-3">
-                                <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                                  <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                    <Calendar size={12} color={tile.accent} />
-                                    <span className="font-body text-[9px] uppercase tracking-wider">Date</span>
-                                  </div>
-                                  <p className="font-body text-xs font-semibold text-white/90">
-                                    {new Date(booking.booking_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                                  </p>
-                                </div>
-                                <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                                  <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                    <MapPin size={12} color={tile.accent} />
-                                    <span className="font-body text-[9px] uppercase tracking-wider">Floor</span>
-                                  </div>
-                                  <p className="font-body text-xs font-semibold text-white/90">Floor {booking.floor}</p>
-                                </div>
-                                <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                                  <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                    <Building2 size={12} color={tile.accent} />
-                                    <span className="font-body text-[9px] uppercase tracking-wider">Seat</span>
-                                  </div>
-                                  <p className="font-body text-xs font-semibold text-white/90">{booking.seat_id}</p>
-                                </div>
-                              </div>
-                            </motion.article>
-                          ))
-                        )}
-                      </div>
-                    );
-                  }
-
-                  if (role === "ADMIN" && stats) {
-                    return (
-                      <motion.article
-                        key={membership.name}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ ease: EASE }}
-                        className="overflow-hidden rounded-2xl"
-                        style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
-                      >
-                        <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
-                          <p className="font-body text-sm font-bold text-white">{stats.company_name}</p>
-                          <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">ADMIN</p>
+                <motion.article
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ease: EASE }}
+                  className="overflow-hidden rounded-2xl"
+                  style={{
+                    background: `${tile.accent}06`,
+                    border: `1px solid ${tile.accent}30`,
+                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                  }}
+                >
+                  <div
+                    className="px-4 py-3 flex items-center justify-between"
+                    style={{
+                      background: `linear-gradient(90deg, ${tile.accent}14, transparent)`,
+                      borderBottom: `1px solid ${tile.accent}24`,
+                    }}
+                  >
+                    <div>
+                      <p className="font-body text-sm font-bold text-white">{seatMembership.name}</p>
+                      <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">
+                        {seatMembership.display_name} • {seatMembership.role}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {seatMembership.role === "OWNER" && seatMembership.ownerData && (
+                    <div className="grid gap-2 p-3 sm:grid-cols-2">
+                      <div className="col-span-2 rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                        <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                          <MapPin size={12} color={tile.accent} />
+                          <span className="font-body text-[9px] uppercase tracking-wider">Organization Name</span>
                         </div>
-                        <div className="grid gap-2 p-3 sm:grid-cols-3">
-                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                              <Users size={12} color={tile.accent} />
-                              <span className="font-body text-[9px] uppercase tracking-wider">Employees</span>
-                            </div>
-                            <p className="font-body text-xs font-semibold text-white/90">{stats.total_employees}</p>
-                          </div>
-                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                              <Users size={12} color={tile.accent} />
-                              <span className="font-body text-[9px] uppercase tracking-wider">Admins</span>
-                            </div>
-                            <p className="font-body text-xs font-semibold text-white/90">{stats.total_admins}</p>
-                          </div>
-                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                              <AlertCircle size={12} color={tile.accent} />
-                              <span className="font-body text-[9px] uppercase tracking-wider">Pending</span>
-                            </div>
-                            <p className="font-body text-xs font-semibold" style={{ color: stats.pending_extension_requests > 0 ? tile.accent : "rgba(255,255,255,0.9)" }}>
-                              {stats.pending_extension_requests}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.article>
-                    );
-                  }
-
-                  if (role === "OWNER" && stats) {
-                    return (
-                      <div key={membership.name} className="space-y-3">
-                        <motion.article
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ ease: EASE }}
-                          className="overflow-hidden rounded-2xl"
-                          style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
-                        >
-                          <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
-                            <p className="font-body text-sm font-bold text-white">{stats.company_name}</p>
-                            <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">OWNER</p>
-                          </div>
-                          <div className="grid gap-2 p-3 sm:grid-cols-3">
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <Users size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">Employees</span>
-                              </div>
-                              <p className="font-body text-xs font-semibold text-white/90">{stats.total_employees}</p>
-                            </div>
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <Users size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">Admins</span>
-                              </div>
-                              <p className="font-body text-xs font-semibold text-white/90">{stats.total_admins}</p>
-                            </div>
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <Calendar size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">This Month</span>
-                              </div>
-                              <p className="font-body text-xs font-semibold text-white/90">{stats.current_month_bookings} bookings</p>
-                            </div>
-                          </div>
-                          <div className="grid gap-2 p-3 sm:grid-cols-3 mt-2">
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <Building2 size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">Industry</span>
-                              </div>
-                              <p className="font-body text-xs font-semibold text-white/90">{stats.industry || "—"}</p>
-                            </div>
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <Users size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">Company Size</span>
-                              </div>
-                              <p className="font-body text-xs font-semibold text-white/90">{stats.company_size || "—"}</p>
-                            </div>
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <MapPin size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">Floors</span>
-                              </div>
-                              <p className="font-body text-xs font-semibold text-white/90">{stats.total_floors} floors</p>
-                            </div>
-                          </div>
-                        </motion.article>
-                        <motion.article
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.1, ease: EASE }}
-                          className="overflow-hidden rounded-2xl"
-                          style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
-                        >
-                          <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
-                            <p className="font-body text-sm font-bold text-white">Access Codes</p>
-                            <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">Share to onboard team</p>
-                          </div>
-                          <div className="grid gap-2 p-3 sm:grid-cols-2">
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <Key size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">Employee Code</span>
-                              </div>
-                              <p className="font-body text-xs font-mono" style={{ color: tile.accent }}>{stats.employee_join_code}</p>
-                            </div>
-                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                                <Key size={12} color={tile.accent} />
-                                <span className="font-body text-[9px] uppercase tracking-wider">Admin Code</span>
-                              </div>
-                              <p className="font-body text-xs font-mono" style={{ color: tile.accent }}>{stats.admin_join_code}</p>
-                            </div>
-                          </div>
-                        </motion.article>
+                        <p className="font-body text-sm font-semibold text-white/90">
+                          {seatMembership.ownerData.organization_name}
+                        </p>
                       </div>
-                    );
-                  }
+                      <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                        <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                          <Users size={12} color={tile.accent} />
+                          <span className="font-body text-[9px] uppercase tracking-wider">Total Employees</span>
+                        </div>
+                        <p className="font-body text-xl font-bold text-white/90">{seatMembership.ownerData.total_employees}</p>
+                      </div>
+                      <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                        <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                          <Users size={12} color={tile.accent} />
+                          <span className="font-body text-[9px] uppercase tracking-wider">Total Admins</span>
+                        </div>
+                        <p className="font-body text-xl font-bold text-white/90">{seatMembership.ownerData.total_admins}</p>
+                      </div>
+                    </div>
+                  )}
 
-                  return null;
-                })
+                  {seatMembership.role === "ADMIN" && (
+                    <div className="p-3">
+                      <p className="font-body text-xs font-semibold text-white/60 mb-2 uppercase tracking-wider">Employee Bookings</p>
+                      {seatMembership.adminData && seatMembership.adminData.length > 0 ? (
+                        <div className="space-y-2">
+                          {seatMembership.adminData.map((emp, i) => (
+                            <div key={i} className="flex items-center justify-between rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <p className="font-body text-sm font-semibold text-white/90">{emp.employee_name}</p>
+                              <div className="text-right">
+                                <p className="font-body text-xs text-white/60">{emp.current_month_bookings} seats booked</p>
+                                <p className="font-body text-[10px]" style={{ color: emp.meets_minimum_criteria ? tile.accent : "#FF4444" }}>
+                                  {emp.meets_minimum_criteria ? "Criteria met" : "Criteria not met"}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="font-body text-xs text-white/40 p-4 text-center rounded-xl border border-dashed border-white/10">No employees found.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {(seatMembership.role === "EMPLOYEE" || (seatMembership.role !== "OWNER" && seatMembership.role !== "ADMIN")) && (
+                    <div className="p-3">
+                      <p className="font-body text-xs font-semibold text-white/60 mb-2 uppercase tracking-wider">Upcoming Seats</p>
+                      {seatMembership.employeeData && seatMembership.employeeData.length > 0 ? (
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                          {seatMembership.employeeData.map((booking, i) => {
+                            const date = new Date(booking.booking_date).toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' });
+                            return (
+                              <div key={i} className="flex items-center justify-between rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                                <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: `${tile.accent}15`, color: tile.accent }}>
+                                    <Calendar size={14} />
+                                  </div>
+                                  <div>
+                                    <p className="font-body text-sm font-semibold text-white/90">{date}</p>
+                                    <p className="font-body text-[10px] text-white/40 uppercase tracking-wider">Seat {booking.seat_identifier}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-body text-[10px] text-white/40 uppercase tracking-wider">Floor</p>
+                                  <p className="font-body text-sm font-semibold text-white/90">{booking.floor_number}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="font-body text-xs text-white/40 p-4 text-center rounded-xl border border-dashed border-white/10">No upcoming seats found.</p>
+                      )}
+                    </div>
+                  )}
+                </motion.article>
               )}
             </div>
           ) : tile.name === "SteadySync" ? (
@@ -2364,7 +2237,7 @@ export default function DashboardPage() {
   const [fluencySessions, setFluencySessions] = useState<FluencySession[]>([]);
   const [steadySettings, setSteadySettings] = useState<SteadySyncSettings | null>(null);
   const [photoSyncPhotos, setPhotoSyncPhotos] = useState<PhotoSyncPhoto[]>([]);
-  const [seatMemberships, setSeatMemberships] = useState<SeatSyncMembership[]>([]);
+  const [seatMembership, setSeatMembership] = useState<SeatSyncMembership | null>(null);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // Layout state
@@ -2646,10 +2519,10 @@ export default function DashboardPage() {
           } else {
             setSteadySettings(null);
           }
-          if (seatData.ok && seatData.memberships) {
-            setSeatMemberships(seatData.memberships);
+          if (seatData.ok && seatData.membership) {
+            setSeatMembership(seatData.membership);
           } else {
-            setSeatMemberships([]);
+            setSeatMembership(null);
           }
           if (photoData.ok && Array.isArray(photoData.photos)) {
             setPhotoSyncPhotos(photoData.photos);
@@ -2885,7 +2758,7 @@ export default function DashboardPage() {
                   insights={insights}
                   fluencySessions={fluencySessions}
                   steadySettings={steadySettings}
-                  seatMemberships={seatMemberships}
+                  seatMembership={seatMembership}
                   photoSyncPhotos={photoSyncPhotos}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}

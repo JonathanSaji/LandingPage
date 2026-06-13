@@ -56,7 +56,9 @@ export async function GET(request: Request) {
       [username, email, `${username}@seatsync.dev`]
     );
 
-    if (result.rows.length === 0 && displayName && displayName !== username) {
+    let membership = result.rows[0];
+
+    if (!membership && displayName && displayName !== username) {
       const fallback = await dbQuery(
         `SELECT
           email,
@@ -71,16 +73,70 @@ export async function GET(request: Request) {
          LIMIT 1`,
         [displayName]
       );
+      membership = fallback.rows[0];
+    }
 
+    if (!membership) {
       return NextResponse.json({
         ok: true,
-        membership: fallback.rows[0] ?? null,
+        membership: null,
       });
+    }
+
+    // Check if the user is the owner of the company
+    let isOwner = false;
+    if (membership.company_id) {
+      const companyRes = await dbQuery(
+        `SELECT owner_email FROM "SeatSync".companies WHERE id = $1 LIMIT 1`,
+        [membership.company_id]
+      );
+      if (companyRes.rows.length > 0 && companyRes.rows[0].owner_email === membership.email) {
+        isOwner = true;
+      }
+    }
+
+    const resolvedRole = isOwner ? 'OWNER' : membership.role;
+    membership.role = resolvedRole;
+
+    let ownerData = null;
+    let adminData = null;
+    let employeeData = null;
+
+    if (resolvedRole === 'OWNER') {
+      const orgRes = await dbQuery(
+        `SELECT company_display_name as organization_name, total_employees, total_admins
+         FROM "SeatSync".organization_stats
+         WHERE company_id = $1 LIMIT 1`,
+        [membership.company_id]
+      );
+      ownerData = orgRes.rows[0] ?? null;
+    } else if (resolvedRole === 'ADMIN') {
+      const adminRes = await dbQuery(
+        `SELECT employee_name, current_month_bookings, meets_minimum_criteria
+         FROM "SeatSync".admin_employee_details
+         WHERE company_id = $1`,
+        [membership.company_id]
+      );
+      adminData = adminRes.rows ?? [];
+    } else {
+      const empRes = await dbQuery(
+        `SELECT booking_date, floor_number, seat_identifier
+         FROM "SeatSync".employee_bookings
+         WHERE employee_email = $1 AND booking_date >= CURRENT_DATE
+         ORDER BY booking_date ASC`,
+        [membership.email]
+      );
+      employeeData = empRes.rows ?? [];
     }
 
     return NextResponse.json({
       ok: true,
-      membership: result.rows[0] ?? null,
+      membership: {
+        ...membership,
+        ownerData,
+        adminData,
+        employeeData
+      },
     });
   } catch (error) {
     console.error("Failed to fetch SeatSync membership:", error);
