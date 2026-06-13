@@ -129,7 +129,7 @@ const DEFAULT_TILES: AppTile[] = [
     name: "TravelSync",
     category: "TRAVEL",
     accent: "#F2994A",
-    logo: "/logos/TravelSync.avif",
+    logo: "/logos/TravelSync.png",
     description:
       "Every trip, perfectly synced. Itineraries, bookings, and memories flow through one intelligent timeline.",
     features: [
@@ -148,7 +148,7 @@ const DEFAULT_TILES: AppTile[] = [
     name: "BrainSync",
     category: "FOCUS",
     accent: "#FFD700",
-    logo: "/logos/BrainSync.avif",
+    logo: "/logos/BrainSync.png",
     description:
       "Focus, amplified. Deep work sessions powered by your personal rhythm and cognitive patterns.",
     features: [
@@ -167,7 +167,7 @@ const DEFAULT_TILES: AppTile[] = [
     name: "SeatSync",
     category: "SCHEDULING",
     accent: "#39FF14",
-    logo: "/logos/SeatSync.avif",
+    logo: "/logos/SeatSync.png",
     description:
       "Book your desk, your shift, your day. Workplace scheduling, simplified and intelligent.",
     features: [
@@ -186,7 +186,7 @@ const DEFAULT_TILES: AppTile[] = [
     name: "PhotoSync",
     category: "MEMORY",
     accent: "#A259FF",
-    logo: "/logos/PhotoSync.avif",
+    logo: "/logos/PhotoSync.png",
     description:
       "Memories, beautifully organized. Every photo finds its context, story, and meaning.",
     features: [
@@ -205,7 +205,7 @@ const DEFAULT_TILES: AppTile[] = [
     name: "FluencySync",
     category: "VOICE",
     accent: "#FF3C38",
-    logo: "/logos/Fluency.avif",
+    logo: "/logos/FluencySync.png",
     description:
       "Your voice, perfected. Language learning that adapts to how you actually speak and think.",
     features: [
@@ -224,7 +224,7 @@ const DEFAULT_TILES: AppTile[] = [
     name: "SteadySync",
     category: "ACCESS",
     accent: "#3A7B7B",
-    logo: "/logos/SteadySync.avif",
+    logo: "/logos/SteadySync.png",
     description:
       "Stability at the core. One account, one subscription, all seven apps unified under one roof.",
     features: [

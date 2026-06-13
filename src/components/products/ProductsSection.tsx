@@ -13,6 +13,7 @@ const PRODUCTS = [
     description: "Your financial engine. Track every dollar, spot every pattern.",
     color: "#CCFF00",
     logoSrc: "/logos/TrackerSync.png",
+    previewSrc: "/products/Tracker.png",
   },
   {
     id: 2,
@@ -21,6 +22,7 @@ const PRODUCTS = [
     description: "Every trip, perfectly synced. Itineraries, bookings, memories — one place.",
     color: "#F2994A",
     logoSrc: "/logos/TravelSync.png",
+    previewSrc: "/products/Travel.png",
   },
   {
     id: 3,
@@ -29,6 +31,7 @@ const PRODUCTS = [
     description: "Focus, amplified. Deep work sessions powered by your personal rhythm.",
     color: "#FFD700",
     logoSrc: "/logos/BrainSync.png",
+    previewSrc: "/products/Brain.png",
   },
   {
     id: 4,
@@ -37,6 +40,7 @@ const PRODUCTS = [
     description: "Book your desk, your shift, your day. Workplace time-slot scheduling, simplified.",
     color: "#39FF14",
     logoSrc: "/logos/SeatSync.png",
+    previewSrc: "/products/Seat.png",
   },
   {
     id: 5,
@@ -45,6 +49,7 @@ const PRODUCTS = [
     description: "Memories, beautifully organized. Every photo in context.",
     color: "#A259FF",
     logoSrc: "/logos/PhotoSync.png",
+    previewSrc: "/products/Photo.png",
   },
   {
     id: 6,
@@ -53,6 +58,7 @@ const PRODUCTS = [
     description: "Your voice, perfected. Language learning that feels natural.",
     color: "#FF3C38",
     logoSrc: "/logos/FluencySync.png",
+    previewSrc: "/products/Fluency.png",
   },
   {
     id: 7,
@@ -61,6 +67,7 @@ const PRODUCTS = [
     description: "Stability at the core. One account, one subscription, all seven apps.",
     color: "#3A7B7B",
     logoSrc: "/logos/SteadySync.png",
+    previewSrc: "/products/Steady.png",
   },
 ] as const;
 
@@ -152,6 +159,7 @@ export function ProductsSection() {
                 description={product.description}
                 color={product.color}
                 logoSrc={product.logoSrc}
+                previewSrc={product.previewSrc}
                 pos={shortestPos(i, active)}
                 reduceMotion={!!reduceMotion}
                 onClick={() => goTo(i)}

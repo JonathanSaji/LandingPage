@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
+import { UnifiedConnection } from "./UnifiedConnection";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -35,7 +36,7 @@ export function EcosystemSection() {
   return (
     <section
       id="ecosystem"
-      className="relative pt-14 pb-20 bg-black overflow-hidden"
+      className="relative pt-14 pb-10 bg-black overflow-hidden"
       aria-labelledby="ecosystem-heading"
     >
       {/* Ambient background glow */}
@@ -176,6 +177,9 @@ export function EcosystemSection() {
             </motion.article>
           ))}
         </div>
+
+        {/* Keystone connection — the SubSync mark with every app unified */}
+        <UnifiedConnection />
       </div>
     </section>
   );

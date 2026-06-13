@@ -27,7 +27,7 @@ export function CTASection() {
   return (
     <section
       id="get-started"
-      className="relative py-32 bg-black overflow-hidden"
+      className="relative pt-16 pb-32 bg-black overflow-hidden"
       aria-labelledby="cta-heading"
     >
       {/* Ambient glow */}

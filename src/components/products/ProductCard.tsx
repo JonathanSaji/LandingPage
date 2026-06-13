@@ -9,6 +9,7 @@ interface ProductCardProps {
   description: string;
   color: string;
   logoSrc: string;
+  previewSrc: string;
   pos: number;          // position relative to active: 0=center, ±1, ±2
   reduceMotion: boolean;
   onClick: () => void;
@@ -27,6 +28,7 @@ export function ProductCard({
   description,
   color,
   logoSrc,
+  previewSrc,
   pos,
   reduceMotion,
   onClick,
@@ -84,6 +86,23 @@ export function ProductCard({
               "#0A0A0A",
             ].join(", "),
           }}
+          aria-hidden
+        />
+
+        {/* Preview screenshot — fills the card face, sits above the base gradient */}
+        <Image
+          src={previewSrc}
+          alt={`${title} app preview`}
+          fill
+          sizes="580px"
+          className="object-cover"
+          priority={pos === 0}
+        />
+
+        {/* Subtle dark veil so the bottom text bar always reads cleanly */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 45%)" }}
           aria-hidden
         />
 
