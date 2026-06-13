@@ -197,6 +197,24 @@ export async function createAccount(input: {
   const verificationToken = crypto.randomBytes(32).toString("hex");
   const tokenExpiresAt = new Date(Date.now() + 3600000); // 1 hour from now
 
+  // Delete any existing unverified account with the same username or email if its token has expired
+  const existingConflicting = await dbQuery<AccountRow>(
+    `
+      SELECT id, email_verified, token_expires_at
+      FROM accounts
+      WHERE LOWER(username) = $1 OR LOWER(email) = $2
+      LIMIT 1
+    `,
+    [sanitized.username.toLowerCase(), sanitized.email.toLowerCase()]
+  );
+
+  if (existingConflicting.rows.length > 0) {
+    const existing = existingConflicting.rows[0];
+    if (!existing.email_verified && existing.token_expires_at && new Date(existing.token_expires_at) <= new Date()) {
+      await dbQuery("DELETE FROM accounts WHERE id = $1", [existing.id]);
+    }
+  }
+
   try {
     const result = await dbQuery<PublicAccount>(
       `
@@ -326,6 +344,7 @@ export async function markWelcomeEmailSent(accountId: number) {
 export async function verifyAccountEmail(token: string) {
   await ensureAuthSchema();
 
+  // Look up by token without expiration check first to distinguish between invalid and expired
   const result = await dbQuery<AccountRow>(
     `
       SELECT
@@ -341,9 +360,10 @@ export async function verifyAccountEmail(token: string) {
         is_active,
         email_verified,
         welcome_email_sent_at,
-        created_at
+        created_at,
+        token_expires_at
       FROM accounts
-      WHERE verification_token = $1 AND token_expires_at > NOW()
+      WHERE verification_token = $1
       LIMIT 1
     `,
     [token],
@@ -352,7 +372,13 @@ export async function verifyAccountEmail(token: string) {
   const account = result.rows[0];
 
   if (!account) {
-    throw new AuthInputError("Invalid or expired verification token.");
+    throw new AuthInputError("Invalid verification token.");
+  }
+
+  if (account.token_expires_at && new Date(account.token_expires_at) <= new Date()) {
+    // Delete the unverified account since the token has expired
+    await dbQuery("DELETE FROM accounts WHERE id = $1", [account.id]);
+    throw new AuthInputError("Verification token has expired. Your registration has been deleted. Please register again.");
   }
 
   const updateResult = await dbQuery<AccountRow>(
