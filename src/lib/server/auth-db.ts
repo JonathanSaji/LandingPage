@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { dbQuery } from "@/lib/server/db";
 import { hashPassword, verifyPassword } from "@/lib/server/password";
 
@@ -18,6 +19,8 @@ type AccountRow = {
   email_verified: boolean;
   welcome_email_sent_at: string | null;
   created_at: string;
+  verification_token: string | null;
+  token_expires_at: string | null;
 };
 
 export type PublicAccount = Omit<AccountRow, "password_hash">;
@@ -28,6 +31,10 @@ export class AuthInputError extends Error {
 
 export class AuthConflictError extends Error {
   status = 409;
+}
+
+export class AuthUnverifiedError extends AuthInputError {
+  status = 403;
 }
 
 let schemaReadyPromise: Promise<void> | null = null;
@@ -53,6 +60,8 @@ async function ensureAuthSchema() {
         email_verified BOOLEAN NOT NULL DEFAULT FALSE,
         welcome_email_sent_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        verification_token TEXT,
+        token_expires_at TIMESTAMPTZ,
         CHECK (char_length(username) >= 3),
         CHECK (position('@' in email) > 1),
         CHECK (role IN ('user', 'ceo', 'employee')),
@@ -89,6 +98,15 @@ async function ensureAuthSchema() {
     );
     await dbQuery(
       "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()",
+    );
+    await dbQuery(
+      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS verification_token TEXT",
+    );
+    await dbQuery(
+      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS token_expires_at TIMESTAMPTZ",
+    );
+    await dbQuery(
+      "ALTER TABLE accounts ALTER COLUMN token_expires_at TYPE TIMESTAMPTZ",
     );
 
     await dbQuery(
@@ -166,7 +184,7 @@ export async function createAccount(input: {
   accountType?: AccountType;
   businessRole?: BusinessRole;
   organizationName?: string;
-}) {
+}): Promise<{ account: PublicAccount; verificationToken: string }> {
   await ensureAuthSchema();
 
   const sanitized = sanitizeRegisterInput(input);
@@ -175,6 +193,9 @@ export async function createAccount(input: {
     sanitized.accountType === "business" && sanitized.businessRole
       ? sanitized.businessRole
       : "user";
+
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+  const tokenExpiresAt = new Date(Date.now() + 3600000); // 1 hour from now
 
   try {
     const result = await dbQuery<PublicAccount>(
@@ -187,9 +208,11 @@ export async function createAccount(input: {
           role,
           account_type,
           business_role,
-          organization_name
+          organization_name,
+          verification_token,
+          token_expires_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING
           id,
           username,
@@ -213,10 +236,12 @@ export async function createAccount(input: {
         sanitized.accountType,
         sanitized.businessRole,
         sanitized.organizationName,
+        verificationToken,
+        tokenExpiresAt,
       ],
     );
 
-    return result.rows[0];
+    return { account: result.rows[0], verificationToken };
   } catch (error) {
     const pgCode = (error as { code?: string }).code;
     if (pgCode === "23505") {
@@ -275,6 +300,10 @@ export async function loginWithPassword(input: {
     throw new AuthInputError("Invalid username/email or password.");
   }
 
+  if (!account.email_verified) {
+    throw new AuthUnverifiedError("Please verify your email address before logging in.");
+  }
+
   const { password_hash, ...publicAccount } = account;
   void password_hash;
 
@@ -292,4 +321,67 @@ export async function markWelcomeEmailSent(accountId: number) {
     `,
     [accountId],
   );
+}
+
+export async function verifyAccountEmail(token: string) {
+  await ensureAuthSchema();
+
+  const result = await dbQuery<AccountRow>(
+    `
+      SELECT
+        id,
+        username,
+        email,
+        password_hash,
+        display_name,
+        role,
+        account_type,
+        business_role,
+        organization_name,
+        is_active,
+        email_verified,
+        welcome_email_sent_at,
+        created_at
+      FROM accounts
+      WHERE verification_token = $1 AND token_expires_at > NOW()
+      LIMIT 1
+    `,
+    [token],
+  );
+
+  const account = result.rows[0];
+
+  if (!account) {
+    throw new AuthInputError("Invalid or expired verification token.");
+  }
+
+  const updateResult = await dbQuery<AccountRow>(
+    `
+      UPDATE accounts
+      SET email_verified = TRUE,
+          verification_token = NULL,
+          token_expires_at = NULL
+      WHERE id = $1
+      RETURNING
+        id,
+        username,
+        email,
+        display_name,
+        role,
+        account_type,
+        business_role,
+        organization_name,
+        is_active,
+        email_verified,
+        welcome_email_sent_at,
+        created_at
+    `,
+    [account.id],
+  );
+
+  const updatedAccount = updateResult.rows[0];
+  const { password_hash, ...publicAccount } = updatedAccount;
+  void password_hash;
+
+  return publicAccount;
 }

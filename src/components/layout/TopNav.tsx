@@ -18,6 +18,11 @@ export function TopNav() {
   // Read auth state once on mount (client-only)
   useEffect(() => {
     setLoggedIn(isLoggedIn());
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verified") === "true" || params.get("auth") === "login") {
+      setShowAuth(true);
+    }
   }, []);
 
   function handleDashboardClick() {

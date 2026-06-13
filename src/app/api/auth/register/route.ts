@@ -3,9 +3,8 @@ import {
   AuthConflictError,
   AuthInputError,
   createAccount,
-  markWelcomeEmailSent,
 } from "@/lib/server/auth-db";
-import { sendWelcomeEmail } from "@/lib/server/email";
+import { sendVerificationEmail } from "@/lib/server/email";
 
 export async function POST(request: Request) {
   try {
@@ -18,22 +17,26 @@ export async function POST(request: Request) {
       organizationName?: string;
     };
 
-    const account = await createAccount(body);
+    const { account, verificationToken } = await createAccount(body);
 
     try {
-      const emailSent = await sendWelcomeEmail({
+      await sendVerificationEmail({
         to: account.email,
         username: account.display_name || account.username,
+        token: verificationToken,
       });
-
-      if (emailSent) {
-        await markWelcomeEmailSent(account.id);
-      }
     } catch (emailError) {
-      console.error("Welcome email send failed", emailError);
+      console.error("Verification email send failed", emailError);
     }
 
-    return NextResponse.json({ ok: true, account }, { status: 201 });
+    return NextResponse.json(
+      { 
+        ok: true, 
+        account,
+        message: "Registration successful! Please check your email to verify your account."
+      }, 
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof AuthInputError || error instanceof AuthConflictError) {
       return NextResponse.json(

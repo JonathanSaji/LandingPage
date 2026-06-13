@@ -491,6 +491,20 @@ export function AuthModal({
     return () => window.removeEventListener("syncbot:open-auth-modal", handleSyncBotOpen);
   }, []);
 
+  // Check if email was verified in query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("verified") === "true") {
+      setNotice({
+        type: "success",
+        message: "Email verified successfully! Please sign in with your credentials.",
+      });
+      // Clear URL parameter without reloading page
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
+
   async function parseApiResponse<T>(response: Response): Promise<ApiResponse<T>> {
     const body = (await response.json().catch(() => null)) as ApiResponse<T> | null;
 
@@ -583,7 +597,7 @@ export function AuthModal({
 
       setNotice({
         type: "success",
-        message: "Account created. Sign in with your new credentials.",
+        message: "Registration successful! Please check your email to verify your account before logging in.",
       });
       setScreen("login");
     } catch (error) {
