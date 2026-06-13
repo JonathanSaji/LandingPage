@@ -77,10 +77,7 @@ export async function GET(request: Request) {
     }
 
     if (!membership) {
-      return NextResponse.json({
-        ok: true,
-        membership: null,
-      });
+      return NextResponse.json({ ok: true, membership: null });
     }
 
     // Check if the user is the owner of the company
@@ -95,14 +92,14 @@ export async function GET(request: Request) {
       }
     }
 
-    const resolvedRole = isOwner ? 'OWNER' : membership.role;
+    const resolvedRole = isOwner ? "OWNER" : membership.role;
     membership.role = resolvedRole;
 
     let ownerData = null;
     let adminData = null;
     let employeeData = null;
 
-    if (resolvedRole === 'OWNER') {
+    if (resolvedRole === "OWNER") {
       const orgRes = await dbQuery(
         `SELECT company_display_name as organization_name, total_employees, total_admins
          FROM seatsync.organization_stats
@@ -110,7 +107,7 @@ export async function GET(request: Request) {
         [membership.company_id]
       );
       ownerData = orgRes.rows[0] ?? null;
-    } else if (resolvedRole === 'ADMIN') {
+    } else if (resolvedRole === "ADMIN") {
       const adminRes = await dbQuery(
         `SELECT employee_name, current_month_bookings, meets_minimum_criteria
          FROM seatsync.admin_employee_details
@@ -135,7 +132,7 @@ export async function GET(request: Request) {
         ...membership,
         ownerData,
         adminData,
-        employeeData
+        employeeData,
       },
     });
   } catch (error) {

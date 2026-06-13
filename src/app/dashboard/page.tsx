@@ -1962,7 +1962,7 @@ function ExpandedTile({
                       </p>
                     </div>
                   </div>
-                  
+
                   {seatMembership.role === "OWNER" && seatMembership.ownerData && (
                     <div className="grid gap-2 p-3 sm:grid-cols-2">
                       <div className="col-span-2 rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
@@ -2020,7 +2020,7 @@ function ExpandedTile({
                       {seatMembership.employeeData && seatMembership.employeeData.length > 0 ? (
                         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                           {seatMembership.employeeData.map((booking, i) => {
-                            const date = new Date(booking.booking_date).toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' });
+                            const date = new Date(booking.booking_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
                             return (
                               <div key={i} className="flex items-center justify-between rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
                                 <div className="flex items-center gap-3">
