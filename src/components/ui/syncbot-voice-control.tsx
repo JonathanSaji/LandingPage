@@ -1,21 +1,6 @@
 "use client";
 
-declare global {
-  interface Window {
-    __syncbot_context?: {
-      page: string;
-      subscriptions: Array<{ id: string; name: string; amount: string; date: string; color: string; billingCycle: string; subscriptionType: string; isTrial: boolean; amountPerCycle: string; personalValue: number }>;
-      trips: Array<{ id: string; name: string; location: string | null; dates: string | null; group: string | null; peopleCount: number; budget: string | null; updatedAt: string }>;
-      presets: Array<{ id: string; title: string; intent: string; duration: number; stats: string; created_at: string }>;
-      insights: Array<{ id: string; title: string; intent: string; duration: number; start_time: string | number; end_time: string | number; completed_at: string; analytics: { focusScore?: number; distractionsBlocked?: number } | null }>;
-      fluencySessions: Array<{ id: string; duration: number | null; wpm: number | null; filler_word_count: number | null; created_at: string }>;
-      tiles: Array<{ id: string; name: string; category: string }>;
-      seatMembership: { email: string; name: string; display_name: string; max_allowed_days: number; organization_name: string | null; role: string; ownerData?: { organization_name: string; total_employees: string; total_admins: string } | null; adminData?: Array<{ employee_name: string; current_month_bookings: string; meets_minimum_criteria: boolean }> | null; employeeData?: Array<{ booking_date: string; floor_number: number; seat_identifier: string }> | null } | null;
-      photoSyncPhotos: Array<{ id: string; storage_url: string; taken_at: string | null; uploaded_at: string; album_name: string }>;
-      lastUpdated: number;
-    };
-  }
-}
+// Window.__syncbot_context is declared globally in src/app/dashboard/page.tsx
 
 import { useEffect, useCallback, useState, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
