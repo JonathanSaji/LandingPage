@@ -110,26 +110,83 @@ function buildWelcomeEmailText(username: string, landingUrl: string) {
   ].join("\n");
 }
 
-export async function sendWelcomeEmail({ to, username }: WelcomeEmailPayload) {
-  const mailer = getTransport();
+async function sendMailHelper({
+  fromName,
+  to,
+  subject,
+  text,
+  html,
+}: {
+  fromName: string;
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+}) {
+  const resendApiKey = process.env.RESEND_API_KEY;
 
+  if (resendApiKey) {
+    // Resend free tier requires sending from 'onboarding@resend.dev' or a verified domain.
+    // Allow custom 'EMAIL_FROM' or default to 'onboarding@resend.dev'
+    const fromAddress = process.env.EMAIL_FROM || "onboarding@resend.dev";
+    const from = `${fromName} <${fromAddress}>`;
+
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to,
+          subject,
+          text,
+          html,
+        }),
+      });
+
+      if (res.ok) {
+        return true;
+      }
+
+      const errorText = await res.text();
+      console.error(`Resend API failed: ${res.status} - ${errorText}`);
+    } catch (err) {
+      console.error("Resend API request failed:", err);
+    }
+  }
+
+  // Fallback to Nodemailer SMTP
+  const mailer = getTransport();
   if (!mailer) {
-    console.warn("Welcome email skipped: EMAIL_USER or EMAIL_PASS is not configured.");
+    console.warn("Mail skipped: SMTP credentials and RESEND_API_KEY are not configured.");
     return false;
   }
 
-  const from = process.env.EMAIL_USER as string;
+  const fromUser = process.env.EMAIL_USER as string;
+  await mailer.sendMail({
+    from: `${fromName} <${fromUser}>`,
+    to,
+    subject,
+    text,
+    html,
+  });
+
+  return true;
+}
+
+export async function sendWelcomeEmail({ to, username }: WelcomeEmailPayload) {
   const landingUrl = process.env.LANDING_PAGE_URL || "https://sub-sync.ca";
 
-  await mailer.sendMail({
-    from: `SubSync <${from}>`,
+  return sendMailHelper({
+    fromName: "SubSync",
     to,
     subject: "Welcome to SubSync",
     text: buildWelcomeEmailText(username, landingUrl),
     html: buildWelcomeEmailHtml(username, landingUrl),
   });
-
-  return true;
 }
 
 function buildVerificationEmailHtml(username: string, verificationLink: string) {
@@ -205,27 +262,17 @@ function buildVerificationEmailText(username: string, verificationLink: string) 
 }
 
 export async function sendVerificationEmail({ to, username, token }: VerificationEmailPayload) {
-  const mailer = getTransport();
   const landingUrl = process.env.LANDING_PAGE_URL || "http://localhost:3000";
   const verificationLink = `${landingUrl}/verify-email?token=${token}`;
 
   console.log(`[Verification Email] To: ${to}, Link: ${verificationLink}`);
 
-  if (!mailer) {
-    console.warn(`Verification email skipped: EMAIL_USER or EMAIL_PASS is not configured.`);
-    console.warn(`To verify locally, open this link: ${verificationLink}`);
-    return false;
-  }
-
-  const from = process.env.EMAIL_USER as string;
-
-  await mailer.sendMail({
-    from: `SubSync <${from}>`,
+  return sendMailHelper({
+    fromName: "SubSync",
     to,
     subject: "Verify Your Email Address - SubSync",
     text: buildVerificationEmailText(username, verificationLink),
     html: buildVerificationEmailHtml(username, verificationLink),
   });
-
-  return true;
 }
+
