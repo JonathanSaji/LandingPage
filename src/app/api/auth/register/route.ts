@@ -30,11 +30,11 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { 
-        ok: true, 
+      {
+        ok: true,
         account,
-        message: "Registration successful! Please check your email to verify your account."
-      }, 
+        message: "Registration successful! Please check your spam or inbox folder in email to verify your account."
+      },
       { status: 201 }
     );
   } catch (error) {
