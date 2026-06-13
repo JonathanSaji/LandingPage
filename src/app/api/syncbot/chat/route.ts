@@ -41,17 +41,17 @@ Know each app deeply so you can answer questions naturally, explain what it does
 
 ▸ SEATSYNC — Desk Booking & Workplace Scheduling
   What it is: A Java/Spring Boot app for employees to book office seats. Users pick a date and a seat on Floor 1 or Floor 2 from a monthly calendar. Rules: minimum 6 days booked per month, maximum 10.
-  Dashboard tile shows: "COMING SOON" — live data is not yet integrated into the dashboard context.
-  Data fields in Context: none yet (coming soon).
-  What users ask: "Can I book a desk?", "How does SeatSync work?", "What floors are available?"
-  How to answer: Explain the booking system clearly. If asked to open it, use the open_app action. Don't pretend to have booking data — it isn't in context yet.
+  Dashboard tile shows: The user's SeatSync membership — their role (OWNER, ADMIN, or EMPLOYEE), organization name, and max allowed booking days per month.
+  Data fields in Context — seatMembership: role, organization_name, max_allowed_days. For OWNER: ownerData with total_employees and total_admins. For ADMIN: adminData array with each employee's name, current_month_bookings, and meets_minimum_criteria (true if they've hit their minimum). For EMPLOYEE: employeeData array of upcoming bookings with booking_date, floor_number, seat_identifier.
+  What users ask: "What's my role in SeatSync?", "Do I have any desk bookings coming up?", "Which employees haven't booked enough days this month?", "How many employees do we have?", "What's the minimum booking requirement?"
+  How to answer: Speak the role naturally ("You're an admin at Acme"). For employees, list upcoming bookings by date. For admins, call out anyone where meets_minimum_criteria is false — that means they haven't booked enough days. For owners, summarize org size. Max allowed days is the monthly ceiling.
 
 ▸ PHOTOSYNC — Photo Organization & Memories
   What it is: A Python/FastAPI + Node.js app for personal photo management. Features AI-powered face detection and recognition (using ArcFace/MediaPipe) to auto-tag people, plus manual albums, shared albums, and cross-device sync. Photos are organized into timelines and smart albums.
-  Dashboard tile shows: "COMING SOON" — live data is not yet integrated into the dashboard context.
-  Data fields in Context: none yet (coming soon).
-  What users ask: "How does PhotoSync work?", "Can it recognize faces?", "How do I share an album?"
-  How to answer: Explain the face detection pipeline and album features naturally. If asked to open it, use the open_app action. Don't pretend to have photo data — it isn't in context yet.
+  Dashboard tile shows: The user's most recent photos (up to 20) with album name and taken/uploaded date.
+  Data fields in Context — photoSyncPhotos: array of { id, storage_url, taken_at, uploaded_at, album_name }.
+  What users ask: "What's in my latest album?", "How many photos do I have?", "When was my last photo taken?", "What albums do I have?"
+  How to answer: Count photos, identify the most recent album by taken_at or uploaded_at, group photos by album_name naturally. If taken_at is null, fall back to uploaded_at for dates.
 
 ▸ FLUENCYSYNC — Speech Training & Language Practice
   What it is: A browser-based speech trainer. Users record 60-second sessions, get real-time transcription via the Web Speech API, and receive coaching on filler word usage (um, uh, like), speaking pace (WPM), and body language. The goal is confident, clear communication.
@@ -117,7 +117,7 @@ User says "what day is it?" → read Date from Context
 ── DATA RULES ──
 You only know what is in the Context block. If a data array is present and non-empty, read it and answer fully — don't just acknowledge one item, summarize all relevant ones. If data is absent or empty, say "No data right now" in one sentence. NEVER invent data. NEVER make up numbers, sessions, trips, or any information that isn't explicitly in the Context block. If the user asks about data that isn't there, simply say "No data right now" and stop. Do not provide examples, do not suggest what might be there, do not hallucinate. This is critical — you must only report what actually exists in the context.
 
-For apps whose dashboard tiles say "COMING SOON" (SeatSync, PhotoSync, SteadySync), live data isn't integrated yet. You can still explain what those apps do and open them — just don't fabricate usage data.
+For apps whose dashboard tiles say "COMING SOON" (SteadySync), live data isn't integrated yet. You can still explain what those apps do and open them — just don't fabricate usage data.
 
 ── RESPONSE STYLE ──
 - Speak naturally as if in conversation. No markdown. No bullet points. No symbols.
@@ -234,6 +234,47 @@ export async function POST(req: NextRequest) {
       return parts.join(" ") || "session";
     }).join(" | ");
     ctxParts.push(`FluencySync sessions: ${fluency}`);
+  }
+
+  const seat = ctx.seatMembership as ({
+    role: string; organization_name: string | null; max_allowed_days: number;
+    ownerData?: { organization_name: string; total_employees: string; total_admins: string } | null;
+    adminData?: Array<{ employee_name: string; current_month_bookings: string; meets_minimum_criteria: boolean }> | null;
+    employeeData?: Array<{ booking_date: string; floor_number: number; seat_identifier: string }> | null;
+  }) | null | undefined;
+  if (seat) {
+    const parts = [`role:${seat.role}`, `org:${seat.organization_name ?? "unknown"}`, `max_days:${seat.max_allowed_days}`];
+    if (seat.role === "OWNER" && seat.ownerData) {
+      parts.push(`employees:${seat.ownerData.total_employees}`, `admins:${seat.ownerData.total_admins}`);
+    } else if (seat.role === "ADMIN" && Array.isArray(seat.adminData) && seat.adminData.length > 0) {
+      const empSummary = seat.adminData.map((e) =>
+        `${e.employee_name} bookings:${e.current_month_bookings} ok:${e.meets_minimum_criteria}`
+      ).join(" | ");
+      parts.push(`employees: ${empSummary}`);
+    } else if ((seat.role === "EMPLOYEE" || seat.role === "ADMIN") && Array.isArray(seat.employeeData) && seat.employeeData.length > 0) {
+      const bookings = seat.employeeData.map((b) =>
+        `${b.booking_date} floor${b.floor_number} seat:${b.seat_identifier}`
+      ).join(" | ");
+      parts.push(`upcoming_bookings: ${bookings}`);
+    }
+    ctxParts.push(`SeatSync: ${parts.join(" ")}`);
+  } else if (ctx.page === "/dashboard") {
+    ctxParts.push("SeatSync: no membership");
+  }
+
+  if (Array.isArray(ctx.photoSyncPhotos) && (ctx.photoSyncPhotos as unknown[]).length > 0) {
+    const photos = ctx.photoSyncPhotos as Array<{ id: string; taken_at: string | null; uploaded_at: string; album_name: string }>;
+    const sorted = [...photos].sort((a, b) => {
+      const da = new Date(a.taken_at ?? a.uploaded_at).getTime();
+      const db = new Date(b.taken_at ?? b.uploaded_at).getTime();
+      return db - da;
+    });
+    const mostRecent = sorted[0];
+    const mostRecentDate = mostRecent.taken_at ?? mostRecent.uploaded_at;
+    const albums = [...new Set(photos.map((p) => p.album_name))].join(", ");
+    ctxParts.push(`PhotoSync: count:${photos.length} most_recent_album:"${mostRecent.album_name}" most_recent_date:${mostRecentDate} albums:${albums}`);
+  } else if (ctx.page === "/dashboard") {
+    ctxParts.push("PhotoSync: no photos");
   }
 
   if (Array.isArray(ctx.visibleApps) && (ctx.visibleApps as string[]).length > 0) {

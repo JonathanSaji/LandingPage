@@ -10,6 +10,8 @@ declare global {
       insights: BrainInsight[];
       fluencySessions: FluencySession[];
       tiles: Array<{ id: string; name: string; category: string }>;
+      seatMembership: SeatSyncMembership | null;
+      photoSyncPhotos: PhotoSyncPhoto[];
       lastUpdated: number;
     };
   }
@@ -2283,9 +2285,11 @@ export default function DashboardPage() {
       insights,
       fluencySessions,
       tiles: tiles.map((t) => ({ id: t.id, name: t.name, category: t.category })),
+      seatMembership: seatMembership ?? null,
+      photoSyncPhotos: photoSyncPhotos ?? [],
       lastUpdated: Date.now(),
     };
-  }, [subscriptions, trips, presets, insights, fluencySessions, tiles]);
+  }, [subscriptions, trips, presets, insights, fluencySessions, tiles, seatMembership, photoSyncPhotos]);
 
   useEffect(() => {
     return () => { window.__syncbot_context = undefined; };

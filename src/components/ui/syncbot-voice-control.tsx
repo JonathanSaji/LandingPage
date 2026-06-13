@@ -10,6 +10,8 @@ declare global {
       insights: Array<{ id: string; title: string; intent: string; duration: number; start_time: string | number; end_time: string | number; completed_at: string; analytics: { focusScore?: number; distractionsBlocked?: number } | null }>;
       fluencySessions: Array<{ id: string; duration: number | null; wpm: number | null; filler_word_count: number | null; created_at: string }>;
       tiles: Array<{ id: string; name: string; category: string }>;
+      seatMembership: { email: string; name: string; display_name: string; max_allowed_days: number; organization_name: string | null; role: string; ownerData?: { organization_name: string; total_employees: string; total_admins: string } | null; adminData?: Array<{ employee_name: string; current_month_bookings: string; meets_minimum_criteria: boolean }> | null; employeeData?: Array<{ booking_date: string; floor_number: number; seat_identifier: string }> | null } | null;
+      photoSyncPhotos: Array<{ id: string; storage_url: string; taken_at: string | null; uploaded_at: string; album_name: string }>;
       lastUpdated: number;
     };
   }
@@ -48,6 +50,17 @@ interface PageContext {
   fluencySessions?: Array<{
     duration: number | null; wpm: number | null;
     filler_word_count: number | null; created_at: string;
+  }>;
+  seatMembership?: {
+    email: string; name: string; display_name: string;
+    max_allowed_days: number; organization_name: string | null; role: string;
+    ownerData?: { organization_name: string; total_employees: string; total_admins: string } | null;
+    adminData?: Array<{ employee_name: string; current_month_bookings: string; meets_minimum_criteria: boolean }> | null;
+    employeeData?: Array<{ booking_date: string; floor_number: number; seat_identifier: string }> | null;
+  };
+  photoSyncPhotos?: Array<{
+    id: string; storage_url: string; taken_at: string | null;
+    uploaded_at: string; album_name: string;
   }>;
   visibleApps?: string[];
   pageText?: string;
@@ -229,6 +242,30 @@ export function SyncBotVoiceControl() {
           wpm: f.wpm,
           filler_word_count: f.filler_word_count,
           created_at: f.created_at,
+        }));
+      }
+
+      if (ctx.seatMembership) {
+        base.seatMembership = {
+          email: ctx.seatMembership.email,
+          name: ctx.seatMembership.name,
+          display_name: ctx.seatMembership.display_name,
+          max_allowed_days: ctx.seatMembership.max_allowed_days,
+          organization_name: ctx.seatMembership.organization_name,
+          role: ctx.seatMembership.role,
+          ownerData: ctx.seatMembership.ownerData,
+          adminData: ctx.seatMembership.adminData,
+          employeeData: ctx.seatMembership.employeeData,
+        };
+      }
+
+      if (ctx.photoSyncPhotos && ctx.photoSyncPhotos.length > 0) {
+        base.photoSyncPhotos = ctx.photoSyncPhotos.slice(0, 20).map((p) => ({
+          id: p.id,
+          storage_url: p.storage_url,
+          taken_at: p.taken_at,
+          uploaded_at: p.uploaded_at,
+          album_name: p.album_name,
         }));
       }
 
