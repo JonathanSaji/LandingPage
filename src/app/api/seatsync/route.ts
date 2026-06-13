@@ -21,15 +21,19 @@ export async function GET(request: Request) {
       );
     }
 
+    // ── Dev alias: userId=999 resolves to user1 ────────────────
     if (userId === 999) {
-      const userRes = await dbQuery("SELECT id FROM accounts WHERE username = 'user1' LIMIT 1");
+      const userRes = await dbQuery(
+        "SELECT id FROM accounts WHERE username = 'user1' LIMIT 1"
+      );
       if (userRes.rows.length > 0) {
         userId = parseInt(userRes.rows[0].id, 10);
       }
     }
 
+    // ── Fetch account from public.accounts ─────────────────────
     const accountRes = await dbQuery(
-      `SELECT username, email, display_name FROM accounts WHERE id = $1 LIMIT 1`,
+      `SELECT id, username, email, display_name FROM accounts WHERE id = $1 LIMIT 1`,
       [userId]
     );
 
@@ -39,71 +43,115 @@ export async function GET(request: Request) {
 
     const { username, email, display_name: displayName } = accountRes.rows[0];
 
-    const result = await dbQuery(
+    // ── Primary lookup: by account_id (authoritative) ──────────
+    let membershipRes = await dbQuery(
       `SELECT
-        email,
-        name,
-        display_name,
-        max_allowed_days,
-        company_id,
-        organization_name,
-        role
-       FROM seatsync.seatsync_membership
-       WHERE display_name = $1
-          OR email = $2
-          OR email = $3
-       LIMIT 1`,
-      [username, email, `${username}@seatsync.dev`]
-    );
-
-    let membership = result.rows[0];
-
-    if (!membership && displayName && displayName !== username) {
-      const fallback = await dbQuery(
-        `SELECT
           email,
           name,
           display_name,
           max_allowed_days,
           company_id,
           organization_name,
-          role
+          role,
+          account_id
+       FROM seatsync.seatsync_membership
+       WHERE account_id = $1
+       LIMIT 1`,
+      [userId]
+    );
+
+    // ── Legacy fallback: match by email/display_name ───────────
+    // (for rows created before the account_id migration)
+    if (membershipRes.rows.length === 0) {
+      membershipRes = await dbQuery(
+        `SELECT
+            email,
+            name,
+            display_name,
+            max_allowed_days,
+            company_id,
+            organization_name,
+            role,
+            account_id
          FROM seatsync.seatsync_membership
          WHERE display_name = $1
+            OR email = $2
+            OR email = $3
          LIMIT 1`,
-        [displayName]
+        [username, email, `${username}@seatsync.dev`]
       );
-      membership = fallback.rows[0];
+
+      // Fallback on display_name if it differs from username
+      if (membershipRes.rows.length === 0 && displayName && displayName !== username) {
+        membershipRes = await dbQuery(
+          `SELECT
+              email,
+              name,
+              display_name,
+              max_allowed_days,
+              company_id,
+              organization_name,
+              role,
+              account_id
+           FROM seatsync.seatsync_membership
+           WHERE display_name = $1
+           LIMIT 1`,
+          [displayName]
+        );
+      }
+
+      // If we found a legacy row, backfill account_id for next time
+      if (membershipRes.rows.length > 0 && !membershipRes.rows[0].account_id) {
+        await dbQuery(
+          `UPDATE seatsync.seatsync_membership
+           SET account_id = $1
+           WHERE email = $2 AND account_id IS NULL`,
+          [userId, membershipRes.rows[0].email]
+        ).catch(() => {
+          // Non-fatal: best effort backfill
+        });
+      }
     }
 
-    if (!membership) {
+    if (membershipRes.rows.length === 0) {
       return NextResponse.json({ ok: true, membership: null });
     }
 
-    // Check if the user is the owner of the company
+    let membership = membershipRes.rows[0];
+
+    // ── Resolve OWNER role via companies.owner_account_id ──────
     let isOwner = false;
     if (membership.company_id) {
       const companyRes = await dbQuery(
-        `SELECT owner_email FROM seatsync.companies WHERE id = $1 LIMIT 1`,
+        `SELECT owner_email, owner_account_id
+         FROM seatsync.companies
+         WHERE id = $1
+         LIMIT 1`,
         [membership.company_id]
       );
-      if (companyRes.rows.length > 0 && companyRes.rows[0].owner_email === membership.email) {
-        isOwner = true;
+      if (companyRes.rows.length > 0) {
+        const company = companyRes.rows[0];
+        // Check by account_id first (authoritative), fall back to owner_email
+        isOwner =
+          company.owner_account_id === userId ||
+          company.owner_email === membership.email;
       }
     }
 
     const resolvedRole = isOwner ? "OWNER" : membership.role;
-    membership.role = resolvedRole;
+    membership = { ...membership, role: resolvedRole };
 
+    // ── Role-specific data ─────────────────────────────────────
     let ownerData = null;
     let adminData = null;
     let employeeData = null;
 
     if (resolvedRole === "OWNER") {
       const orgRes = await dbQuery(
-        `SELECT company_display_name as organization_name, total_employees, total_admins
+        `SELECT company_display_name AS organization_name, total_employees, total_admins
          FROM seatsync.organization_stats
-         WHERE company_id = $1 LIMIT 1`,
+         WHERE company_id = $1
+         LIMIT 1`,
         [membership.company_id]
       );
       ownerData = orgRes.rows[0] ?? null;
@@ -119,7 +167,8 @@ export async function GET(request: Request) {
       const empRes = await dbQuery(
         `SELECT booking_date, floor_number, seat_identifier
          FROM seatsync.employee_bookings
-         WHERE employee_email = $1 AND booking_date >= CURRENT_DATE
+         WHERE employee_email = $1
+           AND booking_date >= CURRENT_DATE
          ORDER BY booking_date ASC`,
         [membership.email]
       );
