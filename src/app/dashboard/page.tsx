@@ -176,7 +176,7 @@ const DEFAULT_TILES: AppTile[] = [
       "Team coordination",
       "Space optimization",
     ],
-    colSpan: 1,
+    colSpan: 2,
     rowSpan: 1,
     colStart: 3,
     rowStart: 2,
@@ -198,7 +198,7 @@ const DEFAULT_TILES: AppTile[] = [
     colSpan: 1,
     rowSpan: 1,
     colStart: 4,
-    rowStart: 2,
+    rowStart: 3,
   },
   {
     id: "fluencysync",
@@ -996,7 +996,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
                   marginBottom: "6px",
                 }}
               >
-                Your membership
+                {seatMembership ? `${seatMembership.role} Workspace` : "Your membership"}
               </p>
 
               {loading ? (
@@ -1017,32 +1017,301 @@ const BentoCard = forwardRef<HTMLDivElement, {
                   <p className="font-body text-center text-[11px] text-white/40">No SeatSync membership found.</p>
                 </div>
               ) : (
-                <div
-                  className="flex min-h-0 flex-1 flex-col justify-center rounded-xl"
-                  style={{
-                    padding: isTall ? "10px 12px" : "8px 10px",
-                    background: `${tile.accent}06`,
-                    border: `1px solid ${tile.accent}30`,
-                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
-                  }}
-                >
-                  <p
-                    className="truncate font-body font-bold text-white"
-                    style={{ fontSize: isTall || isWide ? "12px" : "11px", lineHeight: 1.2 }}
-                    title={seatMembership.name}
-                  >
-                    {seatMembership.name}
-                  </p>
-                  <div className="mt-2 flex flex-col gap-1.5">
-                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                      <Users size={11} color={tile.accent} className="shrink-0" />
-                      <span className="truncate">{seatMembership.role}</span>
-                    </p>
-                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                      <Calendar size={11} color={tile.accent} className="shrink-0" />
-                      <span className="truncate">{seatMembership.max_allowed_days} max booking days</span>
-                    </p>
-                  </div>
+                <div className="flex flex-1 flex-col min-h-0 justify-center">
+                  {isWide && isTall ? (
+                    /* 2x2 Large Layout */
+                    <div className="grid grid-cols-2 gap-3 min-h-0 flex-1">
+                      <div
+                        className="flex flex-col justify-between rounded-xl p-3 h-full"
+                        style={{
+                          background: `${tile.accent}05`,
+                          border: `1px solid ${tile.accent}20`,
+                          boxShadow: `inset 0 1px 0 ${tile.accent}10`,
+                        }}
+                      >
+                        <div>
+                          <p className="font-body text-[9px] text-white/40 uppercase tracking-wider">User Account</p>
+                          <p className="font-body font-bold text-white text-[13px] mt-1 truncate">{seatMembership.name}</p>
+                          <p className="font-body text-[10px] text-white/50 truncate mt-0.5">{seatMembership.email}</p>
+                        </div>
+                        <div className="mt-3">
+                          <span
+                            className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase"
+                            style={{
+                              background: `${tile.accent}15`,
+                              color: tile.accent,
+                              border: `1px solid ${tile.accent}30`,
+                            }}
+                          >
+                            {seatMembership.role}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col min-h-0 justify-between h-full">
+                        {seatMembership.role === "OWNER" && seatMembership.ownerData && (
+                          <div className="flex flex-col gap-2 flex-1 justify-center">
+                            <div className="rounded-xl p-2.5 flex-1 flex flex-col justify-center" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                              <div className="flex items-center gap-1.5 text-white/40 mb-0.5">
+                                <Users size={11} color={tile.accent} />
+                                <span className="font-body text-[8px] uppercase tracking-wider">Employees</span>
+                              </div>
+                              <p className="font-body text-lg font-bold text-white">{seatMembership.ownerData.total_employees}</p>
+                            </div>
+                            <div className="rounded-xl p-2.5 flex-1 flex flex-col justify-center" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                              <div className="flex items-center gap-1.5 text-white/40 mb-0.5">
+                                <Users size={11} color={tile.accent} />
+                                <span className="font-body text-[8px] uppercase tracking-wider">Admins</span>
+                              </div>
+                              <p className="font-body text-lg font-bold text-white">{seatMembership.ownerData.total_admins}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {seatMembership.role === "ADMIN" && (
+                          <div className="flex flex-col gap-2 flex-1 justify-center overflow-hidden">
+                            {seatMembership.adminData && seatMembership.adminData.length > 0 ? (
+                              seatMembership.adminData.slice(0, 2).map((emp, idx) => (
+                                <div key={idx} className="rounded-xl p-2 flex items-center justify-between" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-body text-[10px] font-bold text-white truncate">{emp.employee_name}</p>
+                                    <p className="font-body text-[8px] text-white/40 truncate">{emp.current_month_bookings} bookings</p>
+                                  </div>
+                                  <span className="text-[8px] font-semibold uppercase shrink-0 ml-1" style={{ color: emp.meets_minimum_criteria ? tile.accent : "#FF4444" }}>
+                                    {emp.meets_minimum_criteria ? "Met" : "Alert"}
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="flex-1 flex items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
+                                <p className="font-body text-[9px] text-white/30">No employees</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {seatMembership.role === "EMPLOYEE" && (
+                          <div className="flex flex-col gap-2 flex-1 justify-center overflow-hidden">
+                            {seatMembership.employeeData && seatMembership.employeeData.length > 0 ? (
+                              seatMembership.employeeData.slice(0, 2).map((b, idx) => {
+                                const formatted = new Date(b.booking_date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                                return (
+                                  <div key={idx} className="rounded-xl p-2 flex items-center justify-between" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                                    <div className="min-w-0">
+                                      <p className="font-body text-[10px] font-bold text-white truncate">{formatted}</p>
+                                      <p className="font-body text-[8px] text-white/40">Floor {b.floor_number}</p>
+                                    </div>
+                                    <span className="font-body text-[9px] font-semibold px-1.5 py-0.5 rounded" style={{ background: `${tile.accent}15`, color: tile.accent }}>
+                                      {b.seat_identifier}
+                                    </span>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="flex-1 flex items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01]">
+                                <p className="font-body text-[9px] text-white/30">No bookings</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : isWide ? (
+                    /* 2x1 Medium Horizontal Layout (Default Now!) */
+                    <div className="grid grid-cols-2 gap-3 min-h-0 flex-1 items-stretch">
+                      <div
+                        className="flex flex-col justify-between rounded-xl p-2.5"
+                        style={{
+                          background: `${tile.accent}05`,
+                          border: `1px solid ${tile.accent}20`,
+                          boxShadow: `inset 0 1px 0 ${tile.accent}10`,
+                        }}
+                      >
+                        <div className="min-w-0">
+                          <p className="font-body text-[11px] font-bold text-white truncate">{seatMembership.name}</p>
+                          {seatMembership.organization_name && (
+                            <p className="font-body text-[9px] text-white/40 truncate mt-0.5">{seatMembership.organization_name}</p>
+                          )}
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between gap-1">
+                          <span
+                            className="inline-block rounded-full px-1.5 py-0.5 text-[8px] font-bold tracking-wider uppercase"
+                            style={{
+                              background: `${tile.accent}15`,
+                              color: tile.accent,
+                              border: `1px solid ${tile.accent}25`,
+                            }}
+                          >
+                            {seatMembership.role}
+                          </span>
+                          <span className="font-body text-[8px] text-white/30 truncate">{seatMembership.max_allowed_days}d limit</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col justify-center min-h-0">
+                        {seatMembership.role === "OWNER" && seatMembership.ownerData ? (
+                          <div className="grid grid-cols-2 gap-1.5 h-full items-center">
+                            <div className="rounded-xl p-1.5 flex flex-col justify-center items-center text-center h-full" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                              <p className="font-body text-[12px] font-bold text-white">{seatMembership.ownerData.total_employees}</p>
+                              <span className="font-body text-[7.5px] text-white/40 uppercase tracking-wider mt-0.5">Employees</span>
+                            </div>
+                            <div className="rounded-xl p-1.5 flex flex-col justify-center items-center text-center h-full" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                              <p className="font-body text-[12px] font-bold text-white">{seatMembership.ownerData.total_admins}</p>
+                              <span className="font-body text-[7.5px] text-white/40 uppercase tracking-wider mt-0.5">Admins</span>
+                            </div>
+                          </div>
+                        ) : seatMembership.role === "ADMIN" ? (
+                          <div className="flex flex-col gap-1 justify-center h-full">
+                            {seatMembership.adminData && seatMembership.adminData.length > 0 ? (
+                              seatMembership.adminData.slice(0, 2).map((emp, idx) => (
+                                <div key={idx} className="rounded-lg px-2 py-1 flex items-center justify-between text-[9px]" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}15` }}>
+                                  <span className="font-body font-semibold text-white/90 truncate max-w-[55px]">{emp.employee_name}</span>
+                                  <span className="font-body text-white/40">{emp.current_month_bookings} seats</span>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="font-body text-[8px] text-white/30 text-center">No employee records</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-1 justify-center h-full">
+                            {seatMembership.employeeData && seatMembership.employeeData.length > 0 ? (
+                              (() => {
+                                const nextB = seatMembership.employeeData[0];
+                                const formatted = new Date(nextB.booking_date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                                return (
+                                  <div className="rounded-xl p-2 flex flex-col justify-between h-full" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                                    <div className="flex items-center justify-between text-[7.5px] text-white/40 uppercase tracking-wider">
+                                      <span>Next Booking</span>
+                                      <span style={{ color: tile.accent }}>Active</span>
+                                    </div>
+                                    <div className="flex items-baseline justify-between mt-0.5">
+                                      <p className="font-body text-[11px] font-bold text-white">{formatted}</p>
+                                      <p className="font-body text-[10px] font-semibold" style={{ color: tile.accent }}>Seat {nextB.seat_identifier}</p>
+                                    </div>
+                                  </div>
+                                );
+                              })()
+                            ) : (
+                              <div className="rounded-xl p-2 text-center border border-dashed border-white/10" style={{ background: `${tile.accent}02` }}>
+                                <p className="font-body text-[8px] text-white/30">No active bookings</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : isTall ? (
+                    /* 1x2 Medium Vertical Layout */
+                    <div className="flex flex-col gap-2.5 min-h-0 flex-1 justify-between">
+                      <div
+                        className="flex flex-col justify-between rounded-xl p-2.5 flex-1"
+                        style={{
+                          background: `${tile.accent}05`,
+                          border: `1px solid ${tile.accent}20`,
+                          boxShadow: `inset 0 1px 0 ${tile.accent}10`,
+                        }}
+                      >
+                        <div>
+                          <p className="font-body text-[11px] font-bold text-white truncate">{seatMembership.name}</p>
+                          <p className="font-body text-[8px] text-white/30 truncate">{seatMembership.email}</p>
+                        </div>
+                        <div className="mt-1 flex items-center justify-between">
+                          <span
+                            className="inline-block rounded-full px-1.5 py-0.5 text-[8px] font-bold tracking-wider uppercase"
+                            style={{
+                              background: `${tile.accent}15`,
+                              color: tile.accent,
+                              border: `1px solid ${tile.accent}20`,
+                            }}
+                          >
+                            {seatMembership.role}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col min-h-0 justify-end gap-1">
+                        {seatMembership.role === "OWNER" && seatMembership.ownerData ? (
+                          <div className="flex flex-col gap-1.5">
+                            <div className="rounded-xl p-2 flex items-center justify-between" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                              <span className="font-body text-[8px] text-white/40 uppercase">Employees</span>
+                              <span className="font-body text-[11px] font-bold text-white">{seatMembership.ownerData.total_employees}</span>
+                            </div>
+                            <div className="rounded-xl p-2 flex items-center justify-between" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                              <span className="font-body text-[8px] text-white/40 uppercase">Admins</span>
+                              <span className="font-body text-[11px] font-bold text-white">{seatMembership.ownerData.total_admins}</span>
+                            </div>
+                          </div>
+                        ) : seatMembership.role === "ADMIN" ? (
+                          <div className="flex flex-col gap-1 overflow-hidden">
+                            {seatMembership.adminData && seatMembership.adminData.length > 0 ? (
+                              seatMembership.adminData.slice(0, 2).map((emp, idx) => (
+                                <div key={idx} className="rounded-xl p-1.5 flex items-center justify-between" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}15` }}>
+                                  <span className="font-body text-[9px] text-white truncate max-w-[75px]">{emp.employee_name}</span>
+                                  <span className="font-body text-[8px] text-white/45">{emp.current_month_bookings} seats</span>
+                                </div>
+                              ))
+                            ) : (
+                              <p className="font-body text-[8px] text-white/30 text-center">No employee records</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-1 overflow-hidden">
+                            {seatMembership.employeeData && seatMembership.employeeData.length > 0 ? (
+                              seatMembership.employeeData.slice(0, 2).map((b, idx) => {
+                                const formatted = new Date(b.booking_date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                                return (
+                                  <div key={idx} className="rounded-xl p-1.5 flex items-center justify-between" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}20` }}>
+                                    <div>
+                                      <p className="font-body text-[9px] font-bold text-white">{formatted}</p>
+                                      <p className="font-body text-[7.5px] text-white/45">Floor {b.floor_number}</p>
+                                    </div>
+                                    <span className="font-body text-[8px] font-bold" style={{ color: tile.accent }}>{b.seat_identifier}</span>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <p className="font-body text-[8px] text-white/30 text-center">No bookings</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* 1x1 Small Layout */
+                    <div
+                      className="flex min-h-0 flex-1 flex-col justify-between rounded-xl p-2.5"
+                      style={{
+                        background: `${tile.accent}05`,
+                        border: `1px solid ${tile.accent}20`,
+                        boxShadow: `inset 0 1px 0 ${tile.accent}10`,
+                      }}
+                    >
+                      <div>
+                        <p
+                          className="truncate font-body font-bold text-white"
+                          style={{ fontSize: "11px", lineHeight: 1.2 }}
+                          title={seatMembership.name}
+                        >
+                          {seatMembership.name}
+                        </p>
+                        <p className="font-body text-[8px] text-white/35 truncate mt-0.5">{seatMembership.email}</p>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-between gap-1">
+                        <span
+                          className="inline-block rounded px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider"
+                          style={{
+                            background: `${tile.accent}15`,
+                            color: tile.accent,
+                            border: `1px solid ${tile.accent}20`,
+                          }}
+                        >
+                          {seatMembership.role}
+                        </span>
+                        <span className="font-body text-[8.5px] text-white/45">{seatMembership.max_allowed_days}d limit</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1945,67 +2214,83 @@ function ExpandedTile({
                   transition={{ ease: EASE }}
                   className="overflow-hidden rounded-2xl"
                   style={{
-                    background: `${tile.accent}06`,
-                    border: `1px solid ${tile.accent}30`,
-                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                    background: `${tile.accent}04`,
+                    border: `1px solid ${tile.accent}24`,
+                    boxShadow: `0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 ${tile.accent}12`,
                   }}
                 >
                   <div
-                    className="px-4 py-3 flex items-center justify-between"
+                    className="px-4 py-3.5 flex items-center justify-between"
                     style={{
-                      background: `linear-gradient(90deg, ${tile.accent}14, transparent)`,
-                      borderBottom: `1px solid ${tile.accent}24`,
+                      background: `linear-gradient(90deg, ${tile.accent}0d, transparent)`,
+                      borderBottom: `1px solid ${tile.accent}15`,
                     }}
                   >
                     <div>
-                      <p className="font-body text-sm font-bold text-white">{seatMembership.name}</p>
-                      <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">
-                        {seatMembership.display_name} • {seatMembership.role}
+                      <p className="font-body text-[15px] font-bold text-white tracking-wide">{seatMembership.name}</p>
+                      <p className="font-body mt-0.5 text-[10px] uppercase tracking-widest text-white/40 flex items-center gap-1.5">
+                        <span>{seatMembership.display_name}</span>
+                        <span className="w-1 h-1 rounded-full bg-white/25" />
+                        <span style={{ color: tile.accent }}>{seatMembership.role}</span>
                       </p>
                     </div>
+                    {seatMembership.organization_name && (
+                      <span className="font-body text-[10px] font-semibold text-white/40 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1">
+                        {seatMembership.organization_name}
+                      </span>
+                    )}
                   </div>
 
                   {seatMembership.role === "OWNER" && seatMembership.ownerData && (
-                    <div className="grid gap-2 p-3 sm:grid-cols-2">
-                      <div className="col-span-2 rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                    <div className="grid gap-3 p-4 sm:grid-cols-2">
+                      <div className="col-span-2 rounded-xl p-3.5" style={{ background: `${tile.accent}03`, border: `1px solid ${tile.accent}18` }}>
                         <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                          <MapPin size={12} color={tile.accent} />
-                          <span className="font-body text-[9px] uppercase tracking-wider">Organization Name</span>
+                          <MapPin size={13} color={tile.accent} />
+                          <span className="font-body text-[10px] uppercase tracking-wider">Organization Name</span>
                         </div>
                         <p className="font-body text-sm font-semibold text-white/90">
                           {seatMembership.ownerData.organization_name}
                         </p>
                       </div>
-                      <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                        <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                          <Users size={12} color={tile.accent} />
-                          <span className="font-body text-[9px] uppercase tracking-wider">Total Employees</span>
+                      <div className="rounded-xl p-4 flex flex-col justify-between" style={{ background: `${tile.accent}03`, border: `1px solid ${tile.accent}18` }}>
+                        <div className="mb-2 flex items-center gap-1.5 text-white/40">
+                          <Users size={13} color={tile.accent} />
+                          <span className="font-body text-[10px] uppercase tracking-wider">Total Employees</span>
                         </div>
-                        <p className="font-body text-xl font-bold text-white/90">{seatMembership.ownerData.total_employees}</p>
+                        <p className="font-body text-3xl font-extrabold tracking-tight text-white">{seatMembership.ownerData.total_employees}</p>
                       </div>
-                      <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                        <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                          <Users size={12} color={tile.accent} />
-                          <span className="font-body text-[9px] uppercase tracking-wider">Total Admins</span>
+                      <div className="rounded-xl p-4 flex flex-col justify-between" style={{ background: `${tile.accent}03`, border: `1px solid ${tile.accent}18` }}>
+                        <div className="mb-2 flex items-center gap-1.5 text-white/40">
+                          <Users size={13} color={tile.accent} />
+                          <span className="font-body text-[10px] uppercase tracking-wider">Total Admins</span>
                         </div>
-                        <p className="font-body text-xl font-bold text-white/90">{seatMembership.ownerData.total_admins}</p>
+                        <p className="font-body text-3xl font-extrabold tracking-tight text-white">{seatMembership.ownerData.total_admins}</p>
                       </div>
                     </div>
                   )}
 
                   {seatMembership.role === "ADMIN" && (
-                    <div className="p-3">
-                      <p className="font-body text-xs font-semibold text-white/60 mb-2 uppercase tracking-wider">Employee Bookings</p>
+                    <div className="p-4">
+                      <p className="font-body text-xs font-semibold text-white/50 mb-3 uppercase tracking-wider">Employee Bookings</p>
                       {seatMembership.adminData && seatMembership.adminData.length > 0 ? (
                         <div className="space-y-2">
                           {seatMembership.adminData.map((emp, i) => (
-                            <div key={i} className="flex items-center justify-between rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                              <p className="font-body text-sm font-semibold text-white/90">{emp.employee_name}</p>
+                            <div key={i} className="flex items-center justify-between rounded-xl p-3.5 hover:bg-white/[0.02] transition-colors" style={{ background: `${tile.accent}03`, border: `1px solid ${tile.accent}18` }}>
+                              <div>
+                                <p className="font-body text-sm font-bold text-white">{emp.employee_name}</p>
+                                <p className="font-body text-[11px] text-white/45 mt-0.5">{emp.current_month_bookings} seats booked this month</p>
+                              </div>
                               <div className="text-right">
-                                <p className="font-body text-xs text-white/60">{emp.current_month_bookings} seats booked</p>
-                                <p className="font-body text-[10px]" style={{ color: emp.meets_minimum_criteria ? tile.accent : "#FF4444" }}>
-                                  {emp.meets_minimum_criteria ? "Criteria met" : "Criteria not met"}
-                                </p>
+                                <span
+                                  className="inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
+                                  style={{
+                                    background: emp.meets_minimum_criteria ? "rgba(16, 185, 129, 0.12)" : "rgba(239, 68, 68, 0.12)",
+                                    color: emp.meets_minimum_criteria ? "#10B981" : "#EF4444",
+                                    border: emp.meets_minimum_criteria ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(239, 68, 68, 0.2)",
+                                  }}
+                                >
+                                  {emp.meets_minimum_criteria ? "Criteria Met" : "Warning"}
+                                </span>
                               </div>
                             </div>
                           ))}
@@ -2017,26 +2302,33 @@ function ExpandedTile({
                   )}
 
                   {(seatMembership.role === "EMPLOYEE" || (seatMembership.role !== "OWNER" && seatMembership.role !== "ADMIN")) && (
-                    <div className="p-3">
-                      <p className="font-body text-xs font-semibold text-white/60 mb-2 uppercase tracking-wider">Upcoming Seats</p>
+                    <div className="p-4">
+                      <p className="font-body text-xs font-semibold text-white/50 mb-3 uppercase tracking-wider">Upcoming Seats</p>
                       {seatMembership.employeeData && seatMembership.employeeData.length > 0 ? (
-                        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                        <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
                           {seatMembership.employeeData.map((booking, i) => {
-                            const date = new Date(booking.booking_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+                            const date = new Date(booking.booking_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
                             return (
-                              <div key={i} className="flex items-center justify-between rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                                <div className="flex items-center gap-3">
-                                  <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ background: `${tile.accent}15`, color: tile.accent }}>
-                                    <Calendar size={14} />
+                              <div key={i} className="flex items-center justify-between rounded-xl p-3.5 hover:bg-white/[0.02] transition-colors" style={{ background: `${tile.accent}03`, border: `1px solid ${tile.accent}18` }}>
+                                <div className="flex items-center gap-3.5">
+                                  <div className="h-9 w-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${tile.accent}15`, border: `1px solid ${tile.accent}25`, color: tile.accent }}>
+                                    <Calendar size={15} />
                                   </div>
                                   <div>
-                                    <p className="font-body text-sm font-semibold text-white/90">{date}</p>
-                                    <p className="font-body text-[10px] text-white/40 uppercase tracking-wider">Seat {booking.seat_identifier}</p>
+                                    <p className="font-body text-sm font-bold text-white">{date}</p>
+                                    <p className="font-body text-[10px] text-white/45 uppercase tracking-wider mt-0.5">Workplace Allocation</p>
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <p className="font-body text-[10px] text-white/40 uppercase tracking-wider">Floor</p>
-                                  <p className="font-body text-sm font-semibold text-white/90">{booking.floor_number}</p>
+                                <div className="flex items-center gap-4">
+                                  <div className="text-right">
+                                    <p className="font-body text-[9px] text-white/40 uppercase tracking-widest">Floor</p>
+                                    <p className="font-body text-sm font-extrabold text-white mt-0.5">{booking.floor_number}</p>
+                                  </div>
+                                  <div className="h-8 w-px bg-white/10" />
+                                  <div className="text-right">
+                                    <p className="font-body text-[9px] text-white/40 uppercase tracking-widest">Seat</p>
+                                    <p className="font-body text-sm font-extrabold mt-0.5" style={{ color: tile.accent }}>{booking.seat_identifier}</p>
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -2245,6 +2537,15 @@ export default function DashboardPage() {
   // Layout state
   const [tiles, setTiles] = useState<AppTile[]>(() => {
     const saved = loadLayout();
+    if (saved) {
+      const seatSyncLayout = saved.find((t) => t.id === "seatsync");
+      if (seatSyncLayout && seatSyncLayout.colSpan === 1) {
+        try {
+          localStorage.removeItem(LAYOUT_KEY);
+        } catch {}
+        return DEFAULT_TILES;
+      }
+    }
     return saved ? applyLayoutToTiles(DEFAULT_TILES, saved) : DEFAULT_TILES;
   });
   const [isEditingLayout, setIsEditingLayout] = useState(false);
