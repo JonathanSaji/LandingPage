@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users, Clock } from "lucide-react";
+import { TrendingUp, X, ArrowUpRight, RefreshCw, Check, RotateCcw, MapPin, Calendar, Users, Clock, Building2, Key, AlertCircle } from "lucide-react";
 import Sidebar from "@/components/ui/sidebar-with-submenu";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -333,6 +333,21 @@ interface SeatSyncMembership {
   company_id: string | null;
   organization_name: string | null;
   role: string;
+  upcomingBookings?: Array<{ booking_date: string; floor: number; seat_id: string }>;
+  companyStats?: {
+    company_name: string;
+    total_employees: number;
+    total_admins: number;
+    pending_extension_requests: number;
+    employee_join_code: string;
+    admin_join_code: string;
+    industry?: string;
+    company_size?: string;
+    total_bookings?: number;
+    total_floors?: number;
+    total_active_desks?: number;
+    current_month_bookings?: number;
+  };
 }
 
 function formatSessionTime(duration: number | null) {
@@ -370,7 +385,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   fluencySessions?: FluencySession[];
   steadySettings?: SteadySyncSettings | null;
   photoSyncPhotos?: PhotoSyncPhoto[];
-  seatMembership?: SeatSyncMembership | null;
+  seatMemberships?: SeatSyncMembership[];
   loading?: boolean;
   isEditMode?: boolean;
   isBeingDragged?: boolean;
@@ -387,7 +402,7 @@ const BentoCard = forwardRef<HTMLDivElement, {
   insights = [],
   fluencySessions = [],
   steadySettings = null,
-  seatMembership = null,
+  seatMemberships = [],
   photoSyncPhotos = [],
   loading = false,
   isEditMode = false,
@@ -995,38 +1010,80 @@ const BentoCard = forwardRef<HTMLDivElement, {
                     }}
                   />
                 </div>
-              ) : !seatMembership ? (
+              ) : seatMemberships.length === 0 ? (
                 <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.01] p-3">
                   <p className="font-body text-center text-[11px] text-white/40">No SeatSync membership found.</p>
                 </div>
               ) : (
-                <div
-                  className="flex min-h-0 flex-1 flex-col justify-center rounded-xl"
-                  style={{
-                    padding: isTall ? "10px 12px" : "8px 10px",
-                    background: `${tile.accent}06`,
-                    border: `1px solid ${tile.accent}30`,
-                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
-                  }}
-                >
-                  <p
-                    className="truncate font-body font-bold text-white"
-                    style={{ fontSize: isTall || isWide ? "12px" : "11px", lineHeight: 1.2 }}
-                    title={seatMembership.name}
-                  >
-                    {seatMembership.name}
-                  </p>
-                  <div className="mt-2 flex flex-col gap-1.5">
-                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                      <Users size={11} color={tile.accent} className="shrink-0" />
-                      <span className="truncate">{seatMembership.role}</span>
-                    </p>
-                    <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
-                      <Calendar size={11} color={tile.accent} className="shrink-0" />
-                      <span className="truncate">{seatMembership.max_allowed_days} max booking days</span>
-                    </p>
-                  </div>
-                </div>
+                seatMemberships.map((membership) => {
+                  const role = membership.role?.toUpperCase();
+                  const stats = membership.companyStats;
+                  const upcoming = membership.upcomingBookings || [];
+                  
+                  return (
+                    <div
+                      key={membership.name}
+                      className="flex min-h-0 flex-1 flex-col justify-center rounded-xl"
+                      style={{
+                        padding: isTall ? "10px 12px" : "8px 10px",
+                        background: `${tile.accent}06`,
+                        border: `1px solid ${tile.accent}30`,
+                        boxShadow: `inset 0 1px 0 ${tile.accent}12`,
+                      }}
+                    >
+                      <p
+                        className="truncate font-body font-bold text-white"
+                        style={{ fontSize: isTall || isWide ? "12px" : "11px", lineHeight: 1.2 }}
+                        title={membership.name}
+                      >
+                        {membership.name}
+                      </p>
+                      <div className="mt-2 flex flex-col gap-1.5">
+                        <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                          <Users size={11} color={tile.accent} className="shrink-0" />
+                          <span className="truncate">
+                            {role === "ADMIN" ? "Workspace Admin" :
+                             role === "OWNER" ? "Workspace Owner" :
+                             role === "EMPLOYEE" ? "Employee" :
+                             membership.role}
+                          </span>
+                        </p>
+                        {role === "EMPLOYEE" && (
+                          <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                            <Calendar size={11} color={tile.accent} className="shrink-0" />
+                            <span className="truncate">{upcoming.length} upcoming days</span>
+                          </p>
+                        )}
+                        {role === "ADMIN" && stats && (
+                          <>
+                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                              <Users size={11} color={tile.accent} className="shrink-0" />
+                              <span className="truncate">{stats.total_employees} employees</span>
+                            </p>
+                            {stats.pending_extension_requests > 0 && (
+                              <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px]" style={{ color: tile.accent }}>
+                                <AlertCircle size={11} className="shrink-0" />
+                                <span className="truncate">{stats.pending_extension_requests} pending</span>
+                              </p>
+                            )}
+                          </>
+                        )}
+                        {role === "OWNER" && stats && (
+                          <>
+                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                              <Building2 size={11} color={tile.accent} className="shrink-0" />
+                              <span className="truncate">{stats.company_name}</span>
+                            </p>
+                            <p className="flex min-w-0 items-center gap-1.5 truncate font-body text-[10px] text-white/75">
+                              <Users size={11} color={tile.accent} className="shrink-0" />
+                              <span className="truncate">{stats.total_employees} employees</span>
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
               )}
 
               <motion.div
@@ -1909,79 +1966,213 @@ function ExpandedTile({
                       width: "24px",
                       height: "24px",
                       borderRadius: "50%",
-                      border: "2px solid rgba(57, 255, 20, 0.12)",
+                      border: `2px solid ${tile.accent}1F`,
                       borderTopColor: tile.accent,
                       animation: "sb-spin 0.8s linear infinite",
                     }}
                   />
                 </div>
-              ) : !seatMembership ? (
+              ) : seatMemberships.length === 0 ? (
                 <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
-                  <p className="font-body text-xs text-white/40 text-center">
-                    No SeatSync membership found.
-                  </p>
+                  <p className="font-body text-xs text-white/40 text-center">No SeatSync data found.</p>
                 </div>
               ) : (
-                <motion.article
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ ease: EASE }}
-                  className="overflow-hidden rounded-2xl"
-                  style={{
-                    background: `${tile.accent}06`,
-                    border: `1px solid ${tile.accent}30`,
-                    boxShadow: `inset 0 1px 0 ${tile.accent}12`,
-                  }}
-                >
-                  <div
-                    className="px-4 py-3"
-                    style={{
-                      background: `linear-gradient(90deg, ${tile.accent}14, transparent)`,
-                      borderBottom: `1px solid ${tile.accent}24`,
-                    }}
-                  >
-                    <p className="font-body text-sm font-bold text-white">{seatMembership.name}</p>
-                    <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">
-                      {seatMembership.display_name}
-                    </p>
-                  </div>
-                  <div className="grid gap-2 p-3 sm:grid-cols-2">
-                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                        <Users size={12} color={tile.accent} />
-                        <span className="font-body text-[9px] uppercase tracking-wider">Role</span>
+                seatMemberships.map((membership) => {
+                  const role = membership.role?.toUpperCase();
+                  const stats = membership.companyStats;
+                  const upcoming = membership.upcomingBookings || [];
+
+                  if (role === "EMPLOYEE") {
+                    return (
+                      <div key={membership.name} className="space-y-3">
+                        {upcoming.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl p-6 bg-white/[0.01]">
+                            <p className="font-body text-xs text-white/40 text-center">No upcoming bookings.</p>
+                          </div>
+                        ) : (
+                          upcoming.map((booking, i) => (
+                            <motion.article
+                              key={i}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: i * 0.05, ease: EASE }}
+                              className="overflow-hidden rounded-2xl"
+                              style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
+                            >
+                              <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
+                                <p className="font-body text-sm font-bold text-white">Upcoming Bookings</p>
+                                <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">{upcoming.length} days booked</p>
+                              </div>
+                              <div className="grid gap-2 p-3 sm:grid-cols-3">
+                                <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                                  <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                    <Calendar size={12} color={tile.accent} />
+                                    <span className="font-body text-[9px] uppercase tracking-wider">Date</span>
+                                  </div>
+                                  <p className="font-body text-xs font-semibold text-white/90">
+                                    {new Date(booking.booking_date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                  </p>
+                                </div>
+                                <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                                  <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                    <MapPin size={12} color={tile.accent} />
+                                    <span className="font-body text-[9px] uppercase tracking-wider">Floor</span>
+                                  </div>
+                                  <p className="font-body text-xs font-semibold text-white/90">Floor {booking.floor}</p>
+                                </div>
+                                <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                                  <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                    <Building2 size={12} color={tile.accent} />
+                                    <span className="font-body text-[9px] uppercase tracking-wider">Seat</span>
+                                  </div>
+                                  <p className="font-body text-xs font-semibold text-white/90">{booking.seat_id}</p>
+                                </div>
+                              </div>
+                            </motion.article>
+                          ))
+                        )}
                       </div>
-                      <p className="font-body text-xs font-semibold text-white/90">{seatMembership.role}</p>
-                    </div>
-                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                        <Calendar size={12} color={tile.accent} />
-                        <span className="font-body text-[9px] uppercase tracking-wider">Max Days</span>
+                    );
+                  }
+
+                  if (role === "ADMIN" && stats) {
+                    return (
+                      <motion.article
+                        key={membership.name}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ ease: EASE }}
+                        className="overflow-hidden rounded-2xl"
+                        style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
+                      >
+                        <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
+                          <p className="font-body text-sm font-bold text-white">{stats.company_name}</p>
+                          <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">ADMIN</p>
+                        </div>
+                        <div className="grid gap-2 p-3 sm:grid-cols-3">
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <Users size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Employees</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">{stats.total_employees}</p>
+                          </div>
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <Users size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Admins</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold text-white/90">{stats.total_admins}</p>
+                          </div>
+                          <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                            <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                              <AlertCircle size={12} color={tile.accent} />
+                              <span className="font-body text-[9px] uppercase tracking-wider">Pending</span>
+                            </div>
+                            <p className="font-body text-xs font-semibold" style={{ color: stats.pending_extension_requests > 0 ? tile.accent : "rgba(255,255,255,0.9)" }}>
+                              {stats.pending_extension_requests}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.article>
+                    );
+                  }
+
+                  if (role === "OWNER" && stats) {
+                    return (
+                      <div key={membership.name} className="space-y-3">
+                        <motion.article
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ ease: EASE }}
+                          className="overflow-hidden rounded-2xl"
+                          style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
+                        >
+                          <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
+                            <p className="font-body text-sm font-bold text-white">{stats.company_name}</p>
+                            <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">OWNER</p>
+                          </div>
+                          <div className="grid gap-2 p-3 sm:grid-cols-3">
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <Users size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">Employees</span>
+                              </div>
+                              <p className="font-body text-xs font-semibold text-white/90">{stats.total_employees}</p>
+                            </div>
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <Users size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">Admins</span>
+                              </div>
+                              <p className="font-body text-xs font-semibold text-white/90">{stats.total_admins}</p>
+                            </div>
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <Calendar size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">This Month</span>
+                              </div>
+                              <p className="font-body text-xs font-semibold text-white/90">{stats.current_month_bookings} bookings</p>
+                            </div>
+                          </div>
+                          <div className="grid gap-2 p-3 sm:grid-cols-3 mt-2">
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <Building2 size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">Industry</span>
+                              </div>
+                              <p className="font-body text-xs font-semibold text-white/90">{stats.industry || "—"}</p>
+                            </div>
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <Users size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">Company Size</span>
+                              </div>
+                              <p className="font-body text-xs font-semibold text-white/90">{stats.company_size || "—"}</p>
+                            </div>
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <MapPin size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">Floors</span>
+                              </div>
+                              <p className="font-body text-xs font-semibold text-white/90">{stats.total_floors} floors</p>
+                            </div>
+                          </div>
+                        </motion.article>
+                        <motion.article
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.1, ease: EASE }}
+                          className="overflow-hidden rounded-2xl"
+                          style={{ background: `${tile.accent}06`, border: `1px solid ${tile.accent}30`, boxShadow: `inset 0 1px 0 ${tile.accent}12` }}
+                        >
+                          <div className="px-4 py-3" style={{ background: `linear-gradient(90deg, ${tile.accent}14, transparent)`, borderBottom: `1px solid ${tile.accent}24` }}>
+                            <p className="font-body text-sm font-bold text-white">Access Codes</p>
+                            <p className="font-body mt-0.5 text-[10px] uppercase tracking-wider text-white/35">Share to onboard team</p>
+                          </div>
+                          <div className="grid gap-2 p-3 sm:grid-cols-2">
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <Key size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">Employee Code</span>
+                              </div>
+                              <p className="font-body text-xs font-mono" style={{ color: tile.accent }}>{stats.employee_join_code}</p>
+                            </div>
+                            <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
+                              <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
+                                <Key size={12} color={tile.accent} />
+                                <span className="font-body text-[9px] uppercase tracking-wider">Admin Code</span>
+                              </div>
+                              <p className="font-body text-xs font-mono" style={{ color: tile.accent }}>{stats.admin_join_code}</p>
+                            </div>
+                          </div>
+                        </motion.article>
                       </div>
-                      <p className="font-body text-xs font-semibold text-white/90">
-                        {seatMembership.max_allowed_days} booking days
-                      </p>
-                    </div>
-                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                        <MapPin size={12} color={tile.accent} />
-                        <span className="font-body text-[9px] uppercase tracking-wider">Organization</span>
-                      </div>
-                      <p className="font-body text-xs font-semibold text-white/90">
-                        {seatMembership.organization_name || "—"}
-                      </p>
-                    </div>
-                    <div className="rounded-xl p-3" style={{ background: `${tile.accent}05`, border: `1px solid ${tile.accent}24` }}>
-                      <div className="mb-1.5 flex items-center gap-1.5 text-white/40">
-                        <Clock size={12} color={tile.accent} />
-                        <span className="font-body text-[9px] uppercase tracking-wider">Company ID</span>
-                      </div>
-                      <p className="font-body text-xs font-semibold text-white/90">
-                        {seatMembership.company_id || "—"}
-                      </p>
-                    </div>
-                  </div>
-                </motion.article>
+                    );
+                  }
+
+                  return null;
+                })
               )}
             </div>
           ) : tile.name === "SteadySync" ? (
@@ -2173,7 +2364,7 @@ export default function DashboardPage() {
   const [fluencySessions, setFluencySessions] = useState<FluencySession[]>([]);
   const [steadySettings, setSteadySettings] = useState<SteadySyncSettings | null>(null);
   const [photoSyncPhotos, setPhotoSyncPhotos] = useState<PhotoSyncPhoto[]>([]);
-  const [seatMembership, setSeatMembership] = useState<SeatSyncMembership | null>(null);
+  const [seatMemberships, setSeatMemberships] = useState<SeatSyncMembership[]>([]);
   const [loadingSubs, setLoadingSubs] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // Layout state
@@ -2455,10 +2646,10 @@ export default function DashboardPage() {
           } else {
             setSteadySettings(null);
           }
-          if (seatData.ok && seatData.membership) {
-            setSeatMembership(seatData.membership);
+          if (seatData.ok && seatData.memberships) {
+            setSeatMemberships(seatData.memberships);
           } else {
-            setSeatMembership(null);
+            setSeatMemberships([]);
           }
           if (photoData.ok && Array.isArray(photoData.photos)) {
             setPhotoSyncPhotos(photoData.photos);
@@ -2694,7 +2885,7 @@ export default function DashboardPage() {
                   insights={insights}
                   fluencySessions={fluencySessions}
                   steadySettings={steadySettings}
-                  seatMembership={seatMembership}
+                  seatMemberships={seatMemberships}
                   photoSyncPhotos={photoSyncPhotos}
                   loading={loadingSubs}
                   isEditMode={isEditingLayout}
