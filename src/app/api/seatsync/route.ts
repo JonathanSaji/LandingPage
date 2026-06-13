@@ -48,7 +48,7 @@ export async function GET(request: Request) {
         company_id,
         organization_name,
         role
-       FROM "SeatSync".seatsync_membership
+       FROM seatsync.seatsync_membership
        WHERE display_name = $1
           OR email = $2
           OR email = $3
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
           company_id,
           organization_name,
           role
-         FROM "SeatSync".seatsync_membership
+         FROM seatsync.seatsync_membership
          WHERE display_name = $1
          LIMIT 1`,
         [displayName]
@@ -87,7 +87,7 @@ export async function GET(request: Request) {
     let isOwner = false;
     if (membership.company_id) {
       const companyRes = await dbQuery(
-        `SELECT owner_email FROM "SeatSync".companies WHERE id = $1 LIMIT 1`,
+        `SELECT owner_email FROM seatsync.companies WHERE id = $1 LIMIT 1`,
         [membership.company_id]
       );
       if (companyRes.rows.length > 0 && companyRes.rows[0].owner_email === membership.email) {
@@ -105,7 +105,7 @@ export async function GET(request: Request) {
     if (resolvedRole === 'OWNER') {
       const orgRes = await dbQuery(
         `SELECT company_display_name as organization_name, total_employees, total_admins
-         FROM "SeatSync".organization_stats
+         FROM seatsync.organization_stats
          WHERE company_id = $1 LIMIT 1`,
         [membership.company_id]
       );
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
     } else if (resolvedRole === 'ADMIN') {
       const adminRes = await dbQuery(
         `SELECT employee_name, current_month_bookings, meets_minimum_criteria
-         FROM "SeatSync".admin_employee_details
+         FROM seatsync.admin_employee_details
          WHERE company_id = $1`,
         [membership.company_id]
       );
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
     } else {
       const empRes = await dbQuery(
         `SELECT booking_date, floor_number, seat_identifier
-         FROM "SeatSync".employee_bookings
+         FROM seatsync.employee_bookings
          WHERE employee_email = $1 AND booking_date >= CURRENT_DATE
          ORDER BY booking_date ASC`,
         [membership.email]
