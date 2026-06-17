@@ -354,7 +354,7 @@ interface SeatSyncMembership {
 
 function formatSessionTime(duration: number | null) {
   if (duration === null || !Number.isFinite(duration)) return "--";
-  return `${duration} min`;
+  return `${duration} s`;
 }
 
 /* ─── Edit Mode Resize Sizes ─── */
