@@ -20,7 +20,7 @@ export function SiteFooter() {
   return (
     <footer
       id="footer"
-      className="relative bg-black py-16 px-10"
+      className="relative bg-black py-12 md:py-16 px-6 md:px-10"
     >
       {/* Section divider */}
       <div className="absolute top-0 left-0 right-0 h-px bg-white/10" aria-hidden />
@@ -40,7 +40,7 @@ export function SiteFooter() {
             <span className="font-heading font-extrabold text-[22px] tracking-tight text-[#FFD700]">
               SubSync
             </span>
-            <p className="font-body text-[13px] mt-2" style={{ color: "#444" }}>
+            <p className="font-body text-[13px] mt-2 text-white/40">
               One ecosystem. Seven apps.
             </p>
           </div>
@@ -54,7 +54,7 @@ export function SiteFooter() {
                   href={app.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-body text-[13px] text-[#555] hover:text-white transition-colors duration-150 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  className="font-body text-[13px] text-white/40 hover:text-[#FFD700] transition-colors duration-150 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                   {app.name}
                 </a>
@@ -68,7 +68,7 @@ export function SiteFooter() {
 
         {/* Bottom row: copyright */}
         <div className="flex items-center">
-          <p className="font-body text-[12px]" style={{ color: "#333" }}>
+          <p className="font-body text-[12px] text-white/30">
             © 2025 SubSync. All rights reserved.
           </p>
         </div>

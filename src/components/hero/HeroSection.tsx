@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CircleUserRound } from "lucide-react";
+import { CircleUserRound, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -117,6 +117,7 @@ export function HeroSection() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [devAdminOpen, setDevAdminOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const clickCountRef = useRef(0);
   const clickWindowRef = useRef<number>(0);
   const router = useRouter();
@@ -186,7 +187,7 @@ export function HeroSection() {
 
           {/* Navigation - z-10 */}
           <nav
-            className="absolute left-0 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-white/[0.06] px-10"
+            className="absolute left-0 right-0 top-0 z-10 flex h-16 items-center justify-between border-b border-white/[0.06] px-6 md:px-10"
             style={{
               background: "rgba(0,0,0,0.3)",
               backdropFilter: "blur(12px)",
@@ -199,7 +200,7 @@ export function HeroSection() {
             >
               SubSync
             </button>
-            <div className="flex items-center gap-8">
+            <div className="hidden md:flex items-center gap-8">
               <Link
                 href="/"
                 className="rounded font-body text-sm hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
@@ -232,7 +233,7 @@ export function HeroSection() {
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-2">
               {isLoggedIn && (
                 <button
                   type="button"
@@ -261,12 +262,108 @@ export function HeroSection() {
                 {isLoggedIn ? "Logout" : authOpen ? "Back to Orbital" : "Sign In"}
               </button>
             </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="flex md:hidden items-center justify-center p-2 text-[#94A3B8] hover:text-white focus:outline-none focus:ring-2 focus:ring-[#FFD700] rounded"
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </nav>
 
+          {/* Mobile Navigation Drawer */}
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="absolute left-0 right-0 top-16 z-20 flex flex-col border-b border-white/[0.06] bg-black/95 px-6 py-6 backdrop-blur-lg md:hidden gap-4"
+              >
+                <Link
+                  href="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded font-body text-base hover:text-white py-2"
+                  style={{ color: pathname === "/" ? "#FFD700" : "#94A3B8" }}
+                >
+                  Landing Page
+                </Link>
+                <Link
+                  href="/about"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded font-body text-base hover:text-white py-2"
+                  style={{ color: pathname === "/about" ? "#FFD700" : "#94A3B8" }}
+                >
+                  About Us
+                </Link>
+                {isLoggedIn ? (
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="rounded font-body text-base hover:text-white py-2"
+                    style={{ color: pathname === "/dashboard" ? "#FFD700" : "#94A3B8" }}
+                  >
+                    Dashboard
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setAuthOpen(true);
+                    }}
+                    className="text-left rounded font-body text-base text-[#94A3B8] hover:text-white py-2"
+                  >
+                    Dashboard
+                  </button>
+                )}
+                
+                <div className="h-px bg-white/10 my-1" />
+
+                <div className="flex items-center justify-between gap-4">
+                  {isLoggedIn && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        router.push("/profile");
+                      }}
+                      aria-label="Open profile"
+                      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700]"
+                    >
+                      <CircleUserRound size={20} />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      if (isLoggedIn) {
+                        localStorage.removeItem("subsync_token");
+                        window.dispatchEvent(new Event("storage"));
+                        setIsLoggedIn(false);
+                        setAuthOpen(false);
+                        return;
+                      }
+                      setAuthOpen((prev) => !prev);
+                    }}
+                    className="w-full font-heading rounded-lg bg-[#FFD700] px-5 py-2.5 text-sm font-bold text-black text-center hover:bg-[#ffe033]"
+                  >
+                    {isLoggedIn ? "Logout" : authOpen ? "Back to Orbital" : "Sign In"}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Main grid - z-2 */}
-          <div className="relative z-[2] grid min-h-screen grid-cols-2 pt-16">
+          <div className="relative z-[2] grid min-h-screen grid-cols-1 md:grid-cols-2 pt-16">
             {/* Left: hero copy */}
-            <div className="flex flex-col justify-center gap-6 pl-20 pr-8">
+            <div className="flex flex-col justify-center gap-6 px-6 pt-24 pb-8 md:pl-20 md:pr-8 md:pt-0 md:pb-0">
               <motion.p
                 className="font-body text-[11px] font-medium uppercase tracking-[0.14em] text-[#FFD700]"
                 {...fadeUp(0.15)}
@@ -276,7 +373,7 @@ export function HeroSection() {
 
               <h1
                 className="flex flex-col font-heading font-extrabold leading-[0.95] tracking-[-0.03em]"
-                style={{ fontSize: "clamp(2.8rem, 6vw, 5.5rem)" }}
+                style={{ fontSize: "clamp(2.2rem, 6vw, 5.5rem)" }}
               >
                 <motion.span className="text-white" {...fadeUp(0.4)}>
                   Seven apps. OneSync.
@@ -308,7 +405,7 @@ export function HeroSection() {
             </div>
 
             {/* Right: orbital/login swap */}
-            <div className="relative flex min-h-[640px] items-center justify-center overflow-visible">
+            <div className="relative flex min-h-[400px] sm:min-h-[500px] md:min-h-[640px] items-center justify-center overflow-visible">
               <AnimatePresence mode="wait" initial={false}>
                 {!authOpen ? (
                   <motion.div

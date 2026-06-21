@@ -37,9 +37,9 @@ export function CTASection() {
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-[1400px] px-10">
+      <div className="relative mx-auto max-w-[1400px] px-6 md:px-10">
         <motion.div
-          className="relative mx-auto w-[85vw] rounded-3xl px-12 py-16 text-center"
+          className="relative mx-auto w-full max-w-[1100px] rounded-3xl px-6 py-10 md:px-12 md:py-16 text-center"
           style={{
             background: "rgba(255, 255, 255, 0.03)",
             border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -59,11 +59,11 @@ export function CTASection() {
           />
 
           {/* Logo row */}
-          <div className="flex items-center justify-center gap-3 mb-8">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 md:gap-3 mb-8 max-w-[280px] sm:max-w-none mx-auto">
             {LOGOS.map((logo, i) => (
               <motion.div
                 key={logo.name}
-                className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-[8px] md:rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
                 {...(reduceMotion ? {} : {
                   initial: { opacity: 0, y: 12 },
                   whileInView: { opacity: 1, y: 0 },
@@ -76,7 +76,7 @@ export function CTASection() {
                   alt={logo.name}
                   width={40}
                   height={40}
-                  className="object-contain"
+                  className="object-contain w-full h-full"
                 />
               </motion.div>
             ))}

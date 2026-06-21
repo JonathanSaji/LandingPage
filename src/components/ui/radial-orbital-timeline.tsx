@@ -24,10 +24,27 @@ interface RadialOrbitalTimelineProps {
   timelineData: TimelineItem[];
 }
 
-const RADIUS = 200;
 const SPEED = 6; // degrees per second
 
 export function RadialOrbitalTimeline({ timelineData }: RadialOrbitalTimelineProps) {
+  const [radius, setRadius] = useState(200);
+  const radiusRef = useRef(200);
+
+  useEffect(() => {
+    const handleResize = () => {
+      let r = 200;
+      if (window.innerWidth < 480) {
+        r = 110;
+      } else if (window.innerWidth < 768) {
+        r = 150;
+      }
+      setRadius(r);
+      radiusRef.current = r;
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({});
   const [pulseEffect, setPulseEffect] = useState<Record<number, boolean>>({});
   const [activeNodeId, setActiveNodeId] = useState<number | null>(null);
@@ -78,8 +95,8 @@ export function RadialOrbitalTimeline({ timelineData }: RadialOrbitalTimelinePro
 
         const angle = ((index / timelineData.length) * 360 + angleRef.current) % 360;
         const radian = (angle * Math.PI) / 180;
-        const x = RADIUS * Math.cos(radian);
-        const y = RADIUS * Math.sin(radian);
+        const x = radiusRef.current * Math.cos(radian);
+        const y = radiusRef.current * Math.sin(radian);
         const opacity = Math.max(0.4, Math.min(1, 0.4 + 0.6 * ((1 + Math.sin(radian)) / 2)));
         const zIndex = Math.round(100 + 50 * Math.cos(radian));
         el.style.transform = `translate(${x}px, ${y}px)`;
@@ -146,7 +163,7 @@ export function RadialOrbitalTimeline({ timelineData }: RadialOrbitalTimelinePro
 
   return (
     <div
-      className="w-full h-full flex flex-col items-center justify-center overflow-hidden"
+      className="w-full h-full flex flex-col items-center justify-center overflow-visible"
       ref={containerRef}
       onClick={handleContainerClick}
     >
@@ -172,7 +189,10 @@ export function RadialOrbitalTimeline({ timelineData }: RadialOrbitalTimelinePro
           </div>
 
           {/* Orbit ring */}
-          <div className="absolute w-96 h-96 rounded-full border border-white/10" />
+          <div
+            className="absolute rounded-full border border-white/10"
+            style={{ width: radius * 2, height: radius * 2 }}
+          />
 
           {timelineData.map((item, index) => {
             const isExpanded = expandedItems[item.id];

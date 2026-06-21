@@ -81,7 +81,17 @@ function shortestPos(i: number, active: number): number {
 
 export function ProductsSection() {
   const [active, setActive] = useState(0);
+  const [viewportWidth, setViewportWidth] = useState(1200);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const goTo = useCallback((idx: number) => {
     setActive(((idx % N) + N) % N);
@@ -121,7 +131,7 @@ export function ProductsSection() {
       aria-labelledby="products-heading"
     >
       {/* Section header */}
-      <div className="mx-auto max-w-[1400px] px-10 mb-4 text-center">
+      <div className="mx-auto max-w-[1400px] px-6 md:px-10 mb-4 text-center">
         <p
           className="text-[11px] font-medium tracking-[0.14em] uppercase mb-3"
           style={{ color: "#FFD700", fontFamily: "var(--font-dm-sans)" }}
@@ -143,65 +153,71 @@ export function ProductsSection() {
       </div>
 
       {/* 3D Carousel — overflow-x clips side cards; overflow-y visible so glow isn't cut */}
-      <div className="relative" style={{ height: 460, overflowX: "clip", overflowY: "visible" }}>
-        {/* Perspective container — no preserve-3d so z-index controls stacking */}
-        <div
-          className="absolute inset-0"
-          style={{ perspective: "1200px", perspectiveOrigin: "50% 50%" }}
-        >
-          {/* Zero-size track at center — cards offset themselves from here */}
-          <div className="absolute top-1/2 left-1/2">
-            {PRODUCTS.map((product, i) => (
-              <ProductCard
-                key={product.id}
-                title={product.title}
-                category={product.category}
-                description={product.description}
-                color={product.color}
-                logoSrc={product.logoSrc}
-                previewSrc={product.previewSrc}
-                pos={shortestPos(i, active)}
-                reduceMotion={!!reduceMotion}
-                onClick={() => goTo(i)}
-              />
-            ))}
+      {(() => {
+        const carouselHeight = viewportWidth < 640 ? 280 : viewportWidth < 1024 ? 360 : 460;
+        return (
+          <div className="relative" style={{ height: carouselHeight, overflowX: "clip", overflowY: "visible" }}>
+            {/* Perspective container — no preserve-3d so z-index controls stacking */}
+            <div
+              className="absolute inset-0"
+              style={{ perspective: "1200px", perspectiveOrigin: "50% 50%" }}
+            >
+              {/* Zero-size track at center — cards offset themselves from here */}
+              <div className="absolute top-1/2 left-1/2">
+                {PRODUCTS.map((product, i) => (
+                  <ProductCard
+                    key={product.id}
+                    title={product.title}
+                    category={product.category}
+                    description={product.description}
+                    color={product.color}
+                    logoSrc={product.logoSrc}
+                    previewSrc={product.previewSrc}
+                    pos={shortestPos(i, active)}
+                    reduceMotion={!!reduceMotion}
+                    onClick={() => goTo(i)}
+                    viewportWidth={viewportWidth}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Prev arrow */}
+            <button
+              onClick={() => goTo(active - 1)}
+              className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-50
+                         w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center text-white text-xs md:text-base
+                         transition-[background,transform] duration-200
+                         hover:scale-110 active:scale-95
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}
+              aria-label="Previous app"
+            >
+              <span aria-hidden>←</span>
+            </button>
+
+            {/* Next arrow */}
+            <button
+              onClick={() => goTo(active + 1)}
+              className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-50
+                         w-8 h-8 md:w-11 md:h-11 rounded-full flex items-center justify-center text-white text-xs md:text-base
+                         transition-[background,transform] duration-200
+                         hover:scale-110 active:scale-95
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}
+              aria-label="Next app"
+            >
+              <span aria-hidden>→</span>
+            </button>
           </div>
-        </div>
-
-        {/* Prev arrow */}
-        <button
-          onClick={() => goTo(active - 1)}
-          className="absolute left-6 top-1/2 -translate-y-1/2 z-50
-                     w-11 h-11 rounded-full flex items-center justify-center text-white text-base
-                     transition-[background,transform] duration-200
-                     hover:scale-110 active:scale-95
-                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-          style={{
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.12)",
-          }}
-          aria-label="Previous app"
-        >
-          <span aria-hidden>←</span>
-        </button>
-
-        {/* Next arrow */}
-        <button
-          onClick={() => goTo(active + 1)}
-          className="absolute right-6 top-1/2 -translate-y-1/2 z-50
-                     w-11 h-11 rounded-full flex items-center justify-center text-white text-base
-                     transition-[background,transform] duration-200
-                     hover:scale-110 active:scale-95
-                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FFD700] focus-visible:ring-offset-2 focus-visible:ring-offset-black"
-          style={{
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.12)",
-          }}
-          aria-label="Next app"
-        >
-          <span aria-hidden>→</span>
-        </button>
-      </div>
+        );
+      })()}
 
       {/* Dot pagination */}
       <div

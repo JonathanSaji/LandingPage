@@ -13,6 +13,7 @@ interface ProductCardProps {
   pos: number;          // position relative to active: 0=center, ±1, ±2
   reduceMotion: boolean;
   onClick: () => void;
+  viewportWidth: number;
 }
 
 // Per-position layout — tuned to match the Aura 3D carousel feel
@@ -32,18 +33,41 @@ export function ProductCard({
   pos,
   reduceMotion,
   onClick,
+  viewportWidth,
 }: ProductCardProps) {
+  // Dynamic card configurations based on viewport width
+  let width = 580;
+  let height = 370;
+  let top = -185;
+  let left = -290;
+  let translationX = [0, 268, 490];
+
+  if (viewportWidth < 640) {
+    width = 300;
+    height = 200;
+    top = -100;
+    left = -150;
+    translationX = [0, 120, 210];
+  } else if (viewportWidth < 1024) {
+    width = 440;
+    height = 280;
+    top = -140;
+    left = -220;
+    translationX = [0, 190, 340];
+  }
+
   const abs  = Math.abs(pos);
   const sign = pos >= 0 ? 1 : -1;
 
   if (abs > 2) return null;
 
   const cfg = POS_CONFIG[abs];
+  const translateX = translationX[abs] * sign;
 
   const animTarget = reduceMotion
     ? {}
     : {
-        x:       cfg.x * sign,
+        x:       translateX,
         rotateY: cfg.rotY * sign,
         scale:   cfg.scl,
         opacity: cfg.opa,
@@ -55,10 +79,10 @@ export function ProductCard({
     <motion.article
       className="group absolute cursor-pointer"
       style={{
-        width:  580,
-        height: 370,
-        top:   -185,
-        left:  -290,
+        width:  width,
+        height: height,
+        top:   top,
+        left:  left,
         zIndex:  cfg.z,
         willChange: "transform, opacity",
       }}
@@ -94,7 +118,7 @@ export function ProductCard({
           src={previewSrc}
           alt={`${title} app preview`}
           fill
-          sizes="580px"
+          sizes={`${width}px`}
           className="object-cover"
           priority={pos === 0}
         />
@@ -127,7 +151,7 @@ export function ProductCard({
 
         {/* Category pill — top right */}
         <span
-          className="absolute top-3.5 right-3.5 z-10 text-[9px] font-semibold tracking-[0.14em] uppercase px-2.5 py-1 rounded-full backdrop-blur-md"
+          className="absolute top-2.5 right-2.5 md:top-3.5 md:right-3.5 z-10 text-[8px] md:text-[9px] font-semibold tracking-[0.14em] uppercase px-2 py-0.5 md:px-2.5 md:py-1 rounded-full backdrop-blur-md"
           style={{
             color,
             background: `${color}18`,
@@ -140,11 +164,11 @@ export function ProductCard({
 
         {/* Bottom bar — logo and text in one flex row so they stay aligned */}
         <div
-          className="absolute bottom-0 left-0 right-0 z-10 flex items-end gap-3 px-4 pb-4 pt-16"
+          className="absolute bottom-0 left-0 right-0 z-10 flex items-end gap-2 md:gap-3 px-3 pb-3 pt-8 md:px-4 md:pb-4 md:pt-16"
           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, transparent 100%)" }}
         >
           <div
-            className="flex-shrink-0 w-9 h-9 rounded-[11px] overflow-hidden bg-black"
+            className="flex-shrink-0 w-7 h-7 md:w-9 md:h-9 rounded-[7px] md:rounded-[11px] overflow-hidden bg-black"
             style={{ boxShadow: `0 4px 18px ${color}60` }}
           >
             <Image
@@ -158,13 +182,13 @@ export function ProductCard({
 
           <div>
             <h3
-              className="text-[17px] font-extrabold text-white tracking-[-0.02em] mb-0.5 leading-snug"
+              className="text-[14px] md:text-[17px] font-extrabold text-white tracking-[-0.02em] mb-0.5 leading-snug"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
               {title}
             </h3>
             <p
-              className="text-[11.5px] leading-[1.45]"
+              className="text-[9.5px] md:text-[11.5px] leading-[1.45]"
               style={{ color: "rgba(255,255,255,0.48)", fontFamily: "var(--font-dm-sans)" }}
             >
               {description}
